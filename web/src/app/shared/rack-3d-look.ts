@@ -3,8 +3,8 @@ import { WineType } from '../core/models';
 /** Natural bottle glass colors (instead of the bright type badge colors). */
 export const GLASS_BY_TYPE: Record<WineType, string> = {
   Red: '#101a0c',
-  White: '#8a9a52',
-  Rose: '#b9c79a',
+  White: '#dfe6cf',
+  Rose: '#d9b4b0',
   Sparkling: '#1f2c17',
   Dessert: '#9a6a24',
   Fortified: '#24170d',
@@ -78,19 +78,32 @@ export class LabelAtlas {
 
 // ----- Pulling a row out of the rack -----
 
-/** How far a selected bottle comes out of the rack (rack units) and how far it tips toward the viewer. */
+/** How far a selected bottle comes out of the rack (rack units); it also rolls by 180° and stands up by 90°. */
 export const PULL_DISTANCE = 2.6;
-export const PULL_TILT = (50 * Math.PI) / 180;
-export const PULL_DURATION_MS = 350;
+export const PULL_ROLL = Math.PI;
+export const PULL_PITCH = Math.PI / 2;
+export const PULL_DURATION_MS = 450;
 
 export function easeOutCubic(t: number): number {
   const c = Math.min(1, Math.max(0, t));
   return 1 - Math.pow(1 - c, 3);
 }
 
-/** Offset toward the viewer and tilt of a bottle at pull progress 0 (in the shelf) … 1 (fully out). */
-export function slidePose(progress: number): { z: number; tilt: number } {
-  const e = easeOutCubic(progress);
-  // The tilt lags behind the slide so the bottle does not rise into the shelf above while still inside.
-  return { z: PULL_DISTANCE * e, tilt: PULL_TILT * e * e };
+/** Smooth 0…1 ramp of `progress` between `from` and `to`. */
+function smoothstep(from: number, to: number, progress: number): number {
+  const t = Math.min(1, Math.max(0, (progress - from) / (to - from)));
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * Offset toward the viewer, roll around the bottle's long axis and pitch (standing up) of a bottle at pull
+ * progress 0 (lying in the shelf) … 1 (fully out, upright, label to the viewer). The phases overlap:
+ * sliding out first, rolling meanwhile, standing up last so the neck never rises into the shelf above.
+ */
+export function slidePose(progress: number): { z: number; roll: number; pitch: number } {
+  return {
+    z: PULL_DISTANCE * easeOutCubic(progress / 0.7),
+    roll: PULL_ROLL * smoothstep(0.1, 0.6, progress),
+    pitch: PULL_PITCH * smoothstep(0.45, 1, progress),
+  };
 }
