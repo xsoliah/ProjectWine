@@ -218,6 +218,8 @@ export interface RackWine {
   producer: string | null;
   vintage: number | null;
   type: WineType;
+  /** Label image of the wine (load via ImageCache); null if it has none. */
+  labelImageId?: string | null;
 }
 
 export interface RackSlot {

@@ -11,6 +11,7 @@ public sealed class FakeResearchAgent : IWineResearchAgent
 
     public WineResearchResult Result { get; set; } = new() { Summary = "Testwein erkannt." };
     public int Calls { get; private set; }
+    public string? KnownBarcode { get; private set; }
 
     /// <summary>Runs during the research, e.g. to discard the draft in the meantime.</summary>
     public Func<Task>? During { get; set; }
@@ -22,9 +23,10 @@ public sealed class FakeResearchAgent : IWineResearchAgent
                 transient ? "Der KI-Dienst ist gerade überlastet." : "Die Anfrage wurde abgelehnt.", transient));
     }
 
-    public async Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, CancellationToken ct)
+    public async Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct)
     {
         Calls++;
+        KnownBarcode = knownBarcode;
         if (During is { } during) await during();
         if (_failures.TryDequeue(out var failure)) throw failure;
         return Result;

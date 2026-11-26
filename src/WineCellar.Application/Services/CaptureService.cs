@@ -30,7 +30,7 @@ public class CaptureService(
     }
 
     /// <summary>Stores the photos and a waiting draft; the research runs in the background.</summary>
-    public async Task<CaptureSummaryDto> CreateAsync(byte[]? front, byte[]? back, int bottleCount, string? note, CancellationToken ct = default)
+    public async Task<CaptureSummaryDto> CreateAsync(byte[]? front, byte[]? back, int bottleCount, string? note, string? barcode = null, CancellationToken ct = default)
     {
         EnsureEnabled();
         if (front is null || front.Length == 0) throw new DomainException("Bitte ein Foto des Etiketts aufnehmen.");
@@ -38,6 +38,14 @@ public class CaptureService(
         var cleanNote = Mapping.Clean(note);
         if (cleanNote?.Length > CaptureDraft.MaxNoteLength)
             throw new DomainException($"Die Notiz darf höchstens {CaptureDraft.MaxNoteLength} Zeichen lang sein.");
+
+        string? cleanBarcode = null;
+        if (!string.IsNullOrWhiteSpace(barcode))
+        {
+            cleanBarcode = BarcodeNormalizer.Normalize(barcode);
+            if (!BarcodeNormalizer.HasValidCheckDigit(cleanBarcode))
+                throw new DomainException($"Der Barcode '{barcode}' ist ungültig (die Prüfziffer stimmt nicht). Bitte prüfen.");
+        }
 
         // Validate the files before counting anything against the limit.
         var frontImage = images.Add(front);
@@ -49,6 +57,7 @@ public class CaptureService(
             BackImageId = backImage?.Id,
             BottleCount = bottleCount,
             UserNote = cleanNote,
+            Barcode = cleanBarcode,
             CreatedAt = time.GetUtcNow().UtcDateTime
         };
         db.CaptureDrafts.Add(draft);

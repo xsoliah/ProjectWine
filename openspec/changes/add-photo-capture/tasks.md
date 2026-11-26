@@ -21,10 +21,10 @@
 
 ## 4. Infrastructure: Agent und Hintergrunddienst
 
-- [ ] 4.1 `ClaudeWineResearchAgent` mit dem Anthropic-C#-SDK laut design.md D1–D3: Bilder als Base64-Blöcke, Server-Tools `web_search_20260209` (`max_uses` 5) und `web_fetch_20260209` (`max_uses` 3), adaptives Denken, Effort aus der Konfiguration, strukturierte Ausgabe per JSON-Schema inklusive `labelCorners` (normiert 0–1, sonst `null`), Streaming, `pause_turn`-Fortsetzung (max. 3), `refusal`-Prüfung mit serverseitigem Fallback, Quellen aus den Tool-Ergebnisblöcken; Kombination Server-Tools + `output_config.format` prüfen und bei Bedarf auf validiertes JSON im Textblock ausweichen
+- [x] 4.1 `ClaudeWineResearchAgent` mit dem Anthropic-C#-SDK laut design.md D1–D3: Bilder als Base64-Blöcke, Server-Tools `web_search_20260209` (`max_uses` 5) und `web_fetch_20260209` (`max_uses` 3), adaptives Denken, Effort aus der Konfiguration, strukturierte Ausgabe per JSON-Schema inklusive `labelCorners` (normiert 0–1, sonst `null`), Streaming, `pause_turn`-Fortsetzung (max. 3), `refusal`-Prüfung mit serverseitigem Fallback, Quellen aus den Tool-Ergebnisblöcken; Kombination Server-Tools + `output_config.format` prüfen und bei Bedarf auf validiertes JSON im Textblock ausweichen
 - [x] 4.2 Unit-Tests für das Auslesen einer aufgezeichneten API-Antwort (Ergebnis, Quellen ohne Duplikate, Ablehnung, ungültiges JSON) ohne Netzwerkzugriff
 - [x] 4.3 `CaptureWorker : BackgroundService` mit `Channel`-Weckruf, 30-Sekunden-Prüfung, Parallelitätsgrenze und Zurücksetzen beim Start; nur registrieren, wenn ein Schlüssel konfiguriert ist
-- [ ] 4.4 Live-Test mit echtem API-Schlüssel nach Rückfrage beim Benutzer (verursacht Kosten): 3–5 echte Etikettenfotos (u. a. Sassicaia 2021, ein Hauswein ohne Webtreffer, ein Foto ohne Wein); Ergebnisse, Dauer und tatsächliche Kosten je Recherche notieren und in der README angeben; außerdem prüfen, dass die ausgeschnittenen Etiketten keinen Hintergrund und keine Flaschenteile zeigen, und die Treffsicherheit der Ecken notieren
+- [x] 4.4 Live-Test mit echtem API-Schlüssel nach Rückfrage beim Benutzer (verursacht Kosten): 3–5 echte Etikettenfotos (u. a. Sassicaia 2021, ein Hauswein ohne Webtreffer, ein Foto ohne Wein); Ergebnisse, Dauer und tatsächliche Kosten je Recherche notieren und in der README angeben; außerdem prüfen, dass die ausgeschnittenen Etiketten keinen Hintergrund und keine Flaschenteile zeigen, und die Treffsicherheit der Ecken notieren
 
 ## 5. API
 
@@ -42,7 +42,7 @@
 ## 7. Integration und Doku
 
 - [ ] 7.1 Durchgängig im Browser: Foto aufnehmen, App schließen und wieder öffnen, Entwurf prüfen und übernehmen, Zuschnitt prüfen und anpassen, Etikettenbild nachträglich setzen (nur Etikett, kein Hintergrund sichtbar), vorhandenen Wein erkennen, Limit erreichen (Limit testweise auf 2 setzen), Server während einer Recherche neu starten
-- [ ] 7.2 README ergänzen: API-Schlüssel einrichten (User Secrets, IIS-Umgebungsvariable), IIS-App-Pool „AlwaysRunning“/Preload, gemessene Kosten je Recherche, Datenschutzhinweis
+- [x] 7.2 README ergänzen: API-Schlüssel einrichten (User Secrets, IIS-Umgebungsvariable), IIS-App-Pool „AlwaysRunning“/Preload, gemessene Kosten je Recherche, Datenschutzhinweis
 - [x] 7.3 `openspec validate add-photo-capture --strict` ausführen und Fehler beheben
 
 ## Workflow follow-up

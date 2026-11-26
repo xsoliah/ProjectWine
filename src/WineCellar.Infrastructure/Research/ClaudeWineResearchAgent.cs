@@ -14,7 +14,7 @@ public class AnthropicOptions
 
     /// <summary>Never in appsettings.json: user secrets locally, environment variable Anthropic__ApiKey on the server.</summary>
     public string? ApiKey { get; set; }
-    public string Model { get; set; } = "claude-opus-5-5";
+    public string Model { get; set; } = "claude-haiku-5-5";
     public string Effort { get; set; } = "medium";
     public int MaxTokens { get; set; } = 16000;
     public int MaxContinuations { get; set; } = 3;
@@ -37,7 +37,7 @@ public class ClaudeWineResearchAgent(IOptions<AnthropicOptions> options, ILogger
         Timeout = TimeSpan.FromMinutes(5),
     };
 
-    public async Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, CancellationToken ct)
+    public async Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct)
     {
         var settings = options.Value;
         var userContent = new List<BetaContentBlockParam>();
@@ -58,7 +58,7 @@ public class ClaudeWineResearchAgent(IOptions<AnthropicOptions> options, ILogger
                 },
             });
         }
-        userContent.Add(new BetaTextBlockParam { Text = ResearchPrompt.UserInstruction(hint) });
+        userContent.Add(new BetaTextBlockParam { Text = ResearchPrompt.UserInstruction(hint, knownBarcode) });
 
         List<BetaMessageParam> messages = [new BetaUserMessageParam { Content = userContent }];
         var collected = new List<BetaContentBlock>();

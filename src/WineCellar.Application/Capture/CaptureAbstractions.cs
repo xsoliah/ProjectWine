@@ -10,7 +10,8 @@ public interface IWineResearchAgent
 {
     /// <param name="hint">Optional note of the user, passed as a hint (not as an instruction).</param>
     /// <exception cref="WineResearchException">The research failed; <see cref="WineResearchException.IsTransient"/> tells whether a retry may help.</exception>
-    Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, CancellationToken ct);
+    /// <param name="knownBarcode">Barcode already known from the user's device (valid check digit), or null.</param>
+    Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct);
 }
 
 public class WineResearchException(string message, bool isTransient, Exception? inner = null) : Exception(message, inner)

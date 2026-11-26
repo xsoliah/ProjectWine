@@ -299,3 +299,44 @@ Funktionalität: Foto-Erfassung und Etikettenbild
     Dann wird die Aktion abgelehnt mit "nicht gefunden"
     Wenn ich Annas Originalfoto abrufe
     Dann wird die Aktion abgelehnt mit "nicht gefunden"
+
+  # ----- Barcode zusammen mit dem Foto -----
+
+  Szenario: Barcode wird mit dem Entwurf gespeichert
+    Wenn ich ein Foto des Etiketts mit dem Barcode "4006381333931" aufnehme
+    Und der Agent die Recherche abschließt
+    Dann hat der Entwurf den Barcode "4006381333931" vom Etikett
+    Und der Agent kannte den Barcode "4006381333931"
+
+  Szenario: Falsche Prüfziffer eingegeben
+    Wenn ich ein Foto des Etiketts mit dem Barcode "4006381333932" aufnehme
+    Dann wird die Aktion abgelehnt mit "Prüfziffer"
+    Und es gibt keinen Entwurf
+    Und ich habe heute 0 Recherchen verbraucht
+
+  Szenario: Angegebener Code hat Vorrang
+    Angenommen der Agent erkennt:
+      | Feld    | Wert          | Herkunft |
+      | Name    | Hauswein      | Etikett  |
+      | Barcode | 4001234567891 | Web      |
+    Wenn ich ein Foto des Etiketts mit dem Barcode "4006381333931" aufnehme
+    Und der Agent die Recherche abschließt
+    Dann hat der Entwurf den Barcode "4006381333931" vom Etikett
+
+  Szenario: Agent liest Barcode vom Foto
+    Angenommen der Agent erkennt:
+      | Feld    | Wert          | Herkunft |
+      | Name    | Hauswein      | Etikett  |
+      | Barcode | 4001234567891 | Etikett  |
+    Und ich habe ein Foto des Etiketts aufgenommen
+    Wenn der Agent die Recherche abschließt
+    Dann hat der Entwurf den Barcode "4001234567891" vom Etikett
+
+  Szenario: Gelesener Code mit falscher Prüfziffer
+    Angenommen der Agent erkennt:
+      | Feld    | Wert          | Herkunft |
+      | Name    | Hauswein      | Etikett  |
+      | Barcode | 4001234567892 | Etikett  |
+    Und ich habe ein Foto des Etiketts aufgenommen
+    Wenn der Agent die Recherche abschließt
+    Dann hat der Entwurf keinen Barcode

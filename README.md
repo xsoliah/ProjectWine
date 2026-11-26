@@ -47,6 +47,14 @@ Schritte 3 und 4 in einem: `.\dev.ps1` startet API (Development, :5000) und Angu
 Fenster und öffnet den Browser (`-NoBrowser` unterdrückt das). Strg+C beendet beide; stürzt einer ab, wird der
 andere mit beendet. Sind die Ports schon belegt (alte Instanz), bricht das Skript mit einem Hinweis ab.
 Andere Ports: `-ApiUrl http://localhost:5055 -WebPort 4300` (der Proxy in `web/proxy.conf.mjs` folgt `-ApiUrl`).
+**Am Handy testen (iPhone/Android im selben WLAN):** `.\dev.ps1 -Lan` startet das Frontend per HTTPS mit selbst
+signiertem Zertifikat im ganzen Netz und zeigt die Adresse an (z. B. `https://192.168.1.20:4200`). HTTPS ist nötig,
+sonst bleibt die Kamera für den Barcode-Scan gesperrt. Die Zertifikatswarnung in Safari einmal über „Details
+einblenden“ → „Diese Website besuchen“ bestätigen. Voraussetzungen: Das WLAN ist in Windows als *Privates Netzwerk*
+eingestuft, und Port 4200 ist einmalig freigegeben (Admin-PowerShell):
+`New-NetFirewallRule -DisplayName "Weinkeller Dev-Server (TCP 4200)" -Direction Inbound -Protocol TCP -LocalPort 4200 -Action Allow -Profile Private`.
+In öffentlichen WLANs (Hotel, Flughafen) sind Geräte meist voneinander abgeschottet. Dort den PC stattdessen mit dem
+persönlichen Hotspot des iPhones verbinden.
 Ist die Ausführung von Skripts deaktiviert („…kann nicht geladen werden…“), stattdessen `.\dev.cmd` aufrufen.
 
 ### Datenbank-Migrationen
@@ -130,6 +138,8 @@ recherchiert im Hintergrund Name, Weingut, Jahrgang, Herkunft, Rebsorten, Trinkf
 „Entwürfe“, wo du es prüfst und als Wein übernimmst. Als Etikettenbild wird nur das Etikett gespeichert: entzerrt,
 ohne Hintergrund, im Hochformat 900 × 1200 px; den Zuschnitt kannst du jederzeit über „Zuschnitt anpassen“ korrigieren.
 
+**Barcode und Foto in einer Maske:** Foto und Barcode sind dieselbe Erfassung. Auf „Wein hinzufügen“ nimmst du Vorder- und optional Rückenetikett auf; die App sucht auf beiden Fotos automatisch nach einem Barcode (EAN/UPC, Prüfziffer wird geprüft) und zeigt ihn an. Du kannst ihn ändern, scannen oder eintippen. Der Barcode wird mit dem Entwurf gespeichert und hat Vorrang vor dem, was der Agent liest. Ist der Wein per Barcode schon im Keller, bietet die Maske vor der Recherche „Flaschen hinzufügen“ an (ohne Kontingent). „Nur Barcode, ohne Foto“ bleibt als Nebenweg; ohne API-Schlüssel gilt der bisherige Barcode-Ablauf.
+
 **API-Schlüssel einrichten** (ohne Schlüssel ist die Foto-Erfassung ausgeblendet, alles andere funktioniert):
 
 ```powershell
@@ -145,7 +155,7 @@ Weitere Einstellungen (optional, `appsettings.Production.json`):
 
 ```json
 {
-  "Anthropic": { "Model": "claude-opus-5-5", "Effort": "medium" },
+  "Anthropic": { "Model": "claude-haiku-5-5", "Effort": "medium" },
   "PhotoCapture": { "DailyLimitPerUser": 20, "MaxParallel": 2 }
 }
 ```
@@ -155,8 +165,14 @@ Weitere Einstellungen (optional, `appsettings.Production.json`):
 „Anwendungsinitialisierung“). Liegengebliebene Entwürfe werden zusätzlich beim nächsten Öffnen der Entwurfsliste angestoßen.
 
 **Datenschutz und Kosten:** Die Fotos werden zur Auswertung an die Anthropic-API übertragen; die App weist bei der ersten
-Foto-Erfassung pro Gerät darauf hin. Jede Recherche verursacht API-Kosten (geschätzt 10–30 Cent, gemessene Werte folgen
-nach dem ersten Live-Test). Das Tageslimit pro Benutzer begrenzt die Kosten.
+Foto-Erfassung pro Gerät darauf hin. Jede Recherche verursacht API-Kosten; das Tageslimit pro Benutzer begrenzt sie.
+
+**Gemessen (26.11.2026, 4 Fotos von Wikimedia Commons, Modell `claude-haiku-5-5`):** etwa 31.000 Eingabe- und 2.500
+Ausgabe-Tokens plus 2 Websuchen pro Wein, rund 18 Sekunden. Kosten ≈ **2,4 Cent pro Wein**, davon 2 Cent für die
+Websuchen; ein Foto ohne Wein ≈ 0,1 Cent. Haiku ist deshalb das Standardmodell. Mit `claude-opus-5-5` (40-fach teurere Tokens) wären es
+grob 25–30 Cent. Haiku erkannte alle drei Weine richtig, setzte die Etikett-Ecken aber bei einem gewölbten, schräg
+fotografierten Etikett zu ungenau (Glas sichtbar) – dann hilft „Zuschnitt anpassen“, oder Opus für genauere Ecken.
+Für genauere Etikett-Ecken auf Opus umstellen: `"Anthropic": { "Model": "claude-opus-5-5" }`.
 
 ## API (alle Endpunkte außer `/api/auth/*` und `/health` brauchen `Authorization: Bearer …`)
 
@@ -172,7 +188,7 @@ nach dem ersten Live-Test). Das Tageslimit pro Benutzer begrenzt die Kosten.
 | PUT | `/api/archive/{id}` | Bewertung, Notiz, Käufer/Beschenkte/r, Preis ändern |
 | DELETE | `/api/archive/{id}` | Rückgängig (Flaschen kommen zurück in den Keller) |
 | GET | `/api/captures/quota`, `/api/captures/counts` | Tageslimit und Verfügbarkeit; Anzahl fertiger/aller Entwürfe |
-| POST | `/api/captures` | Foto-Erfassung starten (Multipart: `front`, optional `back`, `bottleCount`, `note`) → 202 |
+| POST | `/api/captures` | Foto-Erfassung starten (Multipart: `front`, optional `back`, `bottleCount`, `note`, `barcode`) → 202 |
 | GET/DELETE | `/api/captures`, `/api/captures/{id}` | Entwürfe auflisten, ansehen, verwerfen |
 | POST | `/api/captures/{id}/retry`, `/api/captures/{id}/accept` | Erneut recherchieren; übernehmen (`wineId` oder `addToWineId`) |
 | PUT | `/api/captures/{id}/label-corners` | Etikett-Ecken im Entwurf anpassen |

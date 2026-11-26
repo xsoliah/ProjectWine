@@ -32,7 +32,7 @@ public static class CaptureEndpoints
                 var front = await ReadAsync(form.Files.GetFile("front"), ct);
                 var back = await ReadAsync(form.Files.GetFile("back"), ct);
                 var count = int.TryParse(form["bottleCount"], out var c) ? c : 1;
-                var draft = await service.CreateAsync(front, back, count, form["note"], ct);
+                var draft = await service.CreateAsync(front, back, count, form["note"], form["barcode"], ct);
                 return TypedResults.Accepted($"/api/captures/{draft.Id}", draft);
             })
             .WithMetadata(new RequestSizeLimitAttribute(MaxUploadBytes))

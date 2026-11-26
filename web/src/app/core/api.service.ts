@@ -200,8 +200,15 @@ export class ApiService {
   }
 
   /** Uploads the photos; the research runs in the background on the server. */
-  createCapture(front: Blob, back: Blob | null, bottleCount: number, note: string | null): Promise<CaptureSummary> {
+  createCapture(
+    front: Blob,
+    back: Blob | null,
+    bottleCount: number,
+    note: string | null,
+    barcode: string | null = null,
+  ): Promise<CaptureSummary> {
     const form = new FormData();
+    if (barcode) form.append('barcode', barcode);
     form.append('front', front, 'front.jpg');
     if (back) form.append('back', back, 'back.jpg');
     form.append('bottleCount', String(bottleCount));

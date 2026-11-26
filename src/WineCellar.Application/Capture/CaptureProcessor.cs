@@ -91,7 +91,7 @@ public class CaptureProcessor(
             timeout.CancelAfter(options.Value.AttemptTimeout);
             try
             {
-                result = await agent.ResearchAsync(research, draft.UserNote, timeout.Token);
+                result = await agent.ResearchAsync(research, draft.UserNote, draft.Barcode, timeout.Token);
                 break;
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
@@ -125,6 +125,8 @@ public class CaptureProcessor(
         }
 
         var clean = Sanitize(result, time.GetUtcNow().Year);
+        // A barcode from the user's device beats whatever the agent read or found.
+        if (draft.Barcode is { } ownBarcode) clean = clean with { Barcode = new Researched<string>(ownBarcode, FieldSource.Label) };
         draft.ResultJson = JsonSerializer.Serialize(clean with { Sources = [], LabelCorners = null }, LabelCornersJson.Options);
         draft.SourcesJson = JsonSerializer.Serialize(clean.Sources, LabelCornersJson.Options);
         if (clean.LabelCorners is { } corners)
@@ -189,7 +191,7 @@ public class CaptureProcessor(
         var drinkUntil = Range(r.DrinkUntil, 1800, currentYear + 100);
         if (drinkFrom is not null && drinkUntil is not null && drinkUntil.Value < drinkFrom.Value) drinkUntil = null;
 
-        var barcode = r.Barcode is null ? null : BarcodeNormalizer.TryNormalize(r.Barcode.Value) is { } code ? r.Barcode with { Value = code } : null;
+        var barcode = r.Barcode is null ? null : BarcodeNormalizer.TryNormalizeChecked(r.Barcode.Value) is { } code ? r.Barcode with { Value = code } : null;
 
         return r with
         {

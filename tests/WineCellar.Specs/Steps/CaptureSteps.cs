@@ -311,6 +311,28 @@ public class CaptureSteps(TestWorld world)
     [Then(@"der Entwurf weist darauf hin, dass im Web nichts gefunden wurde")]
     public async Task ThenNothingOnWeb() => Assert.True((await Detail()).NothingFoundOnWeb);
 
+    [When(@"ich ein Foto des Etiketts mit dem Barcode ""([^""]*)"" aufnehme")]
+    public async Task WhenCaptureWithBarcode(string barcode)
+    {
+        var (photo, _) = TestImages.LabelPhoto();
+        await world.TryAsync(async () => world.LastDraft = await world.Captures.CreateAsync(photo, null, 1, null, barcode));
+    }
+
+    [Then(@"hat der Entwurf den Barcode ""([^""]*)"" vom Etikett")]
+    [Then(@"der Entwurf hat den Barcode ""([^""]*)"" vom Etikett")]
+    public async Task ThenDraftBarcode(string barcode)
+    {
+        var d = await Detail();
+        Assert.Equal(barcode, d.Barcode?.Value);
+        Assert.Equal(FieldSource.Label, d.Barcode?.Source);
+    }
+
+    [Then(@"hat der Entwurf keinen Barcode")]
+    public async Task ThenNoBarcode() => Assert.Null((await Detail()).Barcode);
+
+    [Then(@"der Agent kannte den Barcode ""([^""]*)""")]
+    public void ThenAgentKnew(string barcode) => Assert.Equal(barcode, world.Agent.KnownBarcode);
+
     [Then(@"der Entwurf hat keinen Jahrgang und keinen Barcode")]
     public async Task ThenCleared()
     {
