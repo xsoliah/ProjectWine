@@ -1,0 +1,133 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2.75rem;
+  justify-self: start;
+}
+
+.head {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-4);
+  border-left: 6px solid var(--type-color);
+}
+
+.producer {
+  margin: 0;
+  font-size: 1.125rem;
+  color: var(--ink-soft);
+}
+
+.drink[data-state='early'] {
+  color: var(--state-early);
+}
+.drink[data-state='ready'] {
+  color: var(--state-ready);
+}
+.drink[data-state='late'] {
+  color: var(--state-late);
+}
+
+.stock {
+  gap: var(--space-3);
+}
+
+.number {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.hint {
+  margin: var(--space-2) 0 0;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+
+dt {
+  color: var(--ink-soft);
+}
+
+dd {
+  margin: 0;
+}
+
+.notes {
+  white-space: pre-wrap;
+}
+
+.grapes ul {
+  margin: var(--space-1) 0 0;
+  padding-left: 1.1rem;
+}
+
+.grape-kind {
+  display: inline-block;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.places,
+.rack-pick {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.places a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+}
+
+.rack-pick .btn {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.label-panel {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.label-image {
+  width: min(100%, 18rem);
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+}
+
+.empty-label {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--space-2);
+  width: min(100%, 10rem);
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+.empty-label app-icon {
+  font-size: 2rem;
+}
+
+.label-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}

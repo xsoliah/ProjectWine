@@ -1,0 +1,113 @@
+<div class="page stack">
+  <div class="page-head"><h1>Übersicht</h1></div>
+
+  @if (error(); as text) {
+    <div class="banner error" role="alert">
+      {{ text }} <button type="button" class="btn-link" (click)="load()">Erneut laden</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted" role="status">Übersicht wird geladen …</p>
+  } @else if (stats(); as s) {
+    @if (s.totals.bottles === 0) {
+      <div class="empty">
+        <app-icon name="bottle" />
+        <h2>Dein Keller ist noch leer</h2>
+        <p>Sobald Flaschen im Keller liegen, siehst du hier, wie sie sich verteilen.</p>
+        <a class="btn btn-primary" routerLink="/wines/new"><app-icon name="scan" /> Wein hinzufügen</a>
+      </div>
+    } @else {
+      <section class="kpis" aria-label="Kennzahlen">
+        <div class="kpi hero">
+          <span class="kpi-value">{{ s.totals.bottles }}</span>
+          <span class="kpi-label">{{ s.totals.bottles === 1 ? 'Flasche' : 'Flaschen' }} im Keller</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-value">{{ s.totals.wines }}</span>
+          <span class="kpi-label">{{ s.totals.wines === 1 ? 'Wein' : 'Weine' }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-value">{{ totalValue() }}</span>
+          <span class="kpi-label">Gesamtwert (Einkaufspreis)</span>
+          @if (s.totals.winesWithoutPrice > 0) {
+            <span class="kpi-note">
+              {{ s.totals.winesWithoutPrice }} {{ s.totals.winesWithoutPrice === 1 ? 'Wein' : 'Weine' }} ohne Preis nicht berücksichtigt
+            </span>
+          }
+        </div>
+      </section>
+
+      <section class="panel distribution" aria-labelledby="dist-title">
+        <div class="dist-head">
+          <h2 id="dist-title">
+            @if (s.country; as country) { Regionen in {{ country.name }} }
+            @else if (s.drillDown === 'cuvee') { Cuvées }
+            @else { Verteilung der Flaschen }
+          </h2>
+          @if (s.country) {
+            <button type="button" class="btn btn-small" (click)="back()"><app-icon name="back" /> Zurück zu den Ländern</button>
+          } @else if (s.drillDown === 'cuvee') {
+            <button type="button" class="btn btn-small" (click)="back()"><app-icon name="back" /> Zurück zu den Rebsorten</button>
+          }
+        </div>
+
+        <div class="chips" role="group" aria-label="Gruppieren nach">
+          @for (g of groupings; track g.value) {
+            <button type="button" class="chip" [attr.aria-pressed]="grouping() === g.value && !isDrilled()"
+              (click)="setGrouping(g.value)">{{ g.label }}</button>
+          }
+        </div>
+
+        <div class="chart-row">
+          <app-donut-chart [slices]="slices()" [total]="chartTotal()" [clickable]="canDrill()"
+            [(active)]="active" (picked)="drill($event)" />
+
+          <ul class="legend" aria-label="Legende">
+            @for (item of legend(); track item.key) {
+              <li [class.active]="active() === item.key" (mouseenter)="active.set(item.key)" (mouseleave)="active.set(null)">
+                @if (isDrillable(item.key)) {
+                  <button type="button" class="legend-row drill" (click)="drill(item.key)"
+                    (focus)="active.set(item.key)" (blur)="active.set(null)"
+                    [attr.aria-label]="item.label + ': ' + item.bottles + ' Flaschen, ' + item.percent + ' Prozent. ' + (grouping() === 'Grape' ? 'Zusammensetzungen anzeigen' : 'Regionen anzeigen')">
+                    <span class="swatch" [style.background]="item.color"></span>
+                    <span class="name">{{ item.label }}</span>
+                    <span class="figures">{{ item.bottles }} · {{ item.percent }} %</span>
+                    <span class="chev" aria-hidden="true">›</span>
+                  </button>
+                } @else if (item.children) {
+                  <details>
+                    <summary class="legend-row" (focus)="active.set(item.key)" (blur)="active.set(null)">
+                      <span class="swatch" [style.background]="item.color"></span>
+                      <span class="name">{{ item.label }} ({{ item.children.length }})</span>
+                      <span class="figures">{{ item.bottles }} · {{ item.percent }} %</span>
+                    </summary>
+                    <ul class="sublist">
+                      @for (child of item.children; track child.key) {
+                        <li class="legend-row">
+                          <span class="name">{{ child.label }}</span>
+                          <span class="figures">{{ child.bottles }} · {{ child.percent }} %</span>
+                        </li>
+                      }
+                    </ul>
+                  </details>
+                } @else {
+                  <div class="legend-row">
+                    <span class="swatch" [style.background]="item.color"></span>
+                    <span class="name">{{ item.label }}</span>
+                    <span class="figures">{{ item.bottles }} · {{ item.percent }} %</span>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+        @if (canDrill()) {
+          <p class="muted hint">
+            {{ grouping() === 'Grape' ? 'Tippe auf „Cuvée“, um die Zusammensetzungen zu sehen.' : 'Tippe auf ein Land, um seine Regionen zu sehen.' }}
+          </p>
+        }
+      </section>
+    }
+  }
+</div>

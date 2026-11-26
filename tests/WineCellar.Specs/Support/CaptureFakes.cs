@@ -1,0 +1,89 @@
+using SkiaSharp;
+using WineCellar.Application.Capture;
+using WineCellar.Domain;
+
+namespace WineCellar.Specs.Support;
+
+/// <summary>Simulated research agent: configurable answer, failures and calls (no real API call in tests).</summary>
+public sealed class FakeResearchAgent : IWineResearchAgent
+{
+    private readonly Queue<Exception> _failures = new();
+
+    public WineResearchResult Result { get; set; } = new() { Summary = "Testwein erkannt." };
+    public int Calls { get; private set; }
+
+    /// <summary>Runs during the research, e.g. to discard the draft in the meantime.</summary>
+    public Func<Task>? During { get; set; }
+
+    public void FailNext(int times, bool transient)
+    {
+        for (var i = 0; i < times; i++)
+            _failures.Enqueue(new WineResearchException(
+                transient ? "Der KI-Dienst ist gerade überlastet." : "Die Anfrage wurde abgelehnt.", transient));
+    }
+
+    public async Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, CancellationToken ct)
+    {
+        Calls++;
+        if (During is { } during) await during();
+        if (_failures.TryDequeue(out var failure)) throw failure;
+        return Result;
+    }
+}
+
+public sealed class FakeCaptureAvailability : ICaptureAvailability
+{
+    public bool IsEnabled { get; set; } = true;
+}
+
+public sealed class FakeCaptureQueue : ICaptureQueue
+{
+    public int Notifications { get; private set; }
+    public void Notify() => Notifications++;
+}
+
+/// <summary>Synthetic photos: a coloured label (with a stripe in the middle) on a differently coloured background.</summary>
+public static class TestImages
+{
+    public static readonly SKColor Background = new(30, 160, 60);
+    public static readonly SKColor Paper = new(220, 40, 40);
+    public static readonly SKColor Stripe = new(30, 40, 200);
+
+    /// <summary>Default label photo: a slightly tilted, portrait label in the middle of a 1000 x 800 photo.</summary>
+    public static (byte[] Photo, LabelCorners Corners) LabelPhoto() =>
+        Photo(1000, 800, new LabelCorners(new(0.38, 0.2), new(0.62, 0.23), new(0.61, 0.82), new(0.37, 0.8)));
+
+    /// <summary>A photo with the label drawn exactly at the given corners.</summary>
+    public static (byte[] Photo, LabelCorners Corners) Photo(int width, int height, LabelCorners corners, bool png = false)
+    {
+        using var bitmap = new SKBitmap(width, height);
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            canvas.Clear(Background);
+            var points = corners.Points.Select(p => new SKPoint((float)(p.X * width), (float)(p.Y * height))).ToArray();
+            using var path = new SKPath();
+            path.AddPoly(points, close: true);
+            using var paper = new SKPaint { Color = Paper, IsAntialias = true };
+            canvas.DrawPath(path, paper);
+
+            // Vertical stripe through the middle of the label (between 40 % and 60 % of its width).
+            static SKPoint Lerp(SKPoint a, SKPoint b, float t) => new(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+            using var stripe = new SKPath();
+            stripe.AddPoly(
+            [
+                Lerp(points[0], points[1], 0.4f), Lerp(points[0], points[1], 0.6f),
+                Lerp(points[3], points[2], 0.6f), Lerp(points[3], points[2], 0.4f),
+            ], close: true);
+            using var stripePaint = new SKPaint { Color = Stripe, IsAntialias = true };
+            canvas.DrawPath(stripe, stripePaint);
+        }
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = png ? image.Encode(SKEncodedImageFormat.Png, 100) : image.Encode(SKEncodedImageFormat.Jpeg, 92);
+        return (data.ToArray(), corners);
+    }
+
+    public static SKBitmap Decode(byte[] jpeg) => SKBitmap.Decode(jpeg);
+
+    /// <summary>Whether a pixel looks like the green background (allowing for JPEG noise).</summary>
+    public static bool IsBackground(SKColor c) => c.Green > 110 && c.Red < 110 && c.Blue < 120;
+}

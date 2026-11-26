@@ -1,0 +1,185 @@
+# Weinkeller
+
+Verwaltung deines Weinkellers: Weine per Barcode erfassen, Flaschen trinken, verkaufen oder verschenken (Archiv),
+getrunkene Weine bewerten. Zugriff per Web-Oberfläche sowie Android/iOS-App.
+
+| Schicht | Technik |
+|---|---|
+| Backend | ASP.NET Core (net10.0), EF Core, SQL Server, ASP.NET Identity (Bearer-Token, mehrere Benutzer) |
+| Frontend | Angular (`web/`), Capacitor für Android/iOS |
+| Specs | Reqnroll (Nachfolger von SpecFlow) + xUnit, Gherkin auf Deutsch |
+| Hosting | IIS, ein einziger Site: die API liefert auch das gebaute Angular aus (`wwwroot`) |
+
+```
+src/WineCellar.Domain          Entitäten + Geschäftsregeln (Wine, ConsumptionRecord)
+src/WineCellar.Application     Services (WineService, ArchiveService), DTOs, Schnittstellen
+src/WineCellar.Infrastructure  EF Core DbContext (SQL Server), Barcode-Lookup (Open Food Facts)
+src/WineCellar.Api             Minimal-API-Endpunkte, Auth, liefert Angular aus
+tests/WineCellar.Specs         Feature-Dateien (Gherkin) + Step-Definitionen
+web/                           Angular + Capacitor
+```
+
+## Voraussetzungen
+
+- .NET SDK (du hast 11 installiert; das Projekt zielt auf `net10.0`, was mit dem SDK 11 gebaut wird)
+- Node.js 22+ (nur zum Bauen des Frontends)
+- SQL Server (deine vorhandene Instanz)
+- Auf dem Server: IIS + **ASP.NET Core Hosting Bundle** passend zur Ziel-Runtime (10.x für `net10.0`)
+
+Willst du auf `net11.0` wechseln: `TargetFramework` in `Directory.Build.props` ändern, die Paketversionen `10.0.*`
+in den `.csproj`-Dateien auf `11.0.*` anheben und auf dem Server das Hosting Bundle 11 installieren.
+
+## Erster Start (Entwicklung)
+
+```powershell
+# 1. Datenbank-Verbindung prüfen: src/WineCellar.Api/appsettings.json (Standard: lokale Instanz, Windows-Authentifizierung)
+# 2. EF-Tool wiederherstellen (lokales Tool aus dotnet-tools.json, passend zu EF Core 10)
+dotnet tool restore
+
+# 3. Backend starten (legt/migriert die Datenbank beim Start)
+dotnet run --project src/WineCellar.Api --urls http://localhost:5000
+
+# 4. Frontend im Dev-Modus (Proxy auf :5000)
+cd web; npm ci; npm start
+```
+
+Schritte 3 und 4 in einem: `.\dev.ps1` startet API (Development, :5000) und Angular (:4200) zusammen im selben
+Fenster und öffnet den Browser (`-NoBrowser` unterdrückt das). Strg+C beendet beide; stürzt einer ab, wird der
+andere mit beendet. Sind die Ports schon belegt (alte Instanz), bricht das Skript mit einem Hinweis ab.
+Andere Ports: `-ApiUrl http://localhost:5055 -WebPort 4300` (der Proxy in `web/proxy.conf.mjs` folgt `-ApiUrl`).
+Ist die Ausführung von Skripts deaktiviert („…kann nicht geladen werden…“), stattdessen `.\dev.cmd` aufrufen.
+
+### Datenbank-Migrationen
+
+Das Schema wird über EF-Core-Migrationen in `src/WineCellar.Infrastructure/Migrations` verwaltet und beim Start
+der API automatisch eingespielt. Nach einer Änderung am Datenmodell eine neue Migration erzeugen:
+
+```powershell
+dotnet ef migrations add <Name> --project src/WineCellar.Infrastructure --startup-project src/WineCellar.Api
+```
+
+Läuft die API gerade (gesperrte DLLs), mit `--configuration Release` bauen. Manuell einspielen:
+`dotnet ef database update --project src/WineCellar.Infrastructure --startup-project src/WineCellar.Api`.
+
+## Tests / Specs
+
+```powershell
+dotnet test
+```
+
+Die Specs (`tests/WineCellar.Specs/Features/*.feature`) laufen gegen die echten Services und eine In-Memory-SQLite-DB;
+nur die externe Barcode-Datenbank und der angemeldete Benutzer sind ersetzt.
+
+**Spec-driven weiterentwickeln:** neues Verhalten zuerst als Szenario in einer `.feature`-Datei beschreiben, `dotnet test`
+(Schritt ist „pending/undefined“), Step-Definitionen ergänzen, dann Domain/Service implementieren, bis das Szenario grün ist.
+
+Hinweis: SpecFlow wird nicht mehr weiterentwickelt, Reqnroll ist der Community-Nachfolger mit derselben Gherkin-Syntax und
+fast identischen Attributen (`[Given]`, `[When]`, `[Then]`, `[Binding]`). Die Feature-Dateien sind 1:1 kompatibel.
+
+## Deployment auf IIS
+
+1. **Datenbank anlegen** (Beispiel, Windows-Authentifizierung über die App-Pool-Identität):
+   ```sql
+   CREATE DATABASE WineCellar;
+   GO
+   CREATE LOGIN [IIS APPPOOL\Weinkeller] FROM WINDOWS;   -- erst nach dem Anlegen des App-Pools (Schritt 3)
+   USE WineCellar;
+   CREATE USER [IIS APPPOOL\Weinkeller] FOR LOGIN [IIS APPPOOL\Weinkeller];
+   ALTER ROLE db_owner ADD MEMBER [IIS APPPOOL\Weinkeller];
+   ```
+   Läuft SQL Server auf einem anderen Rechner, nimm stattdessen einen SQL-Login im Connection String.
+2. **Paket bauen:** `.\publish.ps1` (baut Angular, kopiert es nach `wwwroot`, `dotnet publish` nach `.\publish`).
+3. **IIS einrichten:** App-Pool „Weinkeller“ mit *Kein verwalteter Code*; neue Website auf den Publish-Ordner; HTTPS-Bindung mit Zertifikat.
+   HTTPS ist Pflicht: der Kamera-Scan im Browser und die Android-App funktionieren nur über HTTPS.
+4. **Connection String** in `appsettings.Production.json` im Zielordner (nicht im Repo; beim Update nicht überschreiben):
+   ```json
+   {
+     "ConnectionStrings": { "Default": "Server=MEINSERVER;Database=WineCellar;Trusted_Connection=True;TrustServerCertificate=True" },
+     "Auth": { "AllowRegistration": true }
+   }
+   ```
+5. **Registrierung schließen:** nachdem alle Familienmitglieder ein Konto haben, `Auth:AllowRegistration` auf `false` setzen.
+6. **Updates:** `app_offline.htm` in den Zielordner legen, Dateien kopieren (ohne `appsettings.Production.json`), `app_offline.htm` löschen.
+   Datenbank-Änderungen werden beim Start per Migration eingespielt.
+
+## Mobile Apps (Capacitor)
+
+```powershell
+cd web
+npm run build
+npx cap add android      # und/oder: npx cap add ios (nur auf macOS)
+npm run cap:sync
+npx cap open android
+```
+
+- Beim ersten Start der App die Server-URL eintragen (z. B. `https://wein.example.com`).
+- Android: Kamera-Berechtigung ist durch das ML-Kit-Plugin abgedeckt, ggf. `AndroidManifest.xml` laut Plugin-README ergänzen.
+- iOS: in `Info.plist` `NSCameraUsageDescription` setzen.
+- Die CORS-Origins für die Apps (`https://localhost`, `capacitor://localhost`) stehen in `appsettings.json` unter `Cors:Origins`.
+
+## Barcode-Erfassung
+
+`GET /api/wines/lookup/{barcode}` prüft zuerst deinen Keller (Flasche hinzufügen statt Duplikat), dann Open Food Facts.
+Die Abdeckung für Weine ist lückenhaft: bei unbekannten Barcodes gibst du die Daten einmal manuell ein, danach erkennt
+die App den Barcode aus deinem Keller.
+
+## Foto-Erfassung (KI-Recherche)
+
+Unter „Wein hinzufügen“ → „Per Foto erfassen“ fotografierst du das Etikett. Ein Agent (Claude Opus 5.5 mit Websuche)
+recherchiert im Hintergrund Name, Weingut, Jahrgang, Herkunft, Rebsorten, Trinkfenster usw. Das Ergebnis erscheint unter
+„Entwürfe“, wo du es prüfst und als Wein übernimmst. Als Etikettenbild wird nur das Etikett gespeichert: entzerrt,
+ohne Hintergrund, im Hochformat 900 × 1200 px; den Zuschnitt kannst du jederzeit über „Zuschnitt anpassen“ korrigieren.
+
+**API-Schlüssel einrichten** (ohne Schlüssel ist die Foto-Erfassung ausgeblendet, alles andere funktioniert):
+
+```powershell
+# lokal (User Secrets im Api-Projekt, landen nicht im Repo)
+dotnet user-secrets init --project src/WineCellar.Api
+dotnet user-secrets set "Anthropic:ApiKey" "<dein Schlüssel>" --project src/WineCellar.Api
+```
+
+Auf dem Server: Umgebungsvariable `Anthropic__ApiKey` im IIS-App-Pool setzen (IIS-Manager → Konfigurations-Editor →
+`system.applicationHost/applicationPools` → Umgebungsvariablen), **niemals** in `appsettings*.json`.
+
+Weitere Einstellungen (optional, `appsettings.Production.json`):
+
+```json
+{
+  "Anthropic": { "Model": "claude-opus-5-5", "Effort": "medium" },
+  "PhotoCapture": { "DailyLimitPerUser": 20, "MaxParallel": 2 }
+}
+```
+
+**IIS:** Die Recherche läuft als Hintergrunddienst im App-Pool. Damit er nicht einschläft, im App-Pool
+„Startmodus“ = `AlwaysRunning` und bei der Website „Vorabladen aktiviert“ = `True` setzen (benötigt das IIS-Feature
+„Anwendungsinitialisierung“). Liegengebliebene Entwürfe werden zusätzlich beim nächsten Öffnen der Entwurfsliste angestoßen.
+
+**Datenschutz und Kosten:** Die Fotos werden zur Auswertung an die Anthropic-API übertragen; die App weist bei der ersten
+Foto-Erfassung pro Gerät darauf hin. Jede Recherche verursacht API-Kosten (geschätzt 10–30 Cent, gemessene Werte folgen
+nach dem ersten Live-Test). Das Tageslimit pro Benutzer begrenzt die Kosten.
+
+## API (alle Endpunkte außer `/api/auth/*` und `/health` brauchen `Authorization: Bearer …`)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| POST | `/api/auth/register`, `/login`, `/refresh` | Konto, Anmeldung, Token erneuern |
+| GET | `/api/wines?search=&type=&inCellarOnly=` | Keller auflisten |
+| GET | `/api/wines/lookup/{barcode}` | Barcode nachschlagen |
+| POST/PUT/DELETE | `/api/wines`, `/api/wines/{id}` | Wein anlegen/ändern/löschen (Löschen entfernt auch das Archiv des Weins) |
+| POST | `/api/wines/{id}/bottles` | Flaschen hinzufügen |
+| POST | `/api/wines/{id}/consume` | Trinken/Verkaufen/Verschenken (Archiveintrag, optional mit Bewertung) |
+| GET | `/api/archive?kind=` | Archiv |
+| PUT | `/api/archive/{id}` | Bewertung, Notiz, Käufer/Beschenkte/r, Preis ändern |
+| DELETE | `/api/archive/{id}` | Rückgängig (Flaschen kommen zurück in den Keller) |
+| GET | `/api/captures/quota`, `/api/captures/counts` | Tageslimit und Verfügbarkeit; Anzahl fertiger/aller Entwürfe |
+| POST | `/api/captures` | Foto-Erfassung starten (Multipart: `front`, optional `back`, `bottleCount`, `note`) → 202 |
+| GET/DELETE | `/api/captures`, `/api/captures/{id}` | Entwürfe auflisten, ansehen, verwerfen |
+| POST | `/api/captures/{id}/retry`, `/api/captures/{id}/accept` | Erneut recherchieren; übernehmen (`wineId` oder `addToWineId`) |
+| PUT | `/api/captures/{id}/label-corners` | Etikett-Ecken im Entwurf anpassen |
+| GET | `/api/images/{id}` | Bild (nur für den Besitzer) |
+| PUT/DELETE | `/api/wines/{id}/label-image`, PUT `/api/wines/{id}/label-image/corners` | Etikettenbild setzen (Foto + Ecken), Zuschnitt anpassen, entfernen |
+
+## Stand der Verifikation
+
+Das Backend wurde ohne .NET SDK geschrieben und ist noch nicht kompiliert oder getestet. Erster Schritt bei dir:
+`dotnet build` und `dotnet test`.

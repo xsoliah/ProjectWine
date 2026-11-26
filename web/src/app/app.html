@@ -1,0 +1,47 @@
+@if (auth.isAuthenticated()) {
+  <nav class="nav" aria-label="Hauptnavigation">
+    <a class="brand" routerLink="/">
+      <app-icon name="bottle" />
+      <span>Weinkeller</span>
+    </a>
+    <a routerLink="/" [attr.aria-current]="section() === 'overview' ? 'page' : null">
+      <app-icon name="chart" />
+      <span>Übersicht</span>
+    </a>
+    <a routerLink="/cellar" [attr.aria-current]="section() === 'cellar' ? 'page' : null">
+      <app-icon name="bottle" />
+      <span>Keller</span>
+    </a>
+    <a routerLink="/racks" [attr.aria-current]="section() === 'racks' ? 'page' : null">
+      <app-icon name="rack" />
+      <span>Regale</span>
+    </a>
+    <a routerLink="/drafts" [attr.aria-current]="section() === 'drafts' ? 'page' : null"
+      [class.mobile-hidden]="captureCounts.counts().total === 0 && section() !== 'drafts'"
+      [attr.aria-label]="captureCounts.counts().ready > 0 ? 'Entwürfe, ' + captureCounts.counts().ready + ' fertig' : null">
+      <span class="icon-wrap">
+        <app-icon name="inbox" />
+        @if (captureCounts.counts().ready > 0) {
+          <span class="badge" aria-hidden="true">{{ captureCounts.counts().ready }}</span>
+        }
+      </span>
+      <span>Entwürfe</span>
+    </a>
+    <a routerLink="/archive" [attr.aria-current]="section() === 'archive' ? 'page' : null">
+      <app-icon name="archive" />
+      <span>Archiv</span>
+    </a>
+    <a routerLink="/settings" [attr.aria-current]="section() === 'settings' ? 'page' : null">
+      <app-icon name="gear" />
+      <span>Einstellungen</span>
+    </a>
+  </nav>
+}
+<main [class.with-nav]="auth.isAuthenticated()">
+  <router-outlet />
+</main>
+<app-toast-host />
+<app-confirm-host />
+@if (scanner.webRequest()) {
+  <app-scanner-overlay />
+}

@@ -1,0 +1,256 @@
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2.75rem;
+}
+
+.picker {
+  min-width: 14rem;
+}
+
+.page-head {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.segmented {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.segmented .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.banner .btn {
+  margin-left: var(--space-2);
+}
+
+/* Grid view */
+
+.grid-scroll {
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2rem repeat(var(--cols), minmax(4.5rem, 1fr));
+  gap: 3px;
+  min-width: min-content;
+}
+
+.colnum,
+.rownum {
+  display: grid;
+  place-items: center;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.cell {
+  display: grid;
+  align-content: center;
+  gap: 0.1rem;
+  min-height: 3.25rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--type-color, var(--line));
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cell.free {
+  border-left-width: 1px;
+  border-style: dashed;
+  background: transparent;
+}
+
+.cell.source {
+  outline: 3px solid var(--gold);
+}
+
+.cell:hover {
+  background: var(--surface-2);
+}
+
+.cell-name {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cell-year {
+  color: var(--ink-soft);
+}
+
+.cell-free {
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* 3D view */
+
+.three {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .three.with-panel {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+}
+
+.stage {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.loading {
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+}
+
+.row-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.row-list .label {
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+.row-list .chip {
+  min-width: 2.75rem;
+}
+
+.row-panel {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+@media (max-width: 899px) {
+  /* Bottom sheet on phones */
+  .row-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--tabbar-height);
+    z-index: 20;
+    max-height: 45dvh;
+    overflow-y: auto;
+    border-radius: var(--radius-l) var(--radius-l) 0 0;
+    box-shadow: var(--shadow-lifted);
+  }
+}
+
+.row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.entries,
+.pick {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--type-color, var(--line));
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick .entry {
+  grid-template-columns: 1fr;
+}
+
+.entry.free {
+  border-style: dashed;
+  border-left-width: 1px;
+  background: transparent;
+}
+
+.entry:hover {
+  background: var(--surface-2);
+}
+
+.col {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.what {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+/* Slot dialog */
+
+.slot-wine {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: 5px solid var(--type-color);
+}
+
+.slot-actions {
+  display: grid;
+  gap: var(--space-2);
+}

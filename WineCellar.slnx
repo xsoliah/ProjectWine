@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WineCellar.Domain/WineCellar.Domain.csproj" />
+    <Project Path="src/WineCellar.Application/WineCellar.Application.csproj" />
+    <Project Path="src/WineCellar.Infrastructure/WineCellar.Infrastructure.csproj" />
+    <Project Path="src/WineCellar.Api/WineCellar.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WineCellar.Specs/WineCellar.Specs.csproj" />
+  </Folder>
+</Solution>

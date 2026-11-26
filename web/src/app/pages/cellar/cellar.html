@@ -1,0 +1,94 @@
+<div class="page stack">
+  <div class="page-head">
+    <h1>Keller</h1>
+    @if (wines().length > 0) {
+      <span class="muted">{{ bottleCount() }} {{ bottleCount() === 1 ? 'Flasche' : 'Flaschen' }}</span>
+    }
+    <button type="button" class="btn" [disabled]="!webgl || opening3d()"
+      [attr.aria-describedby]="webgl ? null : 'no-3d-hint'" (click)="open3d()">
+      <app-icon name="cube" /> In 3D ansehen
+    </button>
+  </div>
+
+  @if (!webgl) {
+    <p id="no-3d-hint" class="muted">Die 3D-Ansicht ist auf diesem Gerät nicht verfügbar.</p>
+  }
+  @if (noRack()) {
+    <div class="banner" role="status">
+      Für die 3D-Ansicht brauchst du zuerst ein Regal.
+      <a class="btn btn-small" routerLink="/racks" [queryParams]="{ create: 1 }">Regal anlegen</a>
+      <button type="button" class="btn-link" (click)="noRack.set(false)">Schließen</button>
+    </div>
+  }
+
+  <div class="field">
+    <label for="search" class="sr-only">Weine durchsuchen</label>
+    <input id="search" type="search" placeholder="Name, Weingut, Region oder Rebsorte suchen" autocomplete="off"
+      [ngModel]="searchText()" (ngModelChange)="searchText.set($event)" />
+  </div>
+
+  <div class="chips" role="group" aria-label="Nach Weinart filtern">
+    <button type="button" class="chip" [attr.aria-pressed]="type() === null" (click)="type.set(null)">Alle</button>
+    @for (t of types; track t.value) {
+      <button type="button" class="chip" [attr.aria-pressed]="type() === t.value" (click)="type.set(t.value)">
+        {{ t.label }}
+      </button>
+    }
+  </div>
+
+  @if (error(); as text) {
+    <div class="banner error" role="alert">
+      {{ text }} <button type="button" class="btn-link" (click)="reload()">Erneut laden</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <p class="muted" role="status">Keller wird geladen …</p>
+  } @else if (wines().length === 0 && !error()) {
+    @if (filtered()) {
+      <div class="empty">
+        <h2>Keine passenden Weine</h2>
+        <p>Ändere die Suche oder den Filter.</p>
+      </div>
+    } @else {
+      <div class="empty">
+        <app-icon name="bottle" />
+        <h2>Dein Keller ist noch leer</h2>
+        <p>Dein Keller ist noch leer – scanne deine erste Flasche.</p>
+        <a class="btn btn-primary" routerLink="/wines/new"><app-icon name="scan" /> Wein hinzufügen</a>
+      </div>
+    }
+  } @else {
+    <ul class="wines">
+      @for (wine of wines(); track wine.id) {
+        <li class="wine" [attr.data-type]="wine.type">
+          <a class="main" [class.with-thumb]="!!wine.labelImageId" [routerLink]="['/wines', wine.id]">
+            @if (wine.labelImageId) {
+              <img class="thumb" [appAuthImage]="wine.labelImageId" [alt]="'Etikett von ' + wine.name" loading="lazy" />
+            }
+            <span class="name">{{ wine.name }}</span>
+            <span class="meta">
+              @if (wine.producer) { {{ wine.producer }} }
+              @if (wine.vintage !== null) { <strong>{{ wine.vintage }}</strong> }
+            </span>
+            <span class="tags">
+              <app-type-badge [type]="wine.type" />
+              @if (hint(wine); as h) {
+                <span class="drink" [attr.data-state]="h.state">{{ h.label }}</span>
+              }
+            </span>
+          </a>
+          <div class="count">
+            <span class="number" [attr.aria-label]="wine.quantity + ' Flaschen im Keller'">{{ wine.quantity }}</span>
+            <button type="button" class="btn btn-icon" [attr.aria-label]="'Eine Flasche ' + wine.name + ' hinzufügen'"
+              (click)="addBottle(wine)">
+              <app-icon name="plus" />
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+<a class="btn btn-primary fab" routerLink="/wines/new"><app-icon name="plus" /> Wein hinzufügen</a>

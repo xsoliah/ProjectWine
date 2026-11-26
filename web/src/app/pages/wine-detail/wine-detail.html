@@ -1,0 +1,159 @@
+<div class="page stack">
+  <a class="back" routerLink="/cellar"><app-icon name="back" /> Keller</a>
+
+  @if (error(); as text) {
+    <div class="banner error" role="alert">{{ text }}</div>
+  } @else if (wine(); as w) {
+    <header class="head" [attr.data-type]="w.type">
+      <h1>{{ title() }}</h1>
+      @if (w.producer) {
+        <p class="producer">{{ w.producer }}</p>
+      }
+      <div class="row">
+        <app-type-badge [type]="w.type" />
+        @if (hint(); as h) {
+          <span class="drink" [attr.data-state]="h.state">{{ h.label }}</span>
+        }
+      </div>
+    </header>
+
+    <section class="panel label-panel" aria-labelledby="label-title">
+      <h2 id="label-title" class="sr-only">Etikett</h2>
+      @if (w.labelImageId) {
+        <img class="label-image" [appAuthImage]="w.labelImageId" [alt]="'Etikett von ' + w.name" />
+      } @else {
+        <div class="label-image empty-label"><app-icon name="image" /><span>Kein Etikettenbild</span></div>
+      }
+      <div class="label-tools">
+        @if (w.labelSourceImageId) {
+          <button type="button" class="btn btn-small" [disabled]="labelBusy()" (click)="adjustLabel()">
+            {{ w.labelImageId ? 'Zuschnitt anpassen' : 'Zuschnitt festlegen' }}
+          </button>
+        }
+        <button type="button" class="btn btn-small" [disabled]="labelBusy()" (click)="labelInput.click()">
+          <app-icon name="camera" /> {{ w.labelImageId || w.labelSourceImageId ? 'Neues Foto' : 'Etikettenbild hinzufügen' }}
+        </button>
+        @if (w.labelImageId || w.labelSourceImageId) {
+          <button type="button" class="btn btn-small" [disabled]="labelBusy()" (click)="removeLabel()">Entfernen</button>
+        }
+        <input #labelInput type="file" accept="image/*" capture="environment" hidden (change)="pickLabel($event)" />
+      </div>
+    </section>
+
+    <section class="panel stack" aria-label="Bestand">
+      <div class="row stock">
+        <span class="number">{{ w.quantity }}</span>
+        <span>{{ w.quantity === 1 ? 'Flasche' : 'Flaschen' }} im Keller</span>
+      </div>
+      <div class="row">
+        <app-stepper [(value)]="bottles" label="Anzahl neuer Flaschen" />
+        <button type="button" class="btn" [disabled]="busy()" (click)="addBottles()">Flaschen hinzufügen</button>
+      </div>
+      <div>
+        <button type="button" class="btn btn-primary" [disabled]="w.quantity === 0" (click)="consuming.set(true)">
+          Trinken / Verkaufen / Verschenken
+        </button>
+        @if (w.quantity === 0) {
+          <p class="muted hint">Es ist keine Flasche mehr im Keller.</p>
+        }
+      </div>
+    </section>
+
+    <section class="panel stack" aria-labelledby="places-title">
+      <h2 id="places-title">Lagerplätze</h2>
+      @if (w.slots.length > 0) {
+        <ul class="places">
+          @for (s of w.slots; track s.slotId) {
+            <li><a [routerLink]="['/racks', s.rackId]"><app-icon name="rack" /> {{ slotText(s) }}</a></li>
+          }
+        </ul>
+      } @else if (w.quantity > 0) {
+        <p class="muted hint">Keine Flasche liegt in einem Regalfach.</p>
+      }
+      @if (w.quantity > 0) {
+        <div class="row">
+          <span>{{ w.unplacedCount }} {{ w.unplacedCount === 1 ? 'Flasche' : 'Flaschen' }} nicht eingelagert</span>
+          <button type="button" class="btn" [disabled]="w.unplacedCount === 0" (click)="startPlacing()">
+            <app-icon name="rack" /> Einlagern
+          </button>
+        </div>
+      }
+    </section>
+
+    <section class="panel" aria-label="Details">
+      <dl>
+        @if (w.region) { <dt>Region</dt><dd>{{ w.region.name }}</dd> }
+        @if (w.country) { <dt>Land</dt><dd>{{ w.country.name }}</dd> }
+        @if (w.grapes.length > 0) {
+          <dt>Rebsorten</dt>
+          <dd class="grapes">
+            <span class="grape-kind">{{ w.isCuvee ? 'Cuvée' : 'Rebsortenrein' }}</span>
+            <ul>
+              @for (g of w.grapes; track g.id) {
+                <li>{{ g.name }}@if (g.percent !== null) { <span class="muted"> {{ g.percent }} %</span> }</li>
+              }
+            </ul>
+          </dd>
+        }
+        <dt>Flaschengröße</dt><dd>{{ w.bottleSizeMl }} ml</dd>
+        @if (w.drinkFrom !== null) { <dt>Trinkreif ab</dt><dd>{{ w.drinkFrom }}</dd> }
+        @if (w.drinkUntil !== null) { <dt>Trinkreif bis</dt><dd>{{ w.drinkUntil }}</dd> }
+        @if (w.purchasePrice !== null) { <dt>Kaufpreis</dt><dd>{{ price() }}</dd> }
+        @if (w.barcode) { <dt>Barcode</dt><dd>{{ w.barcode }}</dd> }
+        @if (w.notes) { <dt>Notizen</dt><dd class="notes">{{ w.notes }}</dd> }
+      </dl>
+    </section>
+
+    <div class="row">
+      <a class="btn" [routerLink]="['/wines', w.id, 'edit']"><app-icon name="edit" /> Bearbeiten</a>
+      <button type="button" class="btn" (click)="remove()"><app-icon name="trash" /> Löschen</button>
+    </div>
+
+    <section class="stack" aria-labelledby="archive-title">
+      <h2 id="archive-title">Archiv dieses Weins</h2>
+      @for (entry of entries(); track entry.id) {
+        <app-archive-entry-item [entry]="entry" [showWine]="false" (changed)="onEntryChanged()" />
+      } @empty {
+        <p class="muted">Noch keine Flasche getrunken, verkauft oder verschenkt.</p>
+      }
+    </section>
+
+    @if (choosingRack()) {
+      <app-modal label="Regal wählen" (closed)="choosingRack.set(false)">
+        <h2>In welches Regal?</h2>
+        @if (racks().length === 0) {
+          <p class="muted">Du hast noch kein Regal angelegt.</p>
+          <div class="actions">
+            <button type="button" class="btn" (click)="choosingRack.set(false)">Abbrechen</button>
+            <a class="btn btn-primary" routerLink="/racks" [queryParams]="{ create: 1 }">Regal anlegen</a>
+          </div>
+        } @else {
+          <p class="muted">Danach tippst du im Regal auf ein freies Fach.</p>
+          <ul class="rack-pick">
+            @for (r of racks(); track r.id) {
+              <li>
+                <button type="button" class="btn" [disabled]="r.free === 0" (click)="placeIn(r.id)">
+                  {{ r.name }} <span class="muted">· {{ r.free }} frei</span>
+                </button>
+              </li>
+            }
+          </ul>
+          <div class="actions">
+            <button type="button" class="btn" (click)="choosingRack.set(false)">Abbrechen</button>
+          </div>
+        }
+      </app-modal>
+    }
+
+    @if (labelEditor(); as e) {
+      <app-label-corner-editor [src]="e.url" [corners]="e.corners" [busy]="labelBusy()"
+        (confirmed)="saveLabel($event)" (cancelled)="closeLabelEditor()" />
+    }
+
+    @if (consuming()) {
+      <app-consume-dialog [wine]="w" (consumed)="onConsumed()" (closed)="consuming.set(false)" />
+    }
+  } @else {
+    <p class="muted" role="status">Wein wird geladen …</p>
+  }
+</div>

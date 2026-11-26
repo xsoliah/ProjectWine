@@ -1,0 +1,51 @@
+<div class="login">
+  <header>
+    <app-icon name="bottle" />
+    <h1>Weinkeller</h1>
+    <p>Deine Flaschen, dein Archiv, deine Bewertungen.</p>
+  </header>
+
+  <form class="panel stack" (ngSubmit)="submit()" #form="ngForm">
+    <div class="chips" role="group" aria-label="Anmelden oder registrieren">
+      <button type="button" class="chip" [attr.aria-pressed]="mode() === 'login'" (click)="setMode('login')">
+        Anmelden
+      </button>
+      <button type="button" class="chip" [attr.aria-pressed]="mode() === 'register'" (click)="setMode('register')">
+        Registrieren
+      </button>
+    </div>
+
+    @if (config.needsSetup()) {
+      <div class="banner">
+        Lege zuerst die Adresse deines Servers fest.
+        <a routerLink="/settings">Zu den Einstellungen</a>
+      </div>
+    }
+    @if (error(); as text) {
+      <div class="banner error" role="alert">{{ text }}</div>
+    }
+
+    <div class="field">
+      <label for="email">E-Mail</label>
+      <input id="email" name="email" type="email" required autocomplete="email" inputmode="email"
+        [ngModel]="email()" (ngModelChange)="email.set($event)" />
+    </div>
+    <div class="field">
+      <label for="password">Passwort</label>
+      <input id="password" name="password" type="password" required
+        [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+        [ngModel]="password()" (ngModelChange)="password.set($event)" />
+      @if (mode() === 'register') {
+        <span class="hint">Mindestens 6 Zeichen, mit Ziffer, Groß- und Kleinbuchstaben.</span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="busy() || form.invalid || config.needsSetup()">
+      {{ mode() === 'login' ? 'Anmelden' : 'Konto anlegen' }}
+    </button>
+  </form>
+
+  @if (config.isNative) {
+    <a class="server-link" routerLink="/settings">Server-Adresse ändern</a>
+  }
+</div>

@@ -1,0 +1,87 @@
+.drafts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.draft {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+
+.thumb {
+  grid-row: span 2;
+  width: 4.5rem;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+}
+
+.info {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+.draft[data-status='Ready'] .status {
+  color: var(--state-ready);
+}
+
+.draft[data-status='Failed'] .status,
+.err {
+  color: var(--danger);
+}
+
+.err {
+  font-size: 0.875rem;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+.empty app-icon {
+  font-size: 2.5rem;
+}

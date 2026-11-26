@@ -1,0 +1,194 @@
+<div class="page stack">
+  <div class="top">
+    @if (from() === 'cellar') {
+      <button type="button" class="btn-link back" (click)="backToCellar()"><app-icon name="list" /> Zurück zur Liste</button>
+    } @else {
+      <a class="back" routerLink="/racks"><app-icon name="back" /> Regale</a>
+    }
+
+    @if (racks().length > 1) {
+      <div class="field picker">
+        <label for="rack-select">Regal</label>
+        <select id="rack-select" [value]="id()" (change)="switchRack($any($event.target).value)">
+          @for (r of racks(); track r.id) {
+            <option [value]="r.id" [selected]="r.id === id()">{{ r.name }} ({{ r.occupied }}/{{ r.capacity }})</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+
+  @if (error(); as text) {
+    <div class="banner error" role="alert">{{ text }}</div>
+  } @else if (rack(); as r) {
+    <div class="page-head">
+      <h1>{{ r.name }}</h1>
+      <span class="muted">{{ r.height }} × {{ r.width }} · {{ r.occupied }} belegt · {{ r.free }} frei</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="segmented" role="group" aria-label="Ansicht">
+        <button type="button" class="chip" [attr.aria-pressed]="mode() === 'grid'" (click)="setView('grid')">
+          <app-icon name="rack" /> Raster
+        </button>
+        <button type="button" class="chip" [attr.aria-pressed]="mode() === '3d'" [disabled]="!can3d()"
+          [attr.aria-describedby]="can3d() ? null : 'no-3d'" (click)="setView('3d')">
+          <app-icon name="cube" /> 3D
+        </button>
+      </div>
+      @if (!can3d()) {
+        <span id="no-3d" class="muted small">Die 3D-Ansicht ist auf diesem Gerät nicht verfügbar.</span>
+      }
+    </div>
+
+    @if (moving(); as m) {
+      <div class="banner" role="status">
+        <strong>Umlagern:</strong> {{ wineLabel(m.slot) }} aus {{ m.fromRack }}, Reihe {{ m.slot.row }}, Spalte {{ m.slot.column }}.
+        Tippe auf ein freies Fach – auch in einem anderen Regal.
+        <button type="button" class="btn btn-small" (click)="moving.set(null)">Abbrechen</button>
+      </div>
+    }
+    @if (placing(); as p) {
+      <div class="banner" role="status">
+        <strong>Einlagern:</strong> Tippe auf ein freies Fach für „{{ p.name }}“
+        ({{ p.unplacedCount }} {{ p.unplacedCount === 1 ? 'Flasche' : 'Flaschen' }} nicht eingelagert).
+        <button type="button" class="btn btn-small" (click)="stopPlacing()">Fertig</button>
+      </div>
+    }
+
+    @if (mode() === 'grid') {
+      <div class="grid-scroll">
+        <div class="grid" role="grid" [attr.aria-label]="'Regal ' + r.name" [style.--cols]="r.width">
+          <div class="corner" aria-hidden="true"></div>
+          @for (c of columns(); track c) {
+            <div class="colnum" aria-hidden="true">{{ c }}</div>
+          }
+          @for (row of rows(); track row.row) {
+            <div class="rownum" aria-hidden="true">{{ row.row }}</div>
+            @for (c of columns(); track c) {
+              @let slot = slotAt(row.row, c);
+              <button type="button" class="cell" role="gridcell" [class.free]="!slot"
+                [attr.data-type]="slot?.wine?.type" [attr.aria-label]="cellLabel(row.row, c)"
+                [class.source]="!!slot && moving()?.slot?.id === slot.id" (click)="onCell(row.row, c)">
+                @if (slot) {
+                  <span class="cell-name">{{ slot.wine.name }}</span>
+                  @if (slot.wine.vintage !== null) { <span class="cell-year">{{ slot.wine.vintage }}</span> }
+                } @else {
+                  <span class="cell-free">frei</span>
+                }
+              </button>
+            }
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="three" [class.with-panel]="selectedRow() !== null">
+        <div class="stage">
+          @defer (on immediate) {
+            <app-rack-3d [rack]="r" [selectedRow]="selectedRow()" (rowSelected)="selectRow($event)"
+              (contextLost)="onContextLost()" />
+          } @loading (minimum 200ms) {
+            <p class="muted loading" role="status">3D-Ansicht wird geladen …</p>
+          } @error {
+            <p class="banner error" role="alert">Die 3D-Ansicht konnte nicht geladen werden.</p>
+          }
+
+          <nav class="row-list" aria-label="Reihe wählen">
+            <span class="label">Reihe</span>
+            @for (row of rows(); track row.row) {
+              <button type="button" class="chip" [attr.aria-pressed]="selectedRow() === row.row"
+                [attr.aria-label]="'Reihe ' + row.row + ', ' + row.occupied + ' von ' + r.width + ' Fächern belegt'"
+                (click)="selectRow(row.row)">
+                {{ row.row }}
+              </button>
+            }
+          </nav>
+        </div>
+
+        @if (selectedRow(); as row) {
+          <aside class="row-panel panel" [attr.aria-label]="'Fächer in Reihe ' + row">
+            <div class="row-head">
+              <h2>Reihe {{ row }}</h2>
+              <button type="button" class="btn btn-icon" aria-label="Reihe schließen" (click)="selectedRow.set(null)">
+                <app-icon name="close" />
+              </button>
+            </div>
+            <ol class="entries">
+              @for (entry of rowList(); track entry.column) {
+                <li>
+                  <button type="button" class="entry" [class.free]="!entry.slot" [attr.data-type]="entry.slot?.wine?.type"
+                    (click)="onCell(row, entry.column)">
+                    <span class="col">Spalte {{ entry.column }}</span>
+                    @if (entry.slot; as s) {
+                      <span class="what">
+                        <strong>{{ wineLabel(s) }}</strong>
+                        @if (s.wine.producer) { <span class="muted">{{ s.wine.producer }}</span> }
+                        <app-type-badge [type]="s.wine.type" />
+                      </span>
+                    } @else {
+                      <span class="what muted">frei</span>
+                    }
+                  </button>
+                </li>
+              }
+            </ol>
+          </aside>
+        }
+      </div>
+    }
+  } @else {
+    <p class="muted" role="status">Regal wird geladen …</p>
+  }
+</div>
+
+@if (active(); as cell) {
+  <app-modal [label]="'Reihe ' + cell.row + ', Spalte ' + cell.column" (closed)="active.set(null)">
+    <h2>Reihe {{ cell.row }}, Spalte {{ cell.column }}</h2>
+    @if (activeSlot(); as s) {
+      <div class="stack">
+        <div class="slot-wine" [attr.data-type]="s.wine.type">
+          <strong>{{ wineLabel(s) }}</strong>
+          @if (s.wine.producer) { <span class="muted">{{ s.wine.producer }}</span> }
+          <app-type-badge [type]="s.wine.type" />
+        </div>
+        <div class="slot-actions">
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="startConsume(s)">
+            Trinken / Verkaufen / Verschenken
+          </button>
+          <button type="button" class="btn" [disabled]="busy()" (click)="startMove(s)">Umlagern</button>
+          <button type="button" class="btn" [disabled]="busy()" (click)="takeOut(s)">Aus dem Fach nehmen</button>
+          <a class="btn" [routerLink]="['/wines', s.wine.id]">Zum Wein</a>
+        </div>
+      </div>
+    } @else {
+      <div class="stack">
+        <p class="muted">Dieses Fach ist frei. Welche Flasche soll hinein?</p>
+        @if (unplacedWines().length === 0) {
+          <p class="muted">Alle Flaschen in deinem Keller sind bereits eingelagert.</p>
+        } @else {
+          <ul class="pick">
+            @for (w of unplacedWines(); track w.id) {
+              <li>
+                <button type="button" class="entry" [attr.data-type]="w.type" [disabled]="busy()"
+                  (click)="placeWine(w, cell.row, cell.column)">
+                  <span class="what">
+                    <strong>{{ w.name }}@if (w.vintage !== null) { {{ ' ' + w.vintage }} }</strong>
+                    <span class="muted">{{ w.unplacedCount }} nicht eingelagert</span>
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+    <div class="actions">
+      <button type="button" class="btn" (click)="active.set(null)">Schließen</button>
+    </div>
+  </app-modal>
+}
+
+@if (consuming(); as c) {
+  <app-consume-dialog [wine]="c.slot.wine" [slotId]="c.slot.id" [slotLabel]="c.label"
+    (consumed)="onConsumed()" (closed)="consuming.set(null)" />
+}

@@ -1,0 +1,152 @@
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3);
+}
+
+.kpi {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi.hero .kpi-value {
+  font-size: 3rem;
+}
+
+.kpi-label {
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+.kpi-note {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.distribution {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.dist-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-5);
+}
+
+@media (max-width: 640px) {
+  .chart-row {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  app-donut-chart {
+    max-width: 14rem;
+  }
+}
+
+.legend,
+.sublist {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sublist {
+  padding-left: calc(0.875rem + var(--space-3));
+}
+
+.legend-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+summary.legend-row {
+  cursor: pointer;
+  list-style: none;
+}
+
+summary.legend-row::-webkit-details-marker {
+  display: none;
+}
+
+.sublist .legend-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 2.25rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+.legend-row.drill {
+  cursor: pointer;
+}
+
+.legend li.active > .legend-row,
+.legend li.active > details > summary,
+.legend-row.drill:hover {
+  background: var(--surface-2);
+}
+
+.swatch {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 3px;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.figures {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chev {
+  color: var(--ink-soft);
+  font-size: 1.25rem;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+}

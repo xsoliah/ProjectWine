@@ -1,0 +1,122 @@
+<div class="page stack">
+  <div class="page-head">
+    <h1>Länder &amp; Regionen</h1>
+    <a class="btn" routerLink="/settings">Zurück</a>
+  </div>
+
+  <p class="muted">
+    Jede Region gehört zu genau einem Land. Doppelte Einträge wie „Italy“ und „Italien“ kannst du zusammenführen.
+  </p>
+
+  <form class="panel row" (ngSubmit)="addCountry()">
+    <div class="field grow">
+      <label for="new-country">Neues Land</label>
+      <input id="new-country" name="newCountry" autocomplete="off" placeholder="z. B. Italien"
+        [ngModel]="newCountry()" (ngModelChange)="newCountry.set($event)" />
+    </div>
+    <button type="submit" class="btn btn-primary" [disabled]="busy() || !newCountry().trim()">Land anlegen</button>
+  </form>
+
+  @if (error(); as text) {
+    <div class="banner error" role="alert">{{ text }}</div>
+  }
+
+  @if (loading()) {
+    <p class="muted" role="status">Wird geladen …</p>
+  } @else if (countries().length === 0 && !error()) {
+    <div class="empty">
+      <h2>Noch keine Länder</h2>
+      <p>Lege ein Land hier oder direkt beim Erfassen eines Weins an.</p>
+    </div>
+  } @else {
+    <ul class="countries">
+      @for (country of countries(); track country.id) {
+        <li class="panel country">
+          <!-- Country row -->
+          <div class="item">
+            @if (isEditing('country', country.id, 'rename')) {
+              <form class="inline" (ngSubmit)="saveRename()">
+                <label class="sr-only" [for]="'rn-' + country.id">Neuer Name für {{ country.name }}</label>
+                <input [id]="'rn-' + country.id" name="rename" [ngModel]="editText()" (ngModelChange)="editText.set($event)" />
+                <button type="submit" class="btn btn-small btn-primary" [disabled]="busy()">Speichern</button>
+                <button type="button" class="btn btn-small" (click)="cancelEdit()">Abbrechen</button>
+              </form>
+            } @else if (isEditing('country', country.id, 'merge')) {
+              <form class="inline" (ngSubmit)="saveMerge(country.name)">
+                <label [for]="'mg-' + country.id">„{{ country.name }}“ zusammenführen in</label>
+                <select [id]="'mg-' + country.id" name="target" [ngModel]="mergeTarget()" (ngModelChange)="mergeTarget.set($event)">
+                  <option value="" disabled>Land wählen</option>
+                  @for (other of otherCountries(country.id); track other.id) {
+                    <option [value]="other.id">{{ other.name }}</option>
+                  }
+                </select>
+                <button type="submit" class="btn btn-small btn-primary" [disabled]="busy() || !mergeTarget()">Zusammenführen</button>
+                <button type="button" class="btn btn-small" (click)="cancelEdit()">Abbrechen</button>
+              </form>
+            } @else {
+              <h2 class="name">{{ country.name }}</h2>
+              <span class="muted count">{{ country.wineCount }} {{ country.wineCount === 1 ? 'Wein' : 'Weine' }}</span>
+              <div class="tools">
+                <button type="button" class="btn btn-small" (click)="startRename('country', country)">Umbenennen</button>
+                <button type="button" class="btn btn-small" [disabled]="otherCountries(country.id).length === 0"
+                  (click)="startMerge('country', country.id)">Zusammenführen</button>
+                <button type="button" class="btn btn-small" [disabled]="busy() || country.wineCount > 0"
+                  [attr.title]="country.wineCount > 0 ? 'Wird noch von Weinen verwendet' : null"
+                  (click)="remove('country', country)">Löschen</button>
+              </div>
+            }
+          </div>
+
+          <!-- Regions -->
+          <ul class="regions" [attr.aria-label]="'Regionen in ' + country.name">
+            @for (region of country.regions; track region.id) {
+              <li class="item">
+                @if (isEditing('region', region.id, 'rename')) {
+                  <form class="inline" (ngSubmit)="saveRename()">
+                    <label class="sr-only" [for]="'rn-' + region.id">Neuer Name für {{ region.name }}</label>
+                    <input [id]="'rn-' + region.id" name="rename" [ngModel]="editText()" (ngModelChange)="editText.set($event)" />
+                    <button type="submit" class="btn btn-small btn-primary" [disabled]="busy()">Speichern</button>
+                    <button type="button" class="btn btn-small" (click)="cancelEdit()">Abbrechen</button>
+                  </form>
+                } @else if (isEditing('region', region.id, 'merge')) {
+                  <form class="inline" (ngSubmit)="saveMerge(region.name)">
+                    <label [for]="'mg-' + region.id">„{{ region.name }}“ zusammenführen in</label>
+                    <select [id]="'mg-' + region.id" name="target" [ngModel]="mergeTarget()" (ngModelChange)="mergeTarget.set($event)">
+                      <option value="" disabled>Region wählen</option>
+                      @for (other of otherRegions(country, region.id); track other.id) {
+                        <option [value]="other.id">{{ other.name }}</option>
+                      }
+                    </select>
+                    <button type="submit" class="btn btn-small btn-primary" [disabled]="busy() || !mergeTarget()">Zusammenführen</button>
+                    <button type="button" class="btn btn-small" (click)="cancelEdit()">Abbrechen</button>
+                  </form>
+                } @else {
+                  <span class="name">{{ region.name }}</span>
+                  <span class="muted count">{{ region.wineCount }} {{ region.wineCount === 1 ? 'Wein' : 'Weine' }}</span>
+                  <div class="tools">
+                    <button type="button" class="btn btn-small" (click)="startRename('region', region)">Umbenennen</button>
+                    <button type="button" class="btn btn-small" [disabled]="otherRegions(country, region.id).length === 0"
+                      (click)="startMerge('region', region.id)">Zusammenführen</button>
+                    <button type="button" class="btn btn-small" [disabled]="busy() || region.wineCount > 0"
+                      [attr.title]="region.wineCount > 0 ? 'Wird noch von Weinen verwendet' : null"
+                      (click)="remove('region', region)">Löschen</button>
+                  </div>
+                }
+              </li>
+            }
+            <li>
+              <form class="inline add-region" (ngSubmit)="addRegion(country)">
+                <label class="sr-only" [for]="'nr-' + country.id">Neue Region in {{ country.name }}</label>
+                <input [id]="'nr-' + country.id" name="region" autocomplete="off" [placeholder]="'Neue Region in ' + country.name"
+                  [ngModel]="newRegion()[country.id] ?? ''" (ngModelChange)="setNewRegion(country.id, $event)" />
+                <button type="submit" class="btn btn-small" [disabled]="busy() || !(newRegion()[country.id] ?? '').trim()">
+                  Region anlegen
+                </button>
+              </form>
+            </li>
+          </ul>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -1,0 +1,130 @@
+<form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="field">
+    <label for="f-barcode">Barcode<app-source-mark [source]="marks().barcode" /></label>
+    <input id="f-barcode" formControlName="barcode" inputmode="numeric" autocomplete="off" />
+  </div>
+
+  <div class="field">
+    <label for="f-name">Name *<app-source-mark [source]="marks().name" /></label>
+    <input id="f-name" formControlName="name" required [attr.aria-invalid]="invalid('name')" />
+    @if (invalid('name')) {
+      <span class="hint" role="alert">Bitte gib einen Namen ein.</span>
+    }
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <label for="f-producer">Weingut<app-source-mark [source]="marks().producer" /></label>
+      <input id="f-producer" formControlName="producer" />
+    </div>
+    <div class="field">
+      <label for="f-vintage">Jahrgang<app-source-mark [source]="marks().vintage" /></label>
+      <input id="f-vintage" type="number" inputmode="numeric" formControlName="vintage"
+        [attr.aria-invalid]="invalid('vintage')" />
+      @if (invalid('vintage')) {
+        <span class="hint" role="alert">Bitte gib ein gültiges Jahr ein.</span>
+      }
+    </div>
+    <div class="field">
+      <label for="f-type">Art<app-source-mark [source]="marks().type" /></label>
+      <select id="f-type" formControlName="type">
+        @for (type of types; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <label for="f-country">Land<app-source-mark [source]="marks().country" /></label>
+      <input id="f-country" formControlName="country" list="f-country-list" autocomplete="off"
+        placeholder="Land wählen oder eingeben" (input)="onCountryInput()"
+        aria-describedby="f-country-hint" />
+      <datalist id="f-country-list">
+        @for (country of countries(); track country.id) {
+          <option [value]="country.name"></option>
+        }
+      </datalist>
+      <span id="f-country-hint" class="hint origin-hint">
+        @if (newCountryName(); as name) {
+          <span>„{{ name }}“ ist noch nicht angelegt.</span>
+          <button type="button" class="btn btn-small" [disabled]="creatingOrigin()" (click)="createCountry()">
+            Als Land anlegen
+          </button>
+        }
+      </span>
+    </div>
+    <div class="field">
+      <label for="f-region">Region<app-source-mark [source]="marks().region" /></label>
+      <input id="f-region" formControlName="region" list="f-region-list" autocomplete="off"
+        [placeholder]="selectedCountry() ? 'Region wählen oder eingeben' : 'Zuerst ein Land wählen'"
+        [attr.aria-disabled]="!selectedCountry()" [readonly]="!selectedCountry()"
+        (input)="originError.set(null)" aria-describedby="f-region-hint" />
+      <datalist id="f-region-list">
+        @for (region of regionOptions(); track region.id) {
+          <option [value]="region.name"></option>
+        }
+      </datalist>
+      <span id="f-region-hint" class="hint origin-hint">
+        @if (newRegionName(); as name) {
+          <span>„{{ name }}“ gibt es in {{ selectedCountry()?.name }} noch nicht.</span>
+          <button type="button" class="btn btn-small" [disabled]="creatingOrigin()" (click)="createRegion()">
+            Als Region anlegen
+          </button>
+        }
+      </span>
+    </div>
+  </div>
+  @if (originError(); as text) {
+    <div class="banner error" role="alert">{{ text }}</div>
+  }
+
+  @if (marks().grapes; as g) { <p class="muted grape-mark">Rebsorten<app-source-mark [source]="g" /></p> }
+  <app-grape-picker idPrefix="f-grapes" [varieties]="varieties()" [(entries)]="grapes" (created)="loadGrapes()" />
+
+  <div class="field-grid">
+    <div class="field">
+      <label for="f-size">Flaschengröße (ml)<app-source-mark [source]="marks().bottleSizeMl" /></label>
+      <input id="f-size" type="number" inputmode="numeric" formControlName="bottleSizeMl"
+        [attr.aria-invalid]="invalid('bottleSizeMl')" />
+      @if (invalid('bottleSizeMl')) {
+        <span class="hint" role="alert">Bitte gib eine Größe in Millilitern ein.</span>
+      }
+    </div>
+    <div class="field">
+      <label for="f-quantity">Anzahl Flaschen</label>
+      <input id="f-quantity" type="number" inputmode="numeric" formControlName="quantity"
+        [attr.aria-invalid]="invalid('quantity')" />
+      @if (invalid('quantity')) {
+        <span class="hint" role="alert">Die Anzahl muss mindestens {{ minQuantity() }} sein.</span>
+      }
+    </div>
+  </div>
+
+  <div class="field-grid">
+    <div class="field">
+      <label for="f-from">Trinkreif ab (Jahr)<app-source-mark [source]="marks().drinkFrom" /></label>
+      <input id="f-from" type="number" inputmode="numeric" formControlName="drinkFrom" />
+    </div>
+    <div class="field">
+      <label for="f-until">Trinkreif bis (Jahr)<app-source-mark [source]="marks().drinkUntil" /></label>
+      <input id="f-until" type="number" inputmode="numeric" formControlName="drinkUntil" />
+    </div>
+    <div class="field">
+      <label for="f-price">Kaufpreis (€)</label>
+      <input id="f-price" type="number" inputmode="decimal" step="0.01" formControlName="purchasePrice"
+        [attr.aria-invalid]="invalid('purchasePrice')" />
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="f-notes">Notizen<app-source-mark [source]="marks().notes" /></label>
+    <textarea id="f-notes" rows="3" formControlName="notes"></textarea>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="btn" (click)="cancelled.emit()">Abbrechen</button>
+    <button type="submit" class="btn btn-primary" [disabled]="busy() || saving()">{{ submitLabel() }}</button>
+  </div>
+</form>

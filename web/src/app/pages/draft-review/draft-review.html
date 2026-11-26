@@ -1,0 +1,90 @@
+<div class="page stack">
+  <a class="back" routerLink="/drafts"><app-icon name="back" /> Entwürfe</a>
+
+  @if (error(); as text) {
+    <div class="banner error" role="alert">{{ text }}</div>
+  } @else if (detail(); as d) {
+    <div class="page-head"><h1>Entwurf prüfen</h1></div>
+
+    @if (d.summary.status !== 'Ready') {
+      <p class="banner" role="status">Dieser Entwurf ist {{ statusLabel() }}. @if (d.summary.error) { {{ d.summary.error }} }</p>
+    } @else if (d.existingWine && !createAnyway()) {
+      <section class="panel stack" aria-label="Wein bereits im Keller">
+        <p class="banner">Diesen Wein hast du schon im Keller. Füge einfach Flaschen hinzu.</p>
+        <div class="existing" [attr.data-type]="d.existingWine.type">
+          <h2>{{ d.existingWine.name }}</h2>
+          <p class="muted">
+            @if (d.existingWine.producer) { {{ d.existingWine.producer }} }
+            @if (d.existingWine.vintage !== null) { · {{ d.existingWine.vintage }} }
+          </p>
+          <app-type-badge [type]="d.existingWine.type" />
+          <p class="muted">Aktuell im Keller: {{ d.existingWine.quantity }}</p>
+        </div>
+        <div class="row">
+          <app-stepper [(value)]="bottles" label="Anzahl neuer Flaschen" />
+          <button type="button" class="btn btn-primary" [disabled]="busy()" (click)="addToExisting(d.existingWine.id)">
+            Flaschen hinzufügen
+          </button>
+        </div>
+        <div><button type="button" class="btn-link" (click)="createAnyway.set(true)">Trotzdem neu anlegen</button></div>
+      </section>
+    } @else {
+      <div class="review">
+        <section class="label panel" aria-labelledby="label-title">
+          <h2 id="label-title">Etikett</h2>
+          @if (d.summary.labelPreviewImageId) {
+            <img class="label-image" [appAuthImage]="d.summary.labelPreviewImageId"
+              [alt]="'Ausgeschnittenes Etikett' + (d.name ? ' von ' + d.name.value : '')" />
+          } @else {
+            <div class="label-image empty-label">
+              <app-icon name="image" />
+              <span>Noch kein Zuschnitt</span>
+            </div>
+          }
+          <button type="button" class="btn" [disabled]="!frontUrl()" (click)="openEditor()">
+            {{ d.summary.labelPreviewImageId ? 'Zuschnitt anpassen' : 'Zuschnitt festlegen' }}
+          </button>
+        </section>
+
+        <div class="stack">
+          @if (d.researchSummary) {
+            <p class="summary">{{ d.researchSummary }}</p>
+          }
+          @if (d.nothingFoundOnWeb) {
+            <p class="banner" role="status">Im Web wurde nichts Passendes gefunden – die Angaben stammen nur vom Etikett.</p>
+          }
+          <p class="muted legend">
+            Herkunft der Angaben: <span class="mark" data-source="Label">Etikett</span> vom Foto gelesen,
+            <span class="mark" data-source="Web">Web</span> recherchiert. Bitte prüfen und bei Bedarf korrigieren.
+          </p>
+          <app-wine-form
+            [initial]="initial()"
+            [marks]="marks()"
+            submitLabel="Zum Keller hinzufügen"
+            [busy]="busy()"
+            (saved)="create($event)"
+            (cancelled)="back()"
+          />
+          @if (d.sources.length > 0) {
+            <section class="panel" aria-labelledby="sources-title">
+              <h2 id="sources-title">Quellen</h2>
+              <ul class="sources">
+                @for (s of d.sources; track s.url) {
+                  <li><a [href]="s.url" target="_blank" rel="noopener noreferrer">{{ s.title }}</a>
+                    <span class="muted url">{{ s.url }}</span></li>
+                }
+              </ul>
+            </section>
+          }
+        </div>
+      </div>
+    }
+
+    @if (editorOpen() && frontUrl(); as url) {
+      <app-label-corner-editor [src]="url" [corners]="d.labelCorners" [hint]="editorHint()" [busy]="busy()"
+        (confirmed)="saveCorners($event)" (cancelled)="editorOpen.set(false)" />
+    }
+  } @else {
+    <p class="muted" role="status">Entwurf wird geladen …</p>
+  }
+</div>

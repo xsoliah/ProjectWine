@@ -1,0 +1,40 @@
+<div class="page stack">
+  <div class="page-head"><h1>Einstellungen</h1></div>
+
+  @if (config.isNative) {
+    <form class="panel stack" (ngSubmit)="save()">
+      <div class="field">
+        <label for="server">Server-Adresse</label>
+        <input id="server" name="server" type="url" inputmode="url" autocapitalize="off"
+          placeholder="https://wein.example.com" required
+          [ngModel]="url()" (ngModelChange)="url.set($event)"
+          [attr.aria-invalid]="invalid()" [attr.aria-describedby]="invalid() ? 'server-error' : null" />
+        @if (invalid()) {
+          <span id="server-error" class="hint" role="alert">
+            Bitte gib eine vollständige Adresse mit https:// ein.
+          </span>
+        } @else {
+          <span class="hint">Die App verbindet sich mit diesem Server.</span>
+        }
+      </div>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </form>
+  } @else {
+    <p class="muted">Im Browser läuft die App direkt auf deinem Server. Es ist nichts einzustellen.</p>
+  }
+
+  @if (auth.isAuthenticated()) {
+    <div class="panel stack">
+      <h2>Stammdaten</h2>
+      <p class="muted">Länder, Regionen und Rebsorten pflegen, umbenennen und Dubletten zusammenführen.</p>
+      <div class="row">
+        <a class="btn" routerLink="/origins">Länder &amp; Regionen</a>
+        <a class="btn" routerLink="/grapes">Rebsorten</a>
+      </div>
+    </div>
+    <div class="panel stack">
+      <h2>Konto</h2>
+      <div><button type="button" class="btn" (click)="logout()">Abmelden</button></div>
+    </div>
+  }
+</div>
