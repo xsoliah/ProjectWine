@@ -27,3 +27,7 @@
 - Mehrere Netzwerkadapter (VPN, Hyper-V, WSL) → evtl. falsche IP im QR-Code → Text-URL und `-NoQr` bleiben verfügbar; Adapter mit Gateway wird bevorzugt.
 - Dev-Server samt Proxy auf die Dev-API ist im lokalen Netz sichtbar → nur in vertrauenswürdigen Netzen nutzen; im README erwähnt.
 - Angular-Dev-Server prüft den Host-Header; IP-Adressen sind erlaubt, Rechnernamen nicht → deshalb wird die IP statt des Rechnernamens verwendet.
+
+## Nachtrag (Umsetzung)
+
+Auf main existierte bereits der Schalter `-Lan` (HTTPS, `--host 0.0.0.0`, Textausgabe der URLs, Firewall-Hinweis). Der QR-Code erweitert diesen Modus, statt ein zweites Netzwerk-Verfahren einzuführen: Er erscheint nur mit `-Lan`, die URL ist `https://<LAN-IP>:<Port>`. Damit entfällt auch die Einschränung zur Kamera (HTTPS ist vorhanden); der Non-Goal „HTTPS“ ist erledigt. Aufgaben 2.3 (Host-Bindung) war durch `-Lan` bereits erfüllt.
