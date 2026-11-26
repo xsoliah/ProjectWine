@@ -1,12 +1,15 @@
 ﻿<#
   Startet Backend (API auf http://localhost:5000) und Frontend (Angular-Dev-Server auf http://localhost:4200)
   gemeinsam im selben Fenster. Strg+C beendet beide; stürzt einer der beiden ab, wird auch der andere beendet.
-  Aufruf:  .\dev.ps1 [-ApiUrl http://localhost:5000] [-WebPort 4200] [-NoBrowser]
+  Aufruf:  .\dev.ps1 [-ApiUrl http://localhost:5000] [-WebPort 4200] [-NoBrowser] [-Lan]
+  -Lan: Frontend per HTTPS (selbst signiertes Zertifikat) im ganzen Netz erreichbar, z. B. fürs iPhone im WLAN.
+        Die API bleibt auf localhost, das Handy spricht sie über den /api-Proxy des Dev-Servers an.
 #>
 param(
     [string]$ApiUrl = "http://localhost:5000",
     [int]$WebPort = 4200,
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [switch]$Lan
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,6 +37,15 @@ function Stop-Tree($Process) {
 Assert-PortFree $apiPort "Backend"
 Assert-PortFree $WebPort "Frontend"
 
+if ($Lan) {
+    $ruleName = "Weinkeller Dev-Server (TCP $WebPort)"
+    if (-not (Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue)) {
+        Write-Host "==> Keine Firewall-Freigabe für Port $WebPort gefunden. Einmalig in einer Admin-PowerShell ausführen:" -ForegroundColor Yellow
+        Write-Host "    New-NetFirewallRule -DisplayName `"$ruleName`" -Direction Inbound -Protocol TCP -LocalPort $WebPort -Action Allow -Profile Private" -ForegroundColor Yellow
+        Write-Host "    (Das WLAN muss in Windows als 'Privates Netzwerk' eingestuft sein.)" -ForegroundColor Yellow
+    }
+}
+
 if (-not (Test-Path (Join-Path $webDir "node_modules"))) {
     Write-Host "==> npm ci (node_modules fehlt)" -ForegroundColor Cyan
     Push-Location $webDir
@@ -55,8 +67,18 @@ try {
     $env:ASPNETCORE_ENVIRONMENT = $previousEnv
     $env:API_URL = $ApiUrl   # liest web/proxy.conf.mjs
 
-    Write-Host "==> Frontend starten (http://localhost:$WebPort, Proxy auf $ApiUrl)" -ForegroundColor Cyan
+    $scheme = if ($Lan) { "https" } else { "http" }
+    Write-Host "==> Frontend starten ($($scheme)://localhost:$WebPort, Proxy auf $ApiUrl)" -ForegroundColor Cyan
     $ngArgs = @("start", "--", "--port", $WebPort)
+    if ($Lan) {
+        $ngArgs += @("--host", "0.0.0.0", "--ssl")
+        $ips = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+            Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.254.*" } |
+            Select-Object -ExpandProperty IPAddress
+        foreach ($ip in $ips) {
+            Write-Host "==> Am Handy öffnen: https://$($ip):$WebPort  (Zertifikatswarnung einmal bestätigen)" -ForegroundColor Green
+        }
+    }
     if (-not $NoBrowser) { $ngArgs += "--open" }
     $web = Start-Process npm.cmd -ArgumentList $ngArgs -WorkingDirectory $webDir -NoNewWindow -PassThru
 

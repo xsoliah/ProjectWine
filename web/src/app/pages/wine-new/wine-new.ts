@@ -1,14 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { LookupOutcome, cleanBarcode, decideLookupOutcome } from '../../core/barcode-flow';
 import { BarcodeScannerService, ScannerUnavailableError } from '../../core/barcode-scanner.service';
 import { errorMessage } from '../../core/errors';
-import { CAPTURE_CONSENT_KEY } from '../../core/capture';
-import { ConfirmService } from '../../core/confirm.service';
 import { CaptureQuota, SaveWineRequest } from '../../core/models';
-import { StorageService } from '../../core/storage.service';
 import { ToastService } from '../../core/toast.service';
 import { Icon } from '../../shared/icon';
 import { Stepper } from '../../shared/stepper';
@@ -18,7 +15,7 @@ import { PhotoCapture } from './photo-capture';
 
 @Component({
   selector: 'app-wine-new',
-  imports: [FormsModule, RouterLink, Icon, Stepper, TypeBadge, WineForm, PhotoCapture],
+  imports: [FormsModule, Icon, Stepper, TypeBadge, WineForm, PhotoCapture],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './wine-new.html',
   styleUrl: './wine-new.css',
@@ -28,31 +25,14 @@ export class WineNew {
   private readonly scanner = inject(BarcodeScannerService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
-  private readonly confirm = inject(ConfirmService);
-  private readonly storage = inject(StorageService);
 
-  /** Photo capture is offered only when the server has a key for the AI service. */
+  /** The combined photo + barcode form is offered only when the server has a key for the AI service. */
   protected readonly quota = signal<CaptureQuota | null>(null);
-  protected readonly photoMode = signal(false);
+  /** The user chose to look up only a barcode (no photo). */
+  protected readonly barcodeOnly = signal(false);
 
   constructor() {
     this.api.getCaptureQuota().then((q) => this.quota.set(q)).catch(() => this.quota.set(null));
-  }
-
-  /** First use: the photos go to an external AI service; the confirmation is remembered on this device. */
-  protected async startPhoto(): Promise<void> {
-    if ((await this.storage.get(CAPTURE_CONSENT_KEY)) !== 'yes') {
-      const ok = await this.confirm.ask({
-        title: 'Fotos werden übertragen',
-        message:
-          'Für die Foto-Erfassung werden deine Etikettenfotos zur Auswertung an einen externen KI-Dienst (Anthropic) übertragen. ' +
-          'Bitte fotografiere nur das Etikett, keine Personen oder andere private Dinge.',
-        confirmLabel: 'Verstanden, weiter',
-      });
-      if (!ok) return;
-      await this.storage.set(CAPTURE_CONSENT_KEY, 'yes');
-    }
-    this.photoMode.set(true);
   }
 
   /** null while the user is still choosing how to add the wine. */

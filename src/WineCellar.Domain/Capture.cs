@@ -34,6 +34,9 @@ public class CaptureDraft
     public int BottleCount { get; set; } = 1;
     public string? UserNote { get; set; }
 
+    /// <summary>Barcode entered, scanned or decoded from a photo on the user's device; takes precedence over the research.</summary>
+    public string? Barcode { get; set; }
+
     /// <summary>Validated research result (JSON of the application's result type).</summary>
     public string? ResultJson { get; set; }
 

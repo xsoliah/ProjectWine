@@ -34,18 +34,9 @@
         (cancelled)="restart()"
       />
     }
-  } @else if (photoMode()) {
-    <app-photo-capture [quota]="quota()" (cancelled)="photoMode.set(false)" />
+  } @else if (quota()?.enabled && !barcodeOnly()) {
+    <app-photo-capture [quota]="quota()" (cancelled)="cancel()" (barcodeOnly)="barcodeOnly.set(true)" />
   } @else {
-    @if (quota()?.enabled) {
-      <section class="panel stack start">
-        <button type="button" class="btn btn-primary scan" (click)="startPhoto()">
-          <app-icon name="camera" /> Per Foto erfassen
-        </button>
-        <p class="muted center">Die App liest das Etikett und recherchiert die Angaben im Hintergrund.
-          <a routerLink="/drafts">Entwürfe ansehen</a></p>
-      </section>
-    }
     <section class="panel stack start">
       <button type="button" class="btn btn-primary scan" [disabled]="busy()" (click)="scan()">
         <app-icon name="scan" /> Barcode scannen
@@ -64,6 +55,11 @@
         <button type="button" class="btn-link" (click)="withoutBarcode()">Ohne Barcode erfassen</button>
       </div>
     </section>
-    <div><button type="button" class="btn" (click)="cancel()">Abbrechen</button></div>
+    <div class="row">
+      <button type="button" class="btn" (click)="cancel()">Abbrechen</button>
+      @if (quota()?.enabled) {
+        <button type="button" class="btn-link" (click)="barcodeOnly.set(false)">Per Foto erfassen</button>
+      }
+    </div>
   }
 </div>

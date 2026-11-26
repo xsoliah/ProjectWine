@@ -166,6 +166,10 @@ namespace WineCellar.Infrastructure.Migrations
                     b.Property<Guid?>("BackImageId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Barcode")
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
+
                     b.Property<int>("BottleCount")
                         .HasColumnType("int");
 

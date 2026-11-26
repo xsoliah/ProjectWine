@@ -19,7 +19,7 @@ internal static class Mapping
         .Select(s => new SlotLocationDto(s.Id, s.RackId, s.Rack.Name, s.Row, s.Column))
         .ToList();
 
-    public static RackWineDto ToRackWine(this Wine w) => new(w.Id, w.Name, w.Producer, w.Vintage, w.Type);
+    public static RackWineDto ToRackWine(this Wine w) => new(w.Id, w.Name, w.Producer, w.Vintage, w.Type, w.LabelImageId);
 
     public static OriginRefDto ToRef(this Country c) => new(c.Id, c.Name);
 
@@ -46,6 +46,23 @@ public static partial class BarcodeNormalizer
             throw new DomainException($"Ungültiger Barcode '{input}'. Erwartet werden 8, 12, 13 oder 14 Ziffern (EAN/UPC).");
         return cleaned;
     }
+
+    /// <summary>GS1 check digit (modulo 10) of an already normalized EAN-8, UPC-A, EAN-13 or GTIN-14.</summary>
+    public static bool HasValidCheckDigit(string code)
+    {
+        if (!ValidBarcode().IsMatch(code)) return false;
+        var sum = 0;
+        for (var i = 0; i < code.Length - 1; i++)
+        {
+            var digit = code[code.Length - 2 - i] - '0';
+            sum += digit * (i % 2 == 0 ? 3 : 1);
+        }
+        return (10 - sum % 10) % 10 == code[^1] - '0';
+    }
+
+    /// <summary>Normalizes and requires a valid check digit; null for empty or invalid input.</summary>
+    public static string? TryNormalizeChecked(string? input) =>
+        TryNormalize(input) is { } code && HasValidCheckDigit(code) ? code : null;
 
     public static string? NormalizeOrNull(string? input) =>
         string.IsNullOrWhiteSpace(input) ? null : Normalize(input);

@@ -14,8 +14,10 @@ import {
 import {
   BoxGeometry,
   BufferGeometry,
+  CanvasTexture,
   Color,
   CylinderGeometry,
+  InstancedBufferAttribute,
   DirectionalLight,
   HemisphereLight,
   InstancedMesh,
@@ -23,6 +25,11 @@ import {
   Material,
   Matrix4,
   Mesh,
+  PMREMGenerator,
+  Quaternion,
+  SRGBColorSpace,
+  Texture,
+  Vector3,
   MeshBasicMaterial,
   MeshStandardMaterial,
   PerspectiveCamera,
@@ -32,9 +39,20 @@ import {
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Rack, WineType } from '../core/models';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { ImageCache } from '../core/images';
+import { Rack, RackSlot } from '../core/models';
 import { cellFromIndex, cellIndex } from '../core/racks';
 import { Icon } from './icon';
+import {
+  ATLAS_SIZE,
+  CAPSULE_BY_TYPE,
+  GLASS_BY_TYPE,
+  LabelAtlas,
+  TILE_COUNT,
+  PULL_DURATION_MS,
+  slidePose,
+} from './rack-3d-look';
 
 /** One slot is 1 x 1 unit; a Bordeaux bottle is about 4 times as long as it is wide. */
 const CELL = 1;
@@ -44,18 +62,10 @@ const BOTTLE_RADIUS = 0.36;
 const BOTTLE_LENGTH = 2.9;
 /** Pointer movement (px) up to which a press counts as a tap, not as rotating. */
 const TAP_TOLERANCE = 6;
+/** How far a tipped-out bottle reaches above/below its row. */
+const PULL_OVERHANG = 0.9;
 const MAX_AZIMUTH = (45 * Math.PI) / 180;
 const MAX_TILT = (25 * Math.PI) / 180;
-
-const TYPE_VARS: Record<WineType, string> = {
-  Red: '--t-red',
-  White: '--t-white',
-  Rose: '--t-rose',
-  Sparkling: '--t-sparkling',
-  Dessert: '--t-dessert',
-  Fortified: '--t-fortified',
-  Other: '--t-other',
-};
 
 /**
  * Bordeaux bottle as a surface of revolution: straight body, high pronounced shoulders, short neck, lip.
@@ -80,7 +90,16 @@ function capsule(): BufferGeometry {
   return geometry;
 }
 
-/** 3D view of one rack (WebGL via three.js). Tapping a bottle or slot selects its row. */
+/** Slightly curved label on top of the bottle body (the side that tips toward the viewer when pulled out). */
+function labelPatch(): BufferGeometry {
+  const arc = (110 * Math.PI) / 180;
+  const geometry = new CylinderGeometry(BOTTLE_RADIUS + 0.004, BOTTLE_RADIUS + 0.004, 1.0, 16, 1, true, Math.PI - arc / 2, arc);
+  geometry.translate(0, 0.95 - BOTTLE_LENGTH / 2, 0);
+  geometry.rotateX(Math.PI / 2);
+  return geometry;
+}
+
+/** 3D view of one rack (WebGL via three.js). Tapping a bottle or slot selects its row, whose bottles slide out. */
 @Component({
   selector: 'app-rack-3d',
   imports: [Icon],
@@ -145,22 +164,47 @@ export class Rack3d {
 
   private readonly bottleGeometry = bordeauxBottle();
   private readonly capsuleGeometry = capsule();
-  private readonly glass = new MeshStandardMaterial({ roughness: 0.22, metalness: 0.15 });
-  private readonly foil = new MeshStandardMaterial({ color: '#2a1f1a', roughness: 0.45, metalness: 0.5 });
+  private readonly images = inject(ImageCache);
+  private readonly labelGeometry = labelPatch();
+  private readonly glass = new MeshStandardMaterial({ roughness: 0.12, metalness: 0, envMapIntensity: 1.3 });
+  private readonly foil = new MeshStandardMaterial({ roughness: 0.4, metalness: 0.6 });
+  private readonly atlasCanvas = document.createElement('canvas');
+  private readonly atlas = new LabelAtlas();
+  private readonly atlasTexture = new CanvasTexture(this.atlasCanvas);
+  private readonly labelMaterial = new MeshStandardMaterial({ map: this.atlasTexture, roughness: 0.85, metalness: 0 });
   private readonly wood = new MeshStandardMaterial({ color: '#8b5e34', roughness: 0.8 });
   private readonly backWood = new MeshStandardMaterial({ color: '#5c3b21', roughness: 0.9 });
   private readonly hitMaterial = new MeshBasicMaterial({ colorWrite: false, depthWrite: false });
   private readonly highlightMaterial = new MeshBasicMaterial({ color: '#e8c255' });
 
   /** Meshes of the current rack size; rebuilt when height or width change. */
-  private built: { key: string; bottles: InstancedMesh; capsules: InstancedMesh; hits: InstancedMesh; highlight: Mesh; disposables: (BufferGeometry | Material)[]; objects: Mesh[] } | null = null;
-  private typeColors = new Map<WineType, Color>();
+  private built: { key: string; bottles: InstancedMesh; capsules: InstancedMesh; labels: InstancedMesh; labelRects: InstancedBufferAttribute; hits: InstancedMesh; highlight: Mesh; disposables: (BufferGeometry | Material)[]; objects: Mesh[] } | null = null;
+  private environment?: Texture;
+  /** Pull-out progress (0 = in the shelf, 1 = fully out) of every row that is not at rest. */
+  private readonly pull = new Map<number, number>();
+  private pullTarget: number | null = null;
+  private currentRack: Rack | null = null;
+  private animFrame = 0;
+  private lastTick = 0;
+  private disposed = false;
+  private readonly reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  private readonly position = new Vector3();
+  private readonly rotation = new Quaternion();
+  private readonly unit = new Vector3(1, 1, 1);
+  private readonly axisX = new Vector3(1, 0, 0);
+  private readonly matrix = new Matrix4();
   private pointerStart: { x: number; y: number } | null = null;
   private readonly raycaster = new Raycaster();
   /** True once the user rotated or zoomed; until then the camera follows size changes (e.g. the row panel). */
   private userMoved = false;
 
   constructor() {
+    this.atlasCanvas.width = this.atlasCanvas.height = ATLAS_SIZE;
+    this.atlasTexture.colorSpace = SRGBColorSpace;
+    this.atlasTexture.anisotropy = 4;
+    this.paintNeutralLabel();
+    this.patchLabelShader();
+
     afterNextRender(() => this.init());
 
     effect(() => {
@@ -195,8 +239,14 @@ export class Rack3d {
     this.renderer.setClearColor(0x000000, 0);
 
     this.scene = new Scene();
-    this.scene.add(new HemisphereLight(0xfff4e0, 0x3a2a20, 1.4));
-    const sun = new DirectionalLight(0xffffff, 1.8);
+    const pmrem = new PMREMGenerator(this.renderer);
+    const room = new RoomEnvironment();
+    this.environment = pmrem.fromScene(room, 0.04).texture;
+    this.scene.environment = this.environment;
+    room.dispose();
+    pmrem.dispose();
+    this.scene.add(new HemisphereLight(0xfff4e0, 0x3a2a20, 0.5));
+    const sun = new DirectionalLight(0xffffff, 1.4);
     sun.position.set(4, 6, 10);
     this.scene.add(sun);
 
@@ -221,7 +271,6 @@ export class Rack3d {
     canvas.addEventListener('pointerup', this.onPointerUp);
     canvas.addEventListener('webglcontextlost', this.onContextLost);
 
-    this.readTypeColors();
     this.observer = new ResizeObserver(() => this.resize());
     this.observer.observe(this.host.nativeElement);
     this.resize();
@@ -267,7 +316,8 @@ export class Rack3d {
   /** Distance at which the whole front of the rack fits into the view. */
   private fitCamera(rack: Rack, moveCamera: boolean): void {
     const halfFov = ((this.camera.fov / 2) * Math.PI) / 180;
-    const height = rack.height * CELL + BOARD;
+    // Room above and below: bottles of the top/bottom row tip out of the rack when their row is selected.
+    const height = rack.height * CELL + BOARD + 2 * PULL_OVERHANG;
     const width = rack.width * CELL + BOARD;
     const byHeight = height / 2 / Math.tan(halfFov);
     const byWidth = width / 2 / (Math.tan(halfFov) * this.camera.aspect);
@@ -277,45 +327,156 @@ export class Rack3d {
     if (moveCamera) this.resetView();
   }
 
-  private readTypeColors(): void {
-    const style = getComputedStyle(document.documentElement);
-    for (const [type, variable] of Object.entries(TYPE_VARS) as [WineType, string][]) {
-      const value = style.getPropertyValue(variable).trim();
-      this.typeColors.set(type, new Color(value || '#7b746d'));
-    }
-  }
-
-  /** Rebuilds the frame when the size changed, then places bottles and the row highlight. */
+  /** Rebuilds the frame when the size changed, then places bottles, labels and the row highlight. */
   private sync(rack: Rack, selectedRow: number | null): void {
     const key = `${rack.id}:${rack.height}x${rack.width}`;
     if (this.built?.key !== key) {
       this.build(rack, key);
       this.fitCamera(rack, true);
+      this.pull.clear();
     }
     const built = this.built!;
-    const matrix = new Matrix4();
-    const highlight = new Color('#ffffff');
+    this.currentRack = rack;
 
+    // A row that is neither selected nor in motion is at rest; the selected row heads for 1.
+    if (selectedRow !== null && !this.pull.has(selectedRow)) this.pull.set(selectedRow, 0);
+    this.pullTarget = selectedRow;
+    if (this.reducedMotion) {
+      for (const row of [...this.pull.keys()]) this.pull.set(row, row === selectedRow ? 1 : 0);
+    }
+
+    const color = new Color();
+    const rects = built.labelRects.array as Float32Array;
     rack.slots.forEach((slot, i) => {
-      const { x, y } = this.cellCenter(rack, slot.row, slot.column);
-      matrix.makeTranslation(x, y - CELL / 2 + BOARD / 2 + BOTTLE_RADIUS, 0);
-      built.bottles.setMatrixAt(i, matrix);
-      built.capsules.setMatrixAt(i, matrix);
-      const color = (this.typeColors.get(slot.wine.type) ?? new Color('#7b746d')).clone();
-      if (slot.row === selectedRow) color.lerp(highlight, 0.1);
+      color.set(GLASS_BY_TYPE[slot.wine.type] ?? GLASS_BY_TYPE.Other);
       built.bottles.setColorAt(i, color);
+      color.set(CAPSULE_BY_TYPE[slot.wine.type] ?? CAPSULE_BY_TYPE.Other);
+      built.capsules.setColorAt(i, color);
+      const { tile, isNew } = this.atlas.assign(slot.wine.labelImageId);
+      rects.set(LabelAtlas.uvRect(tile), i * 4);
+      if (isNew) void this.loadLabel(slot.wine.labelImageId!, tile);
+      this.placeSlot(rack, built, i, slot, this.pull.get(slot.row) ?? 0);
     });
-    built.bottles.count = rack.slots.length;
-    built.capsules.count = rack.slots.length;
-    built.bottles.instanceMatrix.needsUpdate = true;
-    built.capsules.instanceMatrix.needsUpdate = true;
+    for (const mesh of [built.bottles, built.capsules, built.labels]) {
+      mesh.count = rack.slots.length;
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+    built.labelRects.needsUpdate = true;
     if (built.bottles.instanceColor) built.bottles.instanceColor.needsUpdate = true;
+    if (built.capsules.instanceColor) built.capsules.instanceColor.needsUpdate = true;
 
     built.highlight.visible = selectedRow !== null;
     if (selectedRow !== null) {
       built.highlight.position.set(0, this.cellCenter(rack, selectedRow, 1).y, DEPTH / 2 + 0.04);
     }
+    this.startAnimation();
     this.requestRender();
+  }
+
+  /** Writes the pose of one bottle (with capsule and label): in its slot, or pulled out and tipped by `progress`. */
+  private placeSlot(rack: Rack, built: NonNullable<Rack3d['built']>, i: number, slot: RackSlot, progress: number): void {
+    const { x, y } = this.cellCenter(rack, slot.row, slot.column);
+    const pose = slidePose(progress);
+    this.position.set(x, y - CELL / 2 + BOARD / 2 + BOTTLE_RADIUS, pose.z);
+    this.rotation.setFromAxisAngle(this.axisX, pose.tilt);
+    this.matrix.compose(this.position, this.rotation, this.unit);
+    built.bottles.setMatrixAt(i, this.matrix);
+    built.capsules.setMatrixAt(i, this.matrix);
+    built.labels.setMatrixAt(i, this.matrix);
+  }
+
+  /** Runs only while a row is moving; the scene is otherwise rendered on demand. */
+  private startAnimation(): void {
+    if (this.disposed || this.pull.size === 0) return;
+    if (!this.needsAnimation()) {
+      this.applyPull();
+      return;
+    }
+    if (this.animFrame) return;
+    this.lastTick = performance.now();
+    this.animFrame = requestAnimationFrame(this.tick);
+  }
+
+  private needsAnimation(): boolean {
+    for (const [row, value] of this.pull) {
+      if (value !== (row === this.pullTarget ? 1 : 0)) return true;
+    }
+    return false;
+  }
+
+  private readonly tick = (now: number) => {
+    this.animFrame = 0;
+    if (this.disposed) return;
+    const step = Math.min(0.1, (now - this.lastTick) / PULL_DURATION_MS);
+    this.lastTick = now;
+    for (const [row, value] of this.pull) {
+      const target = row === this.pullTarget ? 1 : 0;
+      this.pull.set(row, value < target ? Math.min(target, value + step) : Math.max(target, value - step));
+    }
+    this.applyPull();
+    if (this.needsAnimation()) this.animFrame = requestAnimationFrame(this.tick);
+  };
+
+  /** Rewrites the matrices of the rows in motion and drops rows that are back at rest. */
+  private applyPull(): void {
+    const rack = this.currentRack;
+    const built = this.built;
+    if (!rack || !built) return;
+    rack.slots.forEach((slot, i) => {
+      const progress = this.pull.get(slot.row);
+      if (progress !== undefined) this.placeSlot(rack, built, i, slot, progress);
+    });
+    for (const mesh of [built.bottles, built.capsules, built.labels]) mesh.instanceMatrix.needsUpdate = true;
+    for (const [row, value] of this.pull) {
+      if (value === 0 && row !== this.pullTarget) this.pull.delete(row);
+    }
+    this.requestRender();
+  }
+
+  // ----- Labels -----
+
+  private paintNeutralLabel(): void {
+    const g = this.atlasCanvas.getContext('2d')!;
+    const r = LabelAtlas.rect(0);
+    g.fillStyle = '#efe6d2';
+    g.fillRect(r.x, r.y, r.width, r.height);
+    g.strokeStyle = '#b9a77f';
+    g.lineWidth = 3;
+    g.strokeRect(r.x + 8, r.y + 8, r.width - 16, r.height - 16);
+    // Every other tile starts out as the neutral label until its image has loaded.
+    for (let tile = 1; tile < TILE_COUNT; tile++) {
+      const t = LabelAtlas.rect(tile);
+      g.drawImage(this.atlasCanvas, r.x, r.y, r.width, r.height, t.x, t.y, t.width, t.height);
+    }
+    this.atlasTexture.needsUpdate = true;
+  }
+
+  private async loadLabel(imageId: string, tile: number): Promise<void> {
+    try {
+      const url = await this.images.url(imageId);
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      if (this.disposed) return;
+      const r = LabelAtlas.rect(tile);
+      this.atlasCanvas.getContext('2d')!.drawImage(image, r.x, r.y, r.width, r.height);
+      this.atlasTexture.needsUpdate = true;
+      this.requestRender();
+    } catch {
+      // The tile keeps the neutral label.
+    }
+  }
+
+  /** Per-instance atlas rectangle (attribute `labelRect`) applied to the label's own UVs, turned by 180 degrees. */
+  private patchLabelShader(): void {
+    this.labelMaterial.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nattribute vec4 labelRect;')
+        .replace(
+          '#include <uv_vertex>',
+          '#include <uv_vertex>\n#ifdef USE_MAP\nvMapUv = labelRect.xy + (vec2(1.0) - uv) * labelRect.zw;\n#endif',
+        );
+    };
   }
 
   private cellCenter(rack: Rack, row: number, column: number): { x: number; y: number } {
@@ -363,6 +524,12 @@ export class Rack3d {
     const bottles = new InstancedMesh(this.bottleGeometry, this.glass, capacity);
     bottles.setColorAt(0, new Color('#ffffff'));
     const capsules = new InstancedMesh(this.capsuleGeometry, this.foil, capacity);
+    capsules.setColorAt(0, new Color('#ffffff'));
+    const labels = new InstancedMesh(this.labelGeometry, this.labelMaterial, capacity);
+    const labelRects = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
+    this.labelGeometry.setAttribute('labelRect', labelRects);
+    // Instances move when a row is pulled out, so the bounding spheres computed from the first pose would be wrong.
+    for (const mesh of [bottles, capsules, labels]) mesh.frustumCulled = false;
 
     // Row highlight: a gold frame around the front of the row (does not tint the bottles).
     const bar = 0.07;
@@ -379,12 +546,12 @@ export class Rack3d {
     );
     highlight.visible = false;
 
-    for (const object of [shelves, dividers, back, hits, bottles, capsules, highlight]) {
+    for (const object of [shelves, dividers, back, hits, bottles, labels, capsules, highlight]) {
       this.scene.add(object);
       objects.push(object);
     }
     disposables.push(shelfGeometry, dividerGeometry, backGeometry, hitGeometry, highlightGeometry);
-    this.built = { key, bottles, capsules, hits, highlight, disposables, objects };
+    this.built = { key, bottles, capsules, labels, labelRects, hits, highlight, disposables, objects };
   }
 
   private clearBuilt(): void {
@@ -407,7 +574,9 @@ export class Rack3d {
   }
 
   private dispose(): void {
+    this.disposed = true;
     cancelAnimationFrame(this.frame);
+    cancelAnimationFrame(this.animFrame);
     this.observer?.disconnect();
     if (!this.renderer) return;
     const canvas = this.canvas().nativeElement;
@@ -416,9 +585,10 @@ export class Rack3d {
     canvas.removeEventListener('webglcontextlost', this.onContextLost);
     this.controls.dispose();
     this.clearBuilt();
-    for (const item of [this.bottleGeometry, this.capsuleGeometry, this.glass, this.foil, this.wood, this.backWood, this.hitMaterial, this.highlightMaterial]) {
+    for (const item of [this.bottleGeometry, this.capsuleGeometry, this.labelGeometry, this.glass, this.foil, this.labelMaterial, this.atlasTexture, this.wood, this.backWood, this.hitMaterial, this.highlightMaterial]) {
       item.dispose();
     }
+    this.environment?.dispose();
     this.renderer.dispose();
   }
 }

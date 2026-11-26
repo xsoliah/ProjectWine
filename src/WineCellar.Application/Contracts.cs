@@ -174,7 +174,7 @@ public record SlotLocationDto(Guid SlotId, Guid RackId, string RackName, int Row
 public record RackSummaryDto(Guid Id, string Name, int Height, int Width, int Capacity, int Occupied, int Free);
 
 /// <summary>Short info about the wine in a slot.</summary>
-public record RackWineDto(Guid Id, string Name, string? Producer, int? Vintage, WineType Type);
+public record RackWineDto(Guid Id, string Name, string? Producer, int? Vintage, WineType Type, Guid? LabelImageId = null);
 
 public record RackSlotDto(Guid Id, int Row, int Column, RackWineDto Wine);
 

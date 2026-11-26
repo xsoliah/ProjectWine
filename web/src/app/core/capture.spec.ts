@@ -50,3 +50,15 @@ describe('captureMarks', () => {
     expect(marks.barcode).toBeUndefined();
   });
 });
+
+describe('barcode of a draft', () => {
+  const withBarcode = detail({ barcode: { value: '4006381333931', source: 'Label' } });
+
+  it('prefills the form with the barcode', () => {
+    expect(captureToInitial(withBarcode).barcode).toBe('4006381333931');
+  });
+
+  it('marks the barcode as coming from the label', () => {
+    expect(captureMarks(withBarcode).barcode).toBe('Label');
+  });
+});
