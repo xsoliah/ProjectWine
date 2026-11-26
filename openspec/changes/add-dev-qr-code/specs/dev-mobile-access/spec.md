@@ -6,12 +6,12 @@ Beim Start der Entwicklungsumgebung lässt sich die laufende Oberfläche per QR-
 
 ## ADDED Requirements
 
-### Requirement: Dev-Start zeigt QR-Code zur Netzwerk-Adresse
-Das System SHALL beim Start der Entwicklungsumgebung (`dev.ps1`/`dev.cmd`) in der Konsole einen QR-Code ausgeben, der die im lokalen Netz erreichbare URL der Web-Oberfläche kodiert. Die URL MUST zusätzlich als Text ausgegeben werden. Der QR-Code MUST erst erscheinen, wenn die Oberfläche erreichbar ist, und MUST den tatsächlich verwendeten Frontend-Port enthalten.
+### Requirement: Dev-Start mit -Lan zeigt QR-Code zur Netzwerk-Adresse
+Das System SHALL beim Start der Entwicklungsumgebung im Netzwerk-Modus (`dev.ps1 -Lan`) in der Konsole einen QR-Code ausgeben, der die im lokalen Netz erreichbare URL der Web-Oberfläche kodiert. Die URL MUST zusätzlich als Text ausgegeben werden. Der QR-Code MUST erst erscheinen, wenn die Oberfläche erreichbar ist, und MUST den tatsächlich verwendeten Frontend-Port enthalten.
 
-#### Scenario: Start mit Standardport
+#### Scenario: Start mit -Lan und Standardport
 - **GIVEN** der Rechner hat die LAN-Adresse 192.168.1.23
-- **WHEN** ich die Entwicklungsumgebung ohne weitere Optionen starte
+- **WHEN** ich die Entwicklungsumgebung mit `-Lan` starte
 - **THEN** erscheint in der Konsole ein QR-Code für `http://192.168.1.23:4200`
 - **AND** die URL steht zusätzlich als Text darunter
 
@@ -26,7 +26,7 @@ Das System SHALL beim Start der Entwicklungsumgebung (`dev.ps1`/`dev.cmd`) in de
 - **THEN** lädt die Weinkeller-Oberfläche und kann die API nutzen
 
 ### Requirement: Oberfläche im lokalen Netz erreichbar
-Das System SHALL die Web-Oberfläche in der Entwicklung nicht nur über `localhost`, sondern auch über die LAN-Adresse des Rechners ausliefern, damit ein Handy sie öffnen kann. Der Zugriff auf die API MUST dabei über die Oberfläche (Proxy) laufen, sodass das Handy keine zweite Adresse braucht.
+Das System SHALL die Web-Oberfläche im Netzwerk-Modus (`-Lan`, HTTPS) nicht nur über `localhost`, sondern auch über die LAN-Adresse des Rechners ausliefern, damit ein Handy sie öffnen kann. Der Zugriff auf die API MUST dabei über die Oberfläche (Proxy) laufen, sodass das Handy keine zweite Adresse braucht.
 
 #### Scenario: API-Aufruf vom Handy
 - **GIVEN** die Oberfläche wurde auf dem Handy über die LAN-Adresse geöffnet

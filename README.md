@@ -48,7 +48,8 @@ Fenster und öffnet den Browser (`-NoBrowser` unterdrückt das). Strg+C beendet 
 andere mit beendet. Sind die Ports schon belegt (alte Instanz), bricht das Skript mit einem Hinweis ab.
 Andere Ports: `-ApiUrl http://localhost:5055 -WebPort 4300` (der Proxy in `web/proxy.conf.mjs` folgt `-ApiUrl`).
 **Am Handy testen (iPhone/Android im selben WLAN):** `.\dev.ps1 -Lan` startet das Frontend per HTTPS mit selbst
-signiertem Zertifikat im ganzen Netz und zeigt die Adresse an (z. B. `https://192.168.1.20:4200`). HTTPS ist nötig,
+signiertem Zertifikat im ganzen Netz und zeigt die Adresse als **QR-Code in der Konsole** an (mit der Handy-Kamera scannen; `-NoQr`
+unterdrückt ihn, die Adresse steht weiterhin als Text da, z. B. `https://192.168.1.20:4200`). HTTPS ist nötig,
 sonst bleibt die Kamera für den Barcode-Scan gesperrt. Die Zertifikatswarnung in Safari einmal über „Details
 einblenden“ → „Diese Website besuchen“ bestätigen. Voraussetzungen: Das WLAN ist in Windows als *Privates Netzwerk*
 eingestuft, und Port 4200 ist einmalig freigegeben (Admin-PowerShell):
