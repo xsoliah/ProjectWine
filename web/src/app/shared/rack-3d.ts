@@ -51,6 +51,7 @@ import {
   LabelAtlas,
   TILE_COUNT,
   PULL_DURATION_MS,
+  PULL_PITCH,
   slidePose,
 } from './rack-3d-look';
 
@@ -62,8 +63,10 @@ const BOTTLE_RADIUS = 0.36;
 const BOTTLE_LENGTH = 2.9;
 /** Pointer movement (px) up to which a press counts as a tap, not as rotating. */
 const TAP_TOLERANCE = 6;
-/** How far a tipped-out bottle reaches above/below its row. */
-const PULL_OVERHANG = 0.9;
+/** Height of an upright bottle's middle above its row centre: the label (0.5 below the middle) sits a little below the centre, so the bottle reaches about equally far up and down. */
+const UPRIGHT_LIFT = 0.2;
+/** How far an upright pulled-out bottle reaches above/below its row. */
+const PULL_OVERHANG = 1.15;
 const MAX_AZIMUTH = (45 * Math.PI) / 180;
 const MAX_TILT = (25 * Math.PI) / 180;
 
@@ -90,7 +93,7 @@ function capsule(): BufferGeometry {
   return geometry;
 }
 
-/** Slightly curved label on top of the bottle body (the side that tips toward the viewer when pulled out). */
+/** Slightly curved label on top of the bottle body (the side that faces the viewer once the rolled bottle stands upright). */
 function labelPatch(): BufferGeometry {
   const arc = (110 * Math.PI) / 180;
   const geometry = new CylinderGeometry(BOTTLE_RADIUS + 0.004, BOTTLE_RADIUS + 0.004, 1.0, 16, 1, true, Math.PI - arc / 2, arc);
@@ -192,6 +195,8 @@ export class Rack3d {
   private readonly rotation = new Quaternion();
   private readonly unit = new Vector3(1, 1, 1);
   private readonly axisX = new Vector3(1, 0, 0);
+  private readonly axisZ = new Vector3(0, 0, 1);
+  private readonly rollRotation = new Quaternion();
   private readonly matrix = new Matrix4();
   private pointerStart: { x: number; y: number } | null = null;
   private readonly raycaster = new Raycaster();
@@ -316,7 +321,7 @@ export class Rack3d {
   /** Distance at which the whole front of the rack fits into the view. */
   private fitCamera(rack: Rack, moveCamera: boolean): void {
     const halfFov = ((this.camera.fov / 2) * Math.PI) / 180;
-    // Room above and below: bottles of the top/bottom row tip out of the rack when their row is selected.
+    // Room above and below: bottles of the top/bottom row stand up beyond the rack when their row is selected.
     const height = rack.height * CELL + BOARD + 2 * PULL_OVERHANG;
     const width = rack.width * CELL + BOARD;
     const byHeight = height / 2 / Math.tan(halfFov);
@@ -373,12 +378,17 @@ export class Rack3d {
     this.requestRender();
   }
 
-  /** Writes the pose of one bottle (with capsule and label): in its slot, or pulled out and tipped by `progress`. */
+  /** Writes the pose of one bottle (with capsule and label): lying in its slot, or pulled out, rolled and standing by `progress`. */
   private placeSlot(rack: Rack, built: NonNullable<Rack3d['built']>, i: number, slot: RackSlot, progress: number): void {
     const { x, y } = this.cellCenter(rack, slot.row, slot.column);
     const pose = slidePose(progress);
-    this.position.set(x, y - CELL / 2 + BOARD / 2 + BOTTLE_RADIUS, pose.z);
-    this.rotation.setFromAxisAngle(this.axisX, pose.tilt);
+    const lyingY = y - CELL / 2 + BOARD / 2 + BOTTLE_RADIUS;
+    const standingY = y + UPRIGHT_LIFT;
+    const stood = pose.pitch / PULL_PITCH;
+    this.position.set(x, lyingY + (standingY - lyingY) * stood, pose.z);
+    // First roll around the long axis (label from top to bottom), then stand up: Rx(-pitch) · Rz(roll).
+    this.rollRotation.setFromAxisAngle(this.axisZ, pose.roll);
+    this.rotation.setFromAxisAngle(this.axisX, -pose.pitch).multiply(this.rollRotation);
     this.matrix.compose(this.position, this.rotation, this.unit);
     built.bottles.setMatrixAt(i, this.matrix);
     built.capsules.setMatrixAt(i, this.matrix);
@@ -467,14 +477,14 @@ export class Rack3d {
     }
   }
 
-  /** Per-instance atlas rectangle (attribute `labelRect`) applied to the label's own UVs, turned by 180 degrees. */
+  /** Per-instance atlas rectangle (attribute `labelRect`) applied to the label's own UVs. */
   private patchLabelShader(): void {
     this.labelMaterial.onBeforeCompile = (shader) => {
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nattribute vec4 labelRect;')
         .replace(
           '#include <uv_vertex>',
-          '#include <uv_vertex>\n#ifdef USE_MAP\nvMapUv = labelRect.xy + (vec2(1.0) - uv) * labelRect.zw;\n#endif',
+          '#include <uv_vertex>\n#ifdef USE_MAP\nvMapUv = labelRect.xy + uv * labelRect.zw;\n#endif',
         );
     };
   }

@@ -4,7 +4,8 @@ import {
   GLASS_BY_TYPE,
   LabelAtlas,
   PULL_DISTANCE,
-  PULL_TILT,
+  PULL_PITCH,
+  PULL_ROLL,
   TILE_COUNT,
   slidePose,
 } from './rack-3d-look';
@@ -28,10 +29,25 @@ describe('glass palette', () => {
       const [r, g, b] = channels(GLASS_BY_TYPE[type]);
       const max = Math.max(r, g, b);
       const saturation = max === 0 ? 0 : (max - Math.min(r, g, b)) / max;
-      expect(max).toBeLessThanOrEqual(0xc8);
+      if (type !== 'White' && type !== 'Rose') expect(max).toBeLessThanOrEqual(0xc8);
       expect(saturation).toBeLessThan(0.8);
       expect(r > 0x60 && g * 2 < r && b * 2 < r).toBe(false); // no bright red; amber is fine
     }
+  });
+
+  it('makes white wine glass light, barely saturated and greener than yellow', () => {
+    const [r, g, b] = channels(GLASS_BY_TYPE.White);
+    const max = Math.max(r, g, b);
+    expect(max).toBeGreaterThanOrEqual(0xd0);
+    expect((max - Math.min(r, g, b)) / max).toBeLessThan(0.15);
+    expect(g).toBeGreaterThanOrEqual(r);
+  });
+
+  it('keeps rose pinkish and dessert wine amber, both distinct from white', () => {
+    const [r, g] = channels(GLASS_BY_TYPE.Rose);
+    expect(r).toBeGreaterThan(g);
+    const [dr, , db] = channels(GLASS_BY_TYPE.Dessert);
+    expect(dr).toBeGreaterThan(db * 2);
   });
 
   it('makes red wine glass very dark', () => {
@@ -76,10 +92,18 @@ describe('LabelAtlas', () => {
 
 describe('slidePose', () => {
   it('rests in the shelf at 0 and is fully out at 1', () => {
-    expect(slidePose(0)).toEqual({ z: 0, tilt: 0 });
+    expect(slidePose(0)).toEqual({ z: 0, roll: 0, pitch: 0 });
     const out = slidePose(1);
     expect(out.z).toBeCloseTo(PULL_DISTANCE);
-    expect(out.tilt).toBeCloseTo(PULL_TILT);
+    expect(out.roll).toBeCloseTo(Math.PI);
+    expect(out.pitch).toBeCloseTo(Math.PI / 2);
+    expect(PULL_ROLL).toBeCloseTo(Math.PI);
+    expect(PULL_PITCH).toBeCloseTo(Math.PI / 2);
+  });
+
+  it('stands up only after the bottle has mostly slid out', () => {
+    expect(slidePose(0.3).pitch).toBe(0);
+    expect(slidePose(0.3).z).toBeGreaterThan(PULL_DISTANCE / 2);
   });
 
   it('moves monotonically and clamps out-of-range progress', () => {
@@ -87,7 +111,8 @@ describe('slidePose', () => {
     for (let i = 1; i <= 20; i++) {
       const pose = slidePose(i / 20);
       expect(pose.z).toBeGreaterThanOrEqual(previous.z);
-      expect(pose.tilt).toBeGreaterThanOrEqual(previous.tilt);
+      expect(pose.roll).toBeGreaterThanOrEqual(previous.roll);
+      expect(pose.pitch).toBeGreaterThanOrEqual(previous.pitch);
       previous = pose;
     }
     expect(slidePose(-1)).toEqual(slidePose(0));
