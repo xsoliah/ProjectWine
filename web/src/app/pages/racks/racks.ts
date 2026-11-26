@@ -1,13 +1,32 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
 import { errorMessage } from '../../core/errors';
-import { RackSummary } from '../../core/models';
+import { downloadText } from '../../core/download';
+import { ListViewState } from '../../core/list-view-state';
+import { tableCsv } from '../../core/list-views';
+import { Rack, RackSummary } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
+import { ColumnPicker } from '../../shared/column-picker';
+import { DataTable } from '../../shared/data-table';
+import { FilterBar } from '../../shared/filter-bar';
 import { Icon } from '../../shared/icon';
 import { Modal } from '../../shared/modal';
+import { PivotCellEvent, PivotTable } from '../../shared/pivot-table';
+import { ViewSwitch } from '../../shared/view-switch';
+import {
+  RACKS_PIVOT,
+  bottleFacts,
+  factDimensions,
+  factMeasures,
+  occupancyFacts,
+  rackColumns,
+  rackFilters,
+  rackKeyDimensions,
+  rackKeyMeasures,
+} from './racks.views';
 
 interface RackDraft {
   id: string | null;
@@ -21,7 +40,7 @@ const MAX_SIZE = 50;
 /** The user's wine racks: capacity, occupied and free slots; create, edit and delete. */
 @Component({
   selector: 'app-racks',
-  imports: [FormsModule, RouterLink, Icon, Modal],
+  imports: [FormsModule, RouterLink, Icon, Modal, ViewSwitch, ColumnPicker, DataTable, FilterBar, PivotTable],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './racks.css',
   template: `
@@ -37,8 +56,47 @@ const MAX_SIZE = 50;
         </div>
       }
 
+      @if (racks().length > 0) {
+        <div class="view-tools">
+          <app-view-switch [view]="view.view()" (changed)="view.setView($event)" />
+          @if (view.view() === 'table') {
+            <app-column-picker [columns]="allColumns" [visible]="visibleKeys()" (changed)="view.setColumns($event)" />
+            <button type="button" class="btn btn-small" [disabled]="tableRows().length === 0" (click)="exportTable()">
+              Als CSV exportieren
+            </button>
+          }
+        </div>
+        <app-filter-bar [defs]="filterDefs" [rows]="racks()" [state]="view.filters()"
+          (stateChange)="view.setFilters($event)" (reset)="view.resetFilters()" />
+      }
+
       @if (loading()) {
         <p class="muted" role="status">Regale werden geladen …</p>
+      } @else if (view.view() === 'pivot' && racks().length > 0) {
+        <div class="chips" role="group" aria-label="Pivot-Auswertung">
+          <button type="button" class="chip" [attr.aria-pressed]="mode() === 'type'" (click)="setMode('type')">Regal × Weinart</button>
+          <button type="button" class="chip" [attr.aria-pressed]="mode() === 'occ'" (click)="setMode('occ')">Regal × Belegung</button>
+        </div>
+        @if (detailsError(); as text) {
+          <div class="banner error" role="alert">
+            {{ text }} <button type="button" class="btn-link" (click)="loadDetails()">Erneut laden</button>
+          </div>
+        } @else if (detailsLoading()) {
+          <p class="muted" role="status">Belegung der Regale wird geladen …</p>
+        } @else {
+          <app-pivot-table [rows]="facts()" [dimensions]="pivotDims()" [measures]="pivotMeasures()"
+            [config]="view.pivotConfig()" [extraRowKeys]="rackNames()" fileName="regale-pivot.csv"
+            (configChange)="view.setPivot($event)" (cell)="onCell($event)" />
+        }
+      } @else if (filteredRacks().length === 0 && racks().length > 0) {
+        <div class="empty">
+          <h2>Keine passenden Einträge</h2>
+          <p>Ändere die Filter.</p>
+          <button type="button" class="btn" (click)="view.resetFilters()">Filter zurücksetzen</button>
+        </div>
+      } @else if (view.view() === 'table' && racks().length > 0) {
+        <app-data-table [rows]="tableRows()" [columns]="visibleColumns()" [sortKey]="view.sortKey()"
+          [sortDir]="view.sortDir()" [link]="link" label="Regale" (sortChange)="view.toggleSort($event)" />
       } @else if (racks().length === 0 && !error()) {
         <div class="empty">
           <app-icon name="rack" />
@@ -48,7 +106,7 @@ const MAX_SIZE = 50;
         </div>
       } @else {
         <ul class="racks">
-          @for (rack of racks(); track rack.id) {
+          @for (rack of filteredRacks(); track rack.id) {
             <li class="panel rack">
               <a class="main" [routerLink]="['/racks', rack.id]">
                 <span class="name">{{ rack.name }}</span>
@@ -107,6 +165,14 @@ export class Racks {
   readonly create = input<string | undefined>();
 
   private readonly api = inject(ApiService);
+  protected readonly view = new ListViewState<RackSummary>({
+    id: 'racks',
+    filters: rackFilters(),
+    columns: rackColumns(),
+    dimensions: rackKeyDimensions(),
+    measures: rackKeyMeasures(),
+    pivot: RACKS_PIVOT,
+  });
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
 
@@ -117,16 +183,80 @@ export class Racks {
   protected readonly busy = signal(false);
   protected readonly draft = signal<RackDraft | null>(null);
 
+  protected readonly filterDefs = this.view.config.filters;
+  protected readonly allColumns = this.view.config.columns;
+  protected readonly visibleColumns = this.view.columns;
+  protected readonly visibleKeys = computed(() => this.visibleColumns().map((c) => c.key));
+  protected readonly filteredRacks = computed(() => this.view.apply(this.racks()));
+  protected readonly tableRows = computed(() => this.view.sorted(this.filteredRacks()));
+  protected readonly rackNames = computed(() => this.filteredRacks().map((r) => r.name));
+
+  /** Regal × Weinart (Flaschen) oder Regal × Belegung (Fächer). */
+  protected readonly mode = computed<'type' | 'occ'>(() => {
+    const { row, col } = this.view.pivotConfig();
+    return row === 'occ' || col === 'occ' ? 'occ' : 'type';
+  });
+  protected readonly pivotDims = computed(() => factDimensions(this.mode()));
+  protected readonly pivotMeasures = computed(() => factMeasures(this.mode()));
+
+  /** Regaldetails (belegte Fächer mit Wein), nur für das Weinart-Pivot nachgeladen. */
+  private readonly details = signal<ReadonlyMap<string, Rack>>(new Map());
+  protected readonly detailsLoading = signal(false);
+  protected readonly detailsError = signal<string | null>(null);
+
+  protected readonly facts = computed(() =>
+    this.mode() === 'type' ? bottleFacts(this.filteredRacks(), this.details()) : occupancyFacts(this.filteredRacks()),
+  );
+
+  protected link = (rack: RackSummary): unknown[] => ['/racks', rack.id];
+
   constructor() {
+    effect(() => {
+      if (this.view.view() === 'pivot' && this.mode() === 'type' && this.racks().length > 0) {
+        void this.loadDetails();
+      }
+    });
     void this.load();
     queueMicrotask(() => {
       if (this.create()) this.startCreate();
     });
   }
 
+  protected setMode(mode: 'type' | 'occ'): void {
+    this.view.setPivot({ row: 'rack', col: mode, measure: 'count' });
+  }
+
+  protected exportTable(): void {
+    downloadText('regale.csv', tableCsv(this.tableRows(), this.visibleColumns()));
+  }
+
+  /** Antippen einer Pivotzelle zeigt das Regal (bzw. alle Regale) als Tabelle. */
+  protected onCell(event: PivotCellEvent): void {
+    const name = event.row ?? '';
+    this.view.setFilters({ ...this.view.filters(), ...(name ? { name } : {}) });
+    this.view.setView('table');
+  }
+
+  /** Lädt die Details der Regale, die noch fehlen (einmal je Regal). */
+  protected async loadDetails(): Promise<void> {
+    const missing = this.racks().filter((r) => !this.details().has(r.id));
+    if (missing.length === 0 || this.detailsLoading()) return;
+    this.detailsLoading.set(true);
+    this.detailsError.set(null);
+    try {
+      const loaded = await Promise.all(missing.map((r) => this.api.getRack(r.id)));
+      this.details.update((old) => new Map([...old, ...loaded.map((r) => [r.id, r] as const)]));
+    } catch (error) {
+      this.detailsError.set(errorMessage(error));
+    } finally {
+      this.detailsLoading.set(false);
+    }
+  }
+
   protected async load(): Promise<void> {
     this.error.set(null);
     try {
+      this.details.set(new Map());
       this.racks.set(await this.api.listRacks());
     } catch (error) {
       this.error.set(errorMessage(error));

@@ -126,6 +126,16 @@ npx cap open android
 - iOS: in `Info.plist` `NSCameraUsageDescription` setzen.
 - Die CORS-Origins für die Apps (`https://localhost`, `capacitor://localhost`) stehen in `appsettings.json` unter `Cors:Origins`.
 
+## Ansichten: Kacheln, Tabelle, Pivot
+
+Keller, Archiv und Regale lassen sich über den Umschalter „Ansicht“ als **Kacheln** (Standard), **Tabelle** oder **Pivot**
+anzeigen; die Wahl wird je Liste im Gerät gemerkt. Die Tabelle hat sortierbare Spalten (Antippen des Spaltenkopfs),
+wählbare Spalten und führt per Zeile zur Einzelansicht. Filter (Suche, Weinart, Land, Region, Rebsorte, Jahrgang,
+Trinkfenster, Zeitraum, Bewertung, Belegung …) wirken in allen drei Ansichten und stehen in der Adresse. Das Pivot
+wertet die gefilterten Einträge als Kreuztabelle aus (z. B. Flaschen je Land und Weinart); ein Antippen einer Zelle
+zeigt die zugehörigen Einträge als Tabelle. Tabelle und Pivot lassen sich als CSV exportieren (UTF-8 mit BOM,
+Semikolon). Sortieren, Filtern und Pivotieren laufen im Frontend, das Backend ist unverändert.
+
 ## Barcode-Erfassung
 
 `GET /api/wines/lookup/{barcode}` prüft zuerst deinen Keller (Flasche hinzufügen statt Duplikat), dann Open Food Facts.
