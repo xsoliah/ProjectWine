@@ -12,7 +12,7 @@ Das System SHALL beim Start der Entwicklungsumgebung im Netzwerk-Modus (`dev.ps1
 #### Scenario: Start mit -Lan und Standardport
 - **GIVEN** der Rechner hat die LAN-Adresse 192.168.1.23
 - **WHEN** ich die Entwicklungsumgebung mit `-Lan` starte
-- **THEN** erscheint in der Konsole ein QR-Code für `http://192.168.1.23:4200`
+- **THEN** erscheint in der Konsole ein QR-Code für `https://192.168.1.23:4200`
 - **AND** die URL steht zusätzlich als Text darunter
 
 #### Scenario: Anderer Port
