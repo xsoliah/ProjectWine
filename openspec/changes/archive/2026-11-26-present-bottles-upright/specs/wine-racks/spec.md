@@ -11,7 +11,7 @@ In der 3D-Ansicht SHALL das Antippen einer Flasche oder eines Fachs die ganze Re
 - **THEN** ist Reihe 2 hervorgehoben
 - **AND** die Liste zeigt Spalte 1 frei, Spalte 2 frei, Spalte 3 „Sassicaia“ 2021, Spalte 4 frei, Spalte 5 „Zweigelt“, Spalte 6 frei
 
-#### Scenario: Flaschen der Reihe drehen sich auf
+#### Scenario: Flaschen der Reihe fahren heraus
 - **GIVEN** in Reihe 2 liegen zwei Flaschen, die übrigen Reihen sind ebenfalls belegt
 - **WHEN** ich auf Reihe 2 tippe
 - **THEN** fahren die beiden Flaschen in einer kurzen, weichen Bewegung aus dem Regal heraus, drehen sich dabei um ihre Längsachse und richten sich auf

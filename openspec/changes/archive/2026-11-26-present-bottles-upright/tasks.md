@@ -14,7 +14,7 @@
 
 ## 3. Abschluss
 
-- [ ] 3.1 `openspec validate present-bottles-upright` ausführen (Warnungen zur Anforderungslänge bei MODIFIED sind bekannt) und die Anforderungstexte mit dem Stand nach Archivierung von `improve-3d-rack-bottles` abgleichen
+- [x] 3.1 `openspec validate present-bottles-upright` ausführen (Warnungen zur Anforderungslänge bei MODIFIED sind bekannt) und die Anforderungstexte mit dem Stand nach Archivierung von `improve-3d-rack-bottles` abgleichen
 
 ## Workflow follow-up
 

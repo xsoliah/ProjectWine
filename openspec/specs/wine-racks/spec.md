@@ -58,7 +58,7 @@ Das System SHALL ein Regal beim Öffnen als zweidimensionales Raster aus Reihen 
 - **AND** alle anderen Fächer werden als frei angezeigt
 
 ### Requirement: 3D-Ansicht des Regals
-Als zusätzliche, optionale Ansicht SHALL das System ein Regal als dreidimensionales Modell mit Höhe × Breite Fächern zeigen, wenn der Benutzer die 3D-Ansicht wählt. In jedem belegten Fach MUST eine liegende Flasche mit dem Hals zum Betrachter liegen, freie Fächer MUST leer sein. Alle Weine MUST dasselbe Modell einer Bordeaux-Flasche verwenden, dessen Farbe sich nach dem Weintyp richtet.
+Als zusätzliche, optionale Ansicht SHALL das System ein Regal als dreidimensionales Modell mit Höhe × Breite Fächern zeigen, wenn der Benutzer die 3D-Ansicht wählt. In jedem belegten Fach MUST eine liegende Flasche mit dem Hals zum Betrachter liegen, freie Fächer MUST leer sein. Alle Weine MUST dasselbe Modell einer Bordeaux-Flasche verwenden, dessen Glasfarbe sich nach dem Weintyp richtet und natürlichen Flaschenfarben entspricht (keine leuchtenden Farben). Auf jeder Flasche MUST das Etikett ihres Weins zu sehen sein, sofern der Wein ein Etikettenbild hat, sonst ein neutrales Etikett.
 
 #### Scenario: Regal in 3D öffnen
 - **GIVEN** ein Regal mit Höhe 5 und Breite 6, in dem 4 Flaschen liegen
@@ -69,7 +69,23 @@ Als zusätzliche, optionale Ansicht SHALL das System ein Regal als dreidimension
 #### Scenario: Farbe nach Weintyp
 - **GIVEN** im Regal liegen eine Flasche Rotwein und eine Flasche Weißwein
 - **WHEN** ich das Regal in 3D ansehe
-- **THEN** haben beide Flaschen dieselbe Form, aber unterschiedliche Farben
+- **THEN** haben beide Flaschen dieselbe Form, aber unterschiedliche Glasfarben
+- **AND** die Rotweinflasche ist dunkel (nahezu schwarzgrün) und nicht leuchtend rot
+
+#### Scenario: Wein mit Etikettenbild
+- **GIVEN** im Regal liegt eine Flasche „Sassicaia“ 2021, deren Wein ein Etikettenbild hat
+- **WHEN** ich das Regal in 3D ansehe
+- **THEN** zeigt die Flasche dieses Etikettenbild
+
+#### Scenario: Wein ohne Etikettenbild
+- **GIVEN** im Regal liegt eine Flasche, deren Wein kein Etikettenbild hat
+- **WHEN** ich das Regal in 3D ansehe
+- **THEN** trägt die Flasche ein neutrales Etikett ohne Beschriftung
+
+#### Scenario: Etikettenbild lässt sich nicht laden
+- **GIVEN** das Etikettenbild eines Weins ist nicht abrufbar
+- **WHEN** ich das Regal in 3D ansehe
+- **THEN** trägt die Flasche das neutrale Etikett und die 3D-Ansicht bleibt bedienbar
 
 ### Requirement: 3D-Regal drehen und zoomen
 In der 3D-Ansicht SHALL der Benutzer das Regal in begrenztem Umfang drehen und zoomen können. „Ansicht zurücksetzen“ MUST zur Startansicht führen, die das ganze Regal von vorne zeigt.
@@ -80,7 +96,7 @@ In der 3D-Ansicht SHALL der Benutzer das Regal in begrenztem Umfang drehen und z
 - **THEN** sehe ich das ganze Regal wieder von vorne
 
 ### Requirement: Reihe antippen zeigt ihre Weine
-In der 3D-Ansicht SHALL das Antippen einer Flasche oder eines Fachs die ganze Reihe hervorheben und alle Fächer dieser Reihe von links nach rechts auflisten: für belegte Fächer Spalte, Name, Erzeuger, Jahrgang und Typ des Weins, für freie Fächer Spalte und „frei“. Das Antippen eines Eintrags MUST die Fach-Aktionen (einlagern, umlagern, auslagern, trinken, verkaufen, verschenken) öffnen. Das Antippen einer anderen Reihe MUST die Auswahl wechseln, Schließen MUST die Hervorhebung aufheben.
+In der 3D-Ansicht SHALL das Antippen einer Flasche oder eines Fachs die ganze Reihe hervorheben und alle Fächer dieser Reihe von links nach rechts auflisten: für belegte Fächer Spalte, Name, Erzeuger, Jahrgang und Typ des Weins, für freie Fächer Spalte und „frei“. Die Flaschen der ausgewählten Reihe MUST weich aus dem Regal herausfahren, sich dabei um ihre Längsachse drehen und aufrichten, sodass sie am Ende aufrecht mit dem Etikett zum Betrachter stehen. Das Antippen eines Eintrags MUST die Fach-Aktionen (einlagern, umlagern, auslagern, trinken, verkaufen, verschenken) öffnen. Das Antippen einer anderen Reihe MUST die Auswahl wechseln, Schließen MUST die Hervorhebung aufheben und die Flaschen wieder einfahren.
 
 #### Scenario: Reihe 2 antippen
 - **GIVEN** ein Regal mit Höhe 5 und Breite 6, in Reihe 2 liegt „Sassicaia“ 2021 in Spalte 3 und „Zweigelt“ in Spalte 5
@@ -88,15 +104,38 @@ In der 3D-Ansicht SHALL das Antippen einer Flasche oder eines Fachs die ganze Re
 - **THEN** ist Reihe 2 hervorgehoben
 - **AND** die Liste zeigt Spalte 1 frei, Spalte 2 frei, Spalte 3 „Sassicaia“ 2021, Spalte 4 frei, Spalte 5 „Zweigelt“, Spalte 6 frei
 
-#### Scenario: Aus der Reihe trinken
-- **GIVEN** die Liste von Reihe 2 ist geöffnet
-- **WHEN** ich auf „Sassicaia“ 2021 tippe und „Trinken“ wähle
-- **THEN** ist Reihe 2, Spalte 3 frei und im 3D-Regal liegt dort keine Flasche mehr
+#### Scenario: Flaschen der Reihe fahren heraus
+- **GIVEN** in Reihe 2 liegen zwei Flaschen, die übrigen Reihen sind ebenfalls belegt
+- **WHEN** ich auf Reihe 2 tippe
+- **THEN** fahren die beiden Flaschen in einer kurzen, weichen Bewegung aus dem Regal heraus, drehen sich dabei um ihre Längsachse und richten sich auf
+- **AND** am Ende stehen sie aufrecht und ihr Etikett zeigt frontal zum Betrachter und ist lesbar
+- **AND** die Flaschen aller anderen Reihen bleiben unverändert im Regal
 
 #### Scenario: Andere Reihe wählen
 - **GIVEN** Reihe 2 ist ausgewählt
 - **WHEN** ich auf ein Fach in Reihe 4 tippe
 - **THEN** ist nur noch Reihe 4 hervorgehoben und die Liste zeigt die Fächer von Reihe 4
+- **AND** die Flaschen von Reihe 2 legen sich wieder und fahren ein, die von Reihe 4 fahren heraus
+
+#### Scenario: Auswahl schließen
+- **GIVEN** Reihe 2 ist ausgewählt und ihre Flaschen stehen aufrecht vor dem Regal
+- **WHEN** ich die Reihe schließe
+- **THEN** legen sich die Flaschen wieder, fahren vollständig ins Regal und die Hervorhebung verschwindet
+
+#### Scenario: Oberste und unterste Reihe
+- **GIVEN** ein Regal, dessen oberste Reihe belegt ist
+- **WHEN** ich die oberste Reihe wähle
+- **THEN** sind die aufrecht stehenden Flaschen vollständig sichtbar und nicht am Bildrand abgeschnitten
+
+#### Scenario: Bewegung reduzieren
+- **GIVEN** mein Gerät ist auf „Bewegung reduzieren“ eingestellt
+- **WHEN** ich eine Reihe auswähle oder abwähle
+- **THEN** wechseln die Flaschen ohne Animation direkt in die aufrechte, ausgefahrene bzw. die liegende, eingefahrene Stellung
+
+#### Scenario: Aus der Reihe trinken
+- **GIVEN** die Liste von Reihe 2 ist geöffnet
+- **WHEN** ich auf „Sassicaia“ 2021 tippe und „Trinken“ wähle
+- **THEN** ist Reihe 2, Spalte 3 frei und im 3D-Regal liegt dort keine Flasche mehr
 
 ### Requirement: Ansicht ohne 3D
 Der Benutzer SHALL zwischen den Ansichten „Raster“ (Standard) und „3D“ umschalten können. Unterstützt das Gerät keine 3D-Darstellung, MUST die Auswahl „3D“ mit einem Hinweis deaktiviert sein, während Kellerliste und Raster unverändert funktionieren. Geht die 3D-Darstellung während der Nutzung verloren, MUST das System zur Ansicht „Raster“ wechseln. Die Auswahl einer Reihe und ihre Liste MUST auch per Tastatur und mit einem Screenreader bedienbar sein.
@@ -274,3 +313,12 @@ Ein Wein MUST NOT mehr ein frei eingebbares Lagerort-Feld haben. Der Lagerort ei
 - **WHEN** der Benutzer das Formular zum Anlegen oder Bearbeiten eines Weins öffnet
 - **THEN** gibt es kein Eingabefeld „Lagerort“
 - **AND** Wein-Daten der API enthalten kein Feld für einen Freitext-Lagerort
+
+### Requirement: Weißwein erscheint als helles Glas
+Die Flaschen von Weißwein SHALL in der 3D-Ansicht in sehr hellem, weißlichem Glas erscheinen (nur ein leichter Grünstich, kein deutliches Gelb) und sich dadurch klar von Rosé-, Dessertwein- und Rotweinflaschen unterscheiden.
+
+#### Scenario: Weißwein neben Dessertwein
+- **GIVEN** im Regal liegen eine Flasche Weißwein und eine Flasche Dessertwein
+- **WHEN** ich das Regal in 3D ansehe
+- **THEN** wirkt die Weißweinflasche hell und weißlich
+- **AND** die Dessertweinflasche bleibt deutlich bernsteinfarben

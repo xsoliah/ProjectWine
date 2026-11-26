@@ -26,7 +26,7 @@
 
 ## 5. Spezifikation und Dokumentation
 
-- [ ] 5.1 Beschreibung der 3D-Ansicht in der README (falls vorhanden) an Etiketten und Ausfahr-Animation anpassen und `openspec validate improve-3d-rack-bottles --strict` ausführen; der Befehl läuft fehlerfrei durch
+- [x] 5.1 Beschreibung der 3D-Ansicht in der README (falls vorhanden) an Etiketten und Ausfahr-Animation anpassen und `openspec validate improve-3d-rack-bottles --strict` ausführen; der Befehl läuft fehlerfrei durch
 
 ## Workflow follow-up
 
