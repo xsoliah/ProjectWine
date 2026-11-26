@@ -23,7 +23,9 @@ public record WineDto(
     string? Notes,
     Guid? LabelImageId = null,
     Guid? LabelSourceImageId = null,
-    IReadOnlyList<LabelPointDto>? LabelCorners = null);
+    IReadOnlyList<LabelPointDto>? LabelCorners = null,
+    Guid? BottleImageId = null,
+    BottleShape? BottleShape = null);
 
 /// <summary>Used for create and update (update replaces all fields, including the bottle count).</summary>
 public record SaveWineRequest(
@@ -245,7 +247,15 @@ public record CaptureDetailDto(
     IReadOnlyList<Capture.WebSource> Sources,
     Guid? CountryId,
     Guid? RegionId,
-    WineDto? ExistingWine);
+    WineDto? ExistingWine,
+    Guid? BottleImageId = null,
+    BottleShape? BottleShape = null);
+
+/// <summary>
+/// Adjusts the bottle: a new <c>Outline</c> on the original photo (optional; the profile follows it) and the
+/// label placement relative to the bottle. Confirms the bottle (clears "Flasche prüfen").
+/// </summary>
+public record SetBottleShapeRequest(IReadOnlyList<LabelPointDto>? Outline, BottleLabelPlacement? Label);
 
 /// <summary>Either <c>WineId</c> (the wine just created from the form) or <c>AddToWineId</c> (+ optional count).</summary>
 public record AcceptCaptureRequest(Guid? WineId = null, Guid? AddToWineId = null, int? Count = null);

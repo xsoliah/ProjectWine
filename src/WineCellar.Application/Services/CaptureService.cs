@@ -12,6 +12,7 @@ public class CaptureService(
     ICurrentUser user,
     ImageService images,
     ILabelImageExtractor extractor,
+    BottleAnalyzer bottles,
     ICaptureAvailability availability,
     ICaptureQueue queue,
     IOptions<PhotoCaptureOptions> options,
@@ -131,7 +132,8 @@ public class CaptureService(
             F(result?.Name), F(result?.Producer), F(result?.Vintage), F(result?.Type), F(result?.Country),
             F(result?.Region), F(result?.BottleSizeMl), F(result?.DrinkFrom), F(result?.DrinkUntil),
             F(result?.Barcode), F(result?.Notes),
-            grapes, sources, countryId, regionId, existing?.ToDto());
+            grapes, sources, countryId, regionId, existing?.ToDto(),
+            draft.BottleImageId, BottleShapeJson.Deserialize(draft.BottleShapeJson));
     }
 
     /// <summary>Researches the draft again (failed or finished); counts towards the daily limit.</summary>
@@ -142,7 +144,9 @@ public class CaptureService(
         if (draft.Status is CaptureStatus.Pending or CaptureStatus.Researching)
             throw new ConflictException("Dieser Entwurf wird bereits recherchiert.");
 
-        await images.RemoveAsync([draft.LabelPreviewImageId], ct);
+        await images.RemoveAsync([draft.LabelPreviewImageId, draft.BottleImageId], ct);
+        draft.BottleShapeJson = null;
+        draft.BottleImageId = null;
         draft.Status = CaptureStatus.Pending;
         draft.Attempts = 0;
         draft.Error = null;
@@ -177,6 +181,35 @@ public class CaptureService(
     }
 
     /// <summary>
+    /// Adjusts the bottle of a finished draft (outline and/or label placement) and cuts the bottle image again;
+    /// confirms the bottle. No research, no quota.
+    /// </summary>
+    public async Task<CaptureDetailDto> SetBottleShapeAsync(Guid id, SetBottleShapeRequest request, CancellationToken ct = default)
+    {
+        var draft = await FindAsync(id, ct);
+        if (draft.Status != CaptureStatus.Ready)
+            throw new ConflictException("Die Flasche kann erst angepasst werden, wenn die Recherche fertig ist.");
+        var placement = request.Label ?? throw new DomainException("Bitte die Lage des Etiketts angeben.");
+        var front = await images.GetAsync(draft.FrontImageId, ct);
+        var type = ReadResult(draft.ResultJson)?.Type?.Value ?? WineType.Red;
+        var analysis = bottles.Adjust(front.Data, BottleShapeJson.Deserialize(draft.BottleShapeJson),
+            ToOutline(request.Outline), placement, type);
+
+        await images.RemoveAsync([draft.BottleImageId], ct);
+        draft.BottleImageId = analysis.Image is { } png
+            ? images.AddGenerated(png, BottleImageFormat.ContentType, user.UserId).Id
+            : null;
+        draft.BottleShapeJson = BottleShapeJson.Serialize(analysis.Shape);
+        draft.Touch();
+        await db.SaveChangesAsync(ct);
+        return await GetAsync(id, ct);
+    }
+
+    /// <summary>Outline points of a request; null when none were sent.</summary>
+    internal static IReadOnlyList<LabelPoint>? ToOutline(IReadOnlyList<LabelPointDto>? points) =>
+        points?.Select(p => new LabelPoint(p.X, p.Y)).ToList();
+
+    /// <summary>
     /// Takes over a finished draft: either it belongs to the wine just created from the form (the extracted label
     /// becomes its label image, the front photo its original), or its bottles are added to an existing wine.
     /// The draft is deleted afterwards.
@@ -200,7 +233,10 @@ public class CaptureService(
         // New wine, or an existing wine without a picture: the draft's photos become its label image.
         if (request.WineId is not null || (wine.LabelImageId is null && wine.LabelSourceImageId is null))
         {
-            await images.RemoveAsync([wine.LabelImageId, wine.LabelSourceImageId], ct);
+            await images.RemoveAsync([wine.LabelImageId, wine.LabelSourceImageId, wine.BottleImageId], ct);
+            wine.BottleShapeJson = draft.BottleShapeJson;
+            wine.BottleImageId = draft.BottleImageId;
+            if (draft.BottleImageId is { } bottleId) keep.Add(bottleId);
             wine.LabelSourceImageId = draft.FrontImageId;
             wine.LabelImageId = draft.LabelPreviewImageId; // null when the corners were never confirmed
             wine.LabelCornersJson = draft.LabelPreviewImageId is null ? null : draft.LabelCornersJson;
@@ -208,7 +244,7 @@ public class CaptureService(
             if (draft.LabelPreviewImageId is { } previewId) keep.Add(previewId);
         }
 
-        var drop = new[] { draft.FrontImageId, draft.BackImageId, draft.LabelPreviewImageId }
+        var drop = new[] { draft.FrontImageId, draft.BackImageId, draft.LabelPreviewImageId, draft.BottleImageId }
             .Where(i => i is not null && !keep.Contains(i.Value));
         await images.RemoveAsync(drop, ct);
         db.CaptureDrafts.Remove(draft);
@@ -220,14 +256,14 @@ public class CaptureService(
     public async Task DiscardAsync(Guid id, CancellationToken ct = default)
     {
         var draft = await FindAsync(id, ct);
-        await images.RemoveAsync([draft.FrontImageId, draft.BackImageId, draft.LabelPreviewImageId], ct);
+        await images.RemoveAsync([draft.FrontImageId, draft.BackImageId, draft.LabelPreviewImageId, draft.BottleImageId], ct);
         db.CaptureDrafts.Remove(draft);
         await db.SaveChangesAsync(ct);
     }
 
     // ----- helpers -----
 
-    private void EnsureEnabled()
+    public void EnsureEnabled()
     {
         if (!availability.IsEnabled)
             throw new ServiceUnavailableException(
@@ -236,8 +272,19 @@ public class CaptureService(
 
     private DateOnly Today() => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
+    /// <summary>Throws <see cref="QuotaExceededException"/> when today's limit is used up (nothing is counted).</summary>
+    public async Task EnsureQuotaAvailableAsync(CancellationToken ct)
+    {
+        var used = await db.CaptureUsages
+            .Where(u => u.OwnerId == user.UserId && u.Day == Today())
+            .Select(u => u.Count)
+            .FirstOrDefaultAsync(ct);
+        if (used >= Limit)
+            throw new QuotaExceededException($"Das Tageslimit von {Limit} Recherchen ist erreicht. Morgen geht es wieder.");
+    }
+
     /// <summary>Counts one research for today and saves the pending changes in the same transaction.</summary>
-    private async Task ConsumeQuotaAndSaveAsync(CancellationToken ct)
+    public async Task ConsumeQuotaAndSaveAsync(CancellationToken ct)
     {
         var today = Today();
         for (var attempt = 0; ; attempt++)

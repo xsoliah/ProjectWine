@@ -11,7 +11,8 @@ public interface IWineResearchAgent
     /// <param name="hint">Optional note of the user, passed as a hint (not as an instruction).</param>
     /// <exception cref="WineResearchException">The research failed; <see cref="WineResearchException.IsTransient"/> tells whether a retry may help.</exception>
     /// <param name="knownBarcode">Barcode already known from the user's device (valid check digit), or null.</param>
-    Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct);
+    /// <param name="bottleOnly">Only the bottle outline and label corners matter (detecting the bottle of an existing wine): no web research.</param>
+    Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct, bool bottleOnly = false);
 }
 
 public class WineResearchException(string message, bool isTransient, Exception? inner = null) : Exception(message, inner)
@@ -97,6 +98,9 @@ public sealed record WineResearchResult
 
     /// <summary>Corners of the front label on the first photo, or null when not reliably detected.</summary>
     public LabelCorners? LabelCorners { get; init; }
+
+    /// <summary>Silhouette of the whole bottle on the first photo, or null when there is none.</summary>
+    public BottleDetection? Bottle { get; init; }
 
     /// <summary>Collected from the web tool results (never written by the model).</summary>
     public IReadOnlyList<WebSource> Sources { get; init; } = [];

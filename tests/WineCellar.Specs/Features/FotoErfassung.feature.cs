@@ -678,15 +678,15 @@ namespace WineCellar.Specs.Features
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Dienst vorübergehend nicht erreichbar")]
+        [Xunit.SkippableFactAttribute(DisplayName="Flasche vollständig im Bild")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Dienst vorübergehend nicht erreichbar")]
-        public async global::System.Threading.Tasks.Task DienstVorubergehendNichtErreichbar()
+        [Xunit.TraitAttribute("Description", "Flasche vollständig im Bild")]
+        public async global::System.Threading.Tasks.Task FlascheVollstandigImBild()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Dienst vorübergehend nicht erreichbar", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 115
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Flasche vollständig im Bild", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 117
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -698,35 +698,35 @@ namespace WineCellar.Specs.Features
                 await this.ScenarioStartAsync();
 #line 6
   await this.FeatureBackgroundAsync();
-#line hidden
-#line 116
-    await testRunner.GivenAsync("der KI-Dienst ist beim ersten Versuch überlastet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
-#line hidden
-#line 117
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 118
-    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+    await testRunner.GivenAsync("der Agent erkennt die ganze Flasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
 #line 119
-    await testRunner.ThenAsync("hat der Entwurf den Status \"fertig\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 120
-    await testRunner.AndAsync("der Agent wurde 2-mal aufgerufen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 121
+    await testRunner.ThenAsync("enthält der Entwurf Flaschenumriss und Etikettenlage", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 122
+    await testRunner.AndAsync("die Etikettenhöhe im Verhältnis zur Flaschenhöhe entspricht dem Foto", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Dienst dauerhaft nicht erreichbar")]
+        [Xunit.SkippableFactAttribute(DisplayName="Kein zusätzlicher Aufruf")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Dienst dauerhaft nicht erreichbar")]
-        public async global::System.Threading.Tasks.Task DienstDauerhaftNichtErreichbar()
+        [Xunit.TraitAttribute("Description", "Kein zusätzlicher Aufruf")]
+        public async global::System.Threading.Tasks.Task KeinZusatzlicherAufruf()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Dienst dauerhaft nicht erreichbar", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 122
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Kein zusätzlicher Aufruf", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 124
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -738,75 +738,38 @@ namespace WineCellar.Specs.Features
                 await this.ScenarioStartAsync();
 #line 6
   await this.FeatureBackgroundAsync();
-#line hidden
-#line 123
-    await testRunner.GivenAsync("der KI-Dienst ist bei 3 Versuchen überlastet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
-#line hidden
-#line 124
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 125
-    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+    await testRunner.GivenAsync("das Tageslimit ist 20 und ich habe heute 2 Recherchen gestartet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
 #line 126
-    await testRunner.ThenAsync("hat der Entwurf den Status \"fehlgeschlagen\" mit dem Hinweis \"überlastet\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.AndAsync("der Agent erkennt die ganze Flasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 127
-    await testRunner.AndAsync("der Agent wurde 3-mal aufgerufen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Abgelehnte Anfrage wird nicht wiederholt")]
-        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Abgelehnte Anfrage wird nicht wiederholt")]
-        public async global::System.Threading.Tasks.Task AbgelehnteAnfrageWirdNichtWiederholt()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Abgelehnte Anfrage wird nicht wiederholt", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 129
-  this.ScenarioInitialize(scenarioInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 6
-  await this.FeatureBackgroundAsync();
-#line hidden
-#line 130
-    await testRunner.GivenAsync("der KI-Dienst lehnt die Anfrage ab", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
-#line hidden
-#line 131
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
-#line hidden
-#line 132
+#line 128
     await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 133
-    await testRunner.ThenAsync("hat der Entwurf den Status \"fehlgeschlagen\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line 129
+    await testRunner.ThenAsync("ich habe heute 3 Recherchen verbraucht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 134
+#line 130
     await testRunner.AndAsync("der Agent wurde 1-mal aufgerufen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Erneut recherchieren")]
+        [Xunit.SkippableFactAttribute(DisplayName="Freigestellte Flasche")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Erneut recherchieren")]
-        public async global::System.Threading.Tasks.Task ErneutRecherchieren()
+        [Xunit.TraitAttribute("Description", "Freigestellte Flasche")]
+        public async global::System.Threading.Tasks.Task FreigestellteFlasche()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Erneut recherchieren", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 136
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Freigestellte Flasche", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 132
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -819,36 +782,73 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 137
-    await testRunner.GivenAsync("der KI-Dienst lehnt die Anfrage ab", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line 133
+    await testRunner.GivenAsync("der Agent erkennt die ganze Flasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 138
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 134
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 139
-    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 135
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 140
-    await testRunner.WhenAsync("ich \"Erneut recherchieren\" wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
-#line hidden
-#line 141
-    await testRunner.ThenAsync("hat der Entwurf den Status \"wartet\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
-#line hidden
-#line 142
-    await testRunner.AndAsync("ich habe heute 2 Recherchen verbraucht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 136
+    await testRunner.ThenAsync("der Entwurf zeigt eine freigestellte Flasche mit dem Etikett in Originalgröße", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Zähler in der Navigation")]
+        [Xunit.SkippableFactAttribute(DisplayName="Flasche abgeschnitten")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Zähler in der Navigation")]
-        public async global::System.Threading.Tasks.Task ZahlerInDerNavigation()
+        [Xunit.TraitAttribute("Description", "Flasche abgeschnitten")]
+        public async global::System.Threading.Tasks.Task FlascheAbgeschnitten()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Zähler in der Navigation", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Flasche abgeschnitten", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 138
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 139
+    await testRunner.GivenAsync("der Agent erkennt eine abgeschnittene Flasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 140
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 141
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 142
+    await testRunner.ThenAsync("hat der Entwurf den Status \"fertig\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 143
+    await testRunner.AndAsync("der Entwurf zeigt den Hinweis \"Flasche prüfen\" mit einer Standardflasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 144
+    await testRunner.AndAsync("der Entwurf hat noch kein Flaschenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Kein Flaschenumriss")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Kein Flaschenumriss")]
+        public async global::System.Threading.Tasks.Task KeinFlaschenumriss()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Kein Flaschenumriss", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 146
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -863,27 +863,33 @@ namespace WineCellar.Specs.Features
   await this.FeatureBackgroundAsync();
 #line hidden
 #line 147
-    await testRunner.GivenAsync("ich habe 3 Fotos aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+    await testRunner.GivenAsync("der Agent erkennt keinen Flaschenumriss", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
 #line 148
-    await testRunner.AndAsync("für 2 davon ist die Recherche fertig", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 149
-    await testRunner.ThenAsync("zeigt die Navigation bei „Entwürfe“ die Zahl 2", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 150
+    await testRunner.ThenAsync("der Entwurf zeigt den Hinweis \"Flasche prüfen\" mit einer Standardflasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 151
+    await testRunner.AndAsync("der Entwurf hat noch kein Flaschenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Fremde Entwürfe")]
+        [Xunit.SkippableFactAttribute(DisplayName="Etikett im Entwurf versetzen")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Fremde Entwürfe")]
-        public async global::System.Threading.Tasks.Task FremdeEntwurfe()
+        [Xunit.TraitAttribute("Description", "Etikett im Entwurf versetzen")]
+        public async global::System.Threading.Tasks.Task EtikettImEntwurfVersetzen()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Fremde Entwürfe", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 151
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Etikett im Entwurf versetzen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 153
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -895,35 +901,41 @@ namespace WineCellar.Specs.Features
                 await this.ScenarioStartAsync();
 #line 6
   await this.FeatureBackgroundAsync();
-#line hidden
-#line 152
-    await testRunner.GivenAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
-#line hidden
-#line 153
-    await testRunner.AndAsync("ich bin als \"ben\" angemeldet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 154
-    await testRunner.ThenAsync("sehe ich keine Entwürfe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.GivenAsync("der Agent erkennt keinen Flaschenumriss", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
 #line 155
-    await testRunner.WhenAsync("ich Annas Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 156
-    await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"nicht gefunden\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 157
+    await testRunner.WhenAsync("ich im Entwurf die Etikettenlage nach oben schiebe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 158
+    await testRunner.ThenAsync("sitzt das Etikett im Entwurf höher", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 159
+    await testRunner.AndAsync("ich habe heute 1 Recherchen verbraucht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 160
+    await testRunner.AndAsync("der Agent wurde 1-mal aufgerufen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Unbekanntes Land wird vorgeschlagen, bekanntes zugeordnet")]
+        [Xunit.SkippableFactAttribute(DisplayName="Flasche im Entwurf bestätigen")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Unbekanntes Land wird vorgeschlagen, bekanntes zugeordnet")]
-        public async global::System.Threading.Tasks.Task UnbekanntesLandWirdVorgeschlagenBekanntesZugeordnet()
+        [Xunit.TraitAttribute("Description", "Flasche im Entwurf bestätigen")]
+        public async global::System.Threading.Tasks.Task FlascheImEntwurfBestatigen()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Unbekanntes Land wird vorgeschlagen, bekanntes zugeordnet", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 160
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Flasche im Entwurf bestätigen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 162
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -936,8 +948,48 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 161
-    await testRunner.GivenAsync("ich habe das Land \"Italien\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line 163
+    await testRunner.GivenAsync("der Agent erkennt eine abgeschnittene Flasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 164
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 165
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 166
+    await testRunner.WhenAsync("ich im Entwurf den Flaschenumriss bestätige", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 167
+    await testRunner.ThenAsync("der Entwurf hat ein Flaschenbild und keinen Hinweis \"Flasche prüfen\" mehr", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Flasche übernehmen")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Flasche übernehmen")]
+        public async global::System.Threading.Tasks.Task FlascheUbernehmen()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Flasche übernehmen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 169
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 170
+    await testRunner.GivenAsync("der Agent erkennt die ganze Flasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
                 global::Reqnroll.Table table5 = new global::Reqnroll.Table(new string[] {
                             "Feld",
@@ -945,40 +997,39 @@ namespace WineCellar.Specs.Features
                             "Herkunft"});
                 table5.AddRow(new string[] {
                             "Name",
-                            "Douro",
+                            "Sassicaia",
                             "Etikett"});
-                table5.AddRow(new string[] {
-                            "Land",
-                            "Portugal",
-                            "Web"});
-#line 162
+#line 171
     await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table5, "Und ");
 #line hidden
-#line 166
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 174
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 167
+#line 175
     await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 168
-    await testRunner.WhenAsync("ich den Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line 176
+    await testRunner.WhenAsync("ich den Entwurf als neuen Wein speichere", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 169
-    await testRunner.ThenAsync("schlägt der Entwurf das Land \"Portugal\" vor, ohne es zuzuordnen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line 177
+    await testRunner.ThenAsync("der Wein \"Sassicaia\" hat Flaschenmaß und Flaschenbild des Entwurfs", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 178
+    await testRunner.AndAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Bekanntes Land und Rebsorte werden zugeordnet")]
+        [Xunit.SkippableFactAttribute(DisplayName="Wein löschen löscht das Flaschenbild")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Bekanntes Land und Rebsorte werden zugeordnet")]
-        public async global::System.Threading.Tasks.Task BekanntesLandUndRebsorteWerdenZugeordnet()
+        [Xunit.TraitAttribute("Description", "Wein löschen löscht das Flaschenbild")]
+        public async global::System.Threading.Tasks.Task WeinLoschenLoschtDasFlaschenbild()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Bekanntes Land und Rebsorte werden zugeordnet", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 171
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Wein löschen löscht das Flaschenbild", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 180
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -991,11 +1042,8 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 172
-    await testRunner.GivenAsync("ich habe das Land \"Italien\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
-#line hidden
-#line 173
-    await testRunner.AndAsync("ich habe die Rebsorte \"Sangiovese\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 181
+    await testRunner.GivenAsync("der Agent erkennt die ganze Flasche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
                 global::Reqnroll.Table table6 = new global::Reqnroll.Table(new string[] {
                             "Feld",
@@ -1003,44 +1051,39 @@ namespace WineCellar.Specs.Features
                             "Herkunft"});
                 table6.AddRow(new string[] {
                             "Name",
-                            "Chianti",
+                            "Sassicaia",
                             "Etikett"});
-                table6.AddRow(new string[] {
-                            "Land",
-                            "italien",
-                            "Web"});
-                table6.AddRow(new string[] {
-                            "Rebsorten",
-                            "Sangiovese 90",
-                            "Web"});
-#line 174
+#line 182
     await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table6, "Und ");
 #line hidden
-#line 179
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 185
+    await testRunner.AndAsync("ich habe ein Foto einer Flasche aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 180
+#line 186
     await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 181
-    await testRunner.WhenAsync("ich den Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line 187
+    await testRunner.WhenAsync("ich den Entwurf als neuen Wein speichere", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 182
-    await testRunner.ThenAsync("ordnet der Entwurf das Land \"Italien\" und die Rebsorte \"Sangiovese\" zu", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line 188
+    await testRunner.AndAsync("ich den Wein \"Sassicaia\" lösche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 189
+    await testRunner.ThenAsync("es sind keine Bilder mehr gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Übernehmen mit Korrektur")]
+        [Xunit.SkippableFactAttribute(DisplayName="Dienst vorübergehend nicht erreichbar")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Übernehmen mit Korrektur")]
-        public async global::System.Threading.Tasks.Task UbernehmenMitKorrektur()
+        [Xunit.TraitAttribute("Description", "Dienst vorübergehend nicht erreichbar")]
+        public async global::System.Threading.Tasks.Task DienstVorubergehendNichtErreichbar()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Übernehmen mit Korrektur", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 184
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Dienst vorübergehend nicht erreichbar", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 191
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1053,57 +1096,33 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 185
-    await testRunner.GivenAsync("der Agent erkennt die Ecken des Etiketts", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
-#line hidden
-                global::Reqnroll.Table table7 = new global::Reqnroll.Table(new string[] {
-                            "Feld",
-                            "Wert",
-                            "Herkunft"});
-                table7.AddRow(new string[] {
-                            "Name",
-                            "Sassicaia",
-                            "Etikett"});
-                table7.AddRow(new string[] {
-                            "Jahrgang",
-                            "2021",
-                            "Etikett"});
-#line 186
-    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table7, "Und ");
-#line hidden
-#line 190
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen und 2 Flaschen angegeben", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
-#line hidden
-#line 191
-    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
-#line hidden
 #line 192
-    await testRunner.WhenAsync("ich den Entwurf mit Jahrgang 2020 als neuen Wein speichere", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+    await testRunner.GivenAsync("der KI-Dienst ist beim ersten Versuch überlastet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
 #line 193
-    await testRunner.ThenAsync("enthält mein Keller 2 Flaschen \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 194
-    await testRunner.AndAsync("der Wein \"Sassicaia\" hat den Jahrgang 2020", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
 #line 195
-    await testRunner.AndAsync("der Wein \"Sassicaia\" zeigt das ausgeschnittene Etikett als Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.ThenAsync("hat der Entwurf den Status \"fertig\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
 #line 196
-    await testRunner.AndAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.AndAsync("der Agent wurde 2-mal aufgerufen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Übernehmen ohne bestätigte Ecken")]
+        [Xunit.SkippableFactAttribute(DisplayName="Dienst dauerhaft nicht erreichbar")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Übernehmen ohne bestätigte Ecken")]
-        public async global::System.Threading.Tasks.Task UbernehmenOhneBestatigteEcken()
+        [Xunit.TraitAttribute("Description", "Dienst dauerhaft nicht erreichbar")]
+        public async global::System.Threading.Tasks.Task DienstDauerhaftNichtErreichbar()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Übernehmen ohne bestätigte Ecken", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Dienst dauerhaft nicht erreichbar", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 198
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -1118,82 +1137,73 @@ namespace WineCellar.Specs.Features
   await this.FeatureBackgroundAsync();
 #line hidden
 #line 199
-    await testRunner.GivenAsync("der Agent erkennt keine Ecken des Etiketts", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+    await testRunner.GivenAsync("der KI-Dienst ist bei 3 Versuchen überlastet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-                global::Reqnroll.Table table8 = new global::Reqnroll.Table(new string[] {
-                            "Feld",
-                            "Wert",
-                            "Herkunft"});
-                table8.AddRow(new string[] {
-                            "Name",
-                            "Barolo",
-                            "Etikett"});
 #line 200
-    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table8, "Und ");
-#line hidden
-#line 203
     await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 204
-    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 201
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
+#line 202
+    await testRunner.ThenAsync("hat der Entwurf den Status \"fehlgeschlagen\" mit dem Hinweis \"überlastet\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 203
+    await testRunner.AndAsync("der Agent wurde 3-mal aufgerufen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Abgelehnte Anfrage wird nicht wiederholt")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Abgelehnte Anfrage wird nicht wiederholt")]
+        public async global::System.Threading.Tasks.Task AbgelehnteAnfrageWirdNichtWiederholt()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Abgelehnte Anfrage wird nicht wiederholt", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 205
-    await testRunner.WhenAsync("ich den Entwurf als neuen Wein speichere", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
 #line hidden
 #line 206
-    await testRunner.ThenAsync("hat der Wein \"Barolo\" kein Etikettenbild, aber das Originalfoto für den Zuschnitt" +
-                        "", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.GivenAsync("der KI-Dienst lehnt die Anfrage ab", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Abbrechen")]
-        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Abbrechen")]
-        public async global::System.Threading.Tasks.Task Abbrechen()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Abbrechen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 207
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
 #line 208
-  this.ScenarioInitialize(scenarioInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 6
-  await this.FeatureBackgroundAsync();
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
 #line 209
-    await testRunner.GivenAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+    await testRunner.ThenAsync("hat der Entwurf den Status \"fehlgeschlagen\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
 #line 210
-    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
-#line hidden
-#line 211
-    await testRunner.ThenAsync("hat der Entwurf den Status \"fertig\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
-#line hidden
-#line 212
-    await testRunner.AndAsync("zeigt die Kelleransicht keine Weine", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.AndAsync("der Agent wurde 1-mal aufgerufen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Wein schon im Keller")]
+        [Xunit.SkippableFactAttribute(DisplayName="Erneut recherchieren")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Wein schon im Keller")]
-        public async global::System.Threading.Tasks.Task WeinSchonImKeller()
+        [Xunit.TraitAttribute("Description", "Erneut recherchieren")]
+        public async global::System.Threading.Tasks.Task ErneutRecherchieren()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Wein schon im Keller", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 214
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Erneut recherchieren", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 212
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1206,53 +1216,70 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
+#line 213
+    await testRunner.GivenAsync("der KI-Dienst lehnt die Anfrage ab", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 214
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
 #line 215
-    await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
-#line hidden
-                global::Reqnroll.Table table9 = new global::Reqnroll.Table(new string[] {
-                            "Feld",
-                            "Wert",
-                            "Herkunft"});
-                table9.AddRow(new string[] {
-                            "Name",
-                            "Sassicaia",
-                            "Etikett"});
-#line 216
-    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table9, "Und ");
-#line hidden
-#line 219
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen und 2 Flaschen angegeben", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
-#line hidden
-#line 220
     await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 221
-    await testRunner.WhenAsync("ich den Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line 216
+    await testRunner.WhenAsync("ich \"Erneut recherchieren\" wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 222
-    await testRunner.ThenAsync("erkennt der Entwurf den vorhandenen Wein \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line 217
+    await testRunner.ThenAsync("hat der Entwurf den Status \"wartet\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 223
-    await testRunner.WhenAsync("ich die Flaschen zum vorhandenen Wein hinzufüge", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
-#line hidden
-#line 224
-    await testRunner.ThenAsync("enthält mein Keller 3 Flaschen \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
-#line hidden
-#line 225
-    await testRunner.AndAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line 218
+    await testRunner.AndAsync("ich habe heute 2 Recherchen verbraucht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Laufenden Entwurf verwerfen")]
+        [Xunit.SkippableFactAttribute(DisplayName="Zähler in der Navigation")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Laufenden Entwurf verwerfen")]
-        public async global::System.Threading.Tasks.Task LaufendenEntwurfVerwerfen()
+        [Xunit.TraitAttribute("Description", "Zähler in der Navigation")]
+        public async global::System.Threading.Tasks.Task ZahlerInDerNavigation()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Laufenden Entwurf verwerfen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Zähler in der Navigation", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 222
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 223
+    await testRunner.GivenAsync("ich habe 3 Fotos aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 224
+    await testRunner.AndAsync("für 2 davon ist die Recherche fertig", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 225
+    await testRunner.ThenAsync("zeigt die Navigation bei „Entwürfe“ die Zahl 2", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Fremde Entwürfe")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Fremde Entwürfe")]
+        public async global::System.Threading.Tasks.Task FremdeEntwurfe()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Fremde Entwürfe", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 227
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -1270,29 +1297,29 @@ namespace WineCellar.Specs.Features
     await testRunner.GivenAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
 #line 229
-    await testRunner.AndAsync("ich verwerfe den Entwurf, während recherchiert wird", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.AndAsync("ich bin als \"ben\" angemeldet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
 #line 230
-    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+    await testRunner.ThenAsync("sehe ich keine Entwürfe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
 #line 231
-    await testRunner.ThenAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.WhenAsync("ich Annas Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
 #line 232
-    await testRunner.AndAsync("es sind keine Bilder mehr gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"nicht gefunden\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Limit erreicht")]
+        [Xunit.SkippableFactAttribute(DisplayName="Unbekanntes Land wird vorgeschlagen, bekanntes zugeordnet")]
         [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Limit erreicht")]
-        public async global::System.Threading.Tasks.Task LimitErreicht()
+        [Xunit.TraitAttribute("Description", "Unbekanntes Land wird vorgeschlagen, bekanntes zugeordnet")]
+        public async global::System.Threading.Tasks.Task UnbekanntesLandWirdVorgeschlagenBekanntesZugeordnet()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Limit erreicht", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Unbekanntes Land wird vorgeschlagen, bekanntes zugeordnet", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 236
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -1307,12 +1334,382 @@ namespace WineCellar.Specs.Features
   await this.FeatureBackgroundAsync();
 #line hidden
 #line 237
+    await testRunner.GivenAsync("ich habe das Land \"Italien\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+                global::Reqnroll.Table table7 = new global::Reqnroll.Table(new string[] {
+                            "Feld",
+                            "Wert",
+                            "Herkunft"});
+                table7.AddRow(new string[] {
+                            "Name",
+                            "Douro",
+                            "Etikett"});
+                table7.AddRow(new string[] {
+                            "Land",
+                            "Portugal",
+                            "Web"});
+#line 238
+    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table7, "Und ");
+#line hidden
+#line 242
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 243
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 244
+    await testRunner.WhenAsync("ich den Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 245
+    await testRunner.ThenAsync("schlägt der Entwurf das Land \"Portugal\" vor, ohne es zuzuordnen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Bekanntes Land und Rebsorte werden zugeordnet")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Bekanntes Land und Rebsorte werden zugeordnet")]
+        public async global::System.Threading.Tasks.Task BekanntesLandUndRebsorteWerdenZugeordnet()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Bekanntes Land und Rebsorte werden zugeordnet", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 247
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 248
+    await testRunner.GivenAsync("ich habe das Land \"Italien\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 249
+    await testRunner.AndAsync("ich habe die Rebsorte \"Sangiovese\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+                global::Reqnroll.Table table8 = new global::Reqnroll.Table(new string[] {
+                            "Feld",
+                            "Wert",
+                            "Herkunft"});
+                table8.AddRow(new string[] {
+                            "Name",
+                            "Chianti",
+                            "Etikett"});
+                table8.AddRow(new string[] {
+                            "Land",
+                            "italien",
+                            "Web"});
+                table8.AddRow(new string[] {
+                            "Rebsorten",
+                            "Sangiovese 90",
+                            "Web"});
+#line 250
+    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table8, "Und ");
+#line hidden
+#line 255
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 256
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 257
+    await testRunner.WhenAsync("ich den Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 258
+    await testRunner.ThenAsync("ordnet der Entwurf das Land \"Italien\" und die Rebsorte \"Sangiovese\" zu", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Übernehmen mit Korrektur")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Übernehmen mit Korrektur")]
+        public async global::System.Threading.Tasks.Task UbernehmenMitKorrektur()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Übernehmen mit Korrektur", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 260
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 261
+    await testRunner.GivenAsync("der Agent erkennt die Ecken des Etiketts", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+                global::Reqnroll.Table table9 = new global::Reqnroll.Table(new string[] {
+                            "Feld",
+                            "Wert",
+                            "Herkunft"});
+                table9.AddRow(new string[] {
+                            "Name",
+                            "Sassicaia",
+                            "Etikett"});
+                table9.AddRow(new string[] {
+                            "Jahrgang",
+                            "2021",
+                            "Etikett"});
+#line 262
+    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table9, "Und ");
+#line hidden
+#line 266
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen und 2 Flaschen angegeben", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 267
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 268
+    await testRunner.WhenAsync("ich den Entwurf mit Jahrgang 2020 als neuen Wein speichere", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 269
+    await testRunner.ThenAsync("enthält mein Keller 2 Flaschen \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 270
+    await testRunner.AndAsync("der Wein \"Sassicaia\" hat den Jahrgang 2020", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 271
+    await testRunner.AndAsync("der Wein \"Sassicaia\" zeigt das ausgeschnittene Etikett als Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 272
+    await testRunner.AndAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Übernehmen ohne bestätigte Ecken")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Übernehmen ohne bestätigte Ecken")]
+        public async global::System.Threading.Tasks.Task UbernehmenOhneBestatigteEcken()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Übernehmen ohne bestätigte Ecken", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 274
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 275
+    await testRunner.GivenAsync("der Agent erkennt keine Ecken des Etiketts", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+                global::Reqnroll.Table table10 = new global::Reqnroll.Table(new string[] {
+                            "Feld",
+                            "Wert",
+                            "Herkunft"});
+                table10.AddRow(new string[] {
+                            "Name",
+                            "Barolo",
+                            "Etikett"});
+#line 276
+    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table10, "Und ");
+#line hidden
+#line 279
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 280
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 281
+    await testRunner.WhenAsync("ich den Entwurf als neuen Wein speichere", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 282
+    await testRunner.ThenAsync("hat der Wein \"Barolo\" kein Etikettenbild, aber das Originalfoto für den Zuschnitt" +
+                        "", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Abbrechen")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Abbrechen")]
+        public async global::System.Threading.Tasks.Task Abbrechen()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Abbrechen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 284
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 285
+    await testRunner.GivenAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 286
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 287
+    await testRunner.ThenAsync("hat der Entwurf den Status \"fertig\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 288
+    await testRunner.AndAsync("zeigt die Kelleransicht keine Weine", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Wein schon im Keller")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Wein schon im Keller")]
+        public async global::System.Threading.Tasks.Task WeinSchonImKeller()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Wein schon im Keller", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 290
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 291
+    await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+                global::Reqnroll.Table table11 = new global::Reqnroll.Table(new string[] {
+                            "Feld",
+                            "Wert",
+                            "Herkunft"});
+                table11.AddRow(new string[] {
+                            "Name",
+                            "Sassicaia",
+                            "Etikett"});
+#line 292
+    await testRunner.AndAsync("der Agent erkennt:", ((string)(null)), table11, "Und ");
+#line hidden
+#line 295
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen und 2 Flaschen angegeben", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 296
+    await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 297
+    await testRunner.WhenAsync("ich den Entwurf öffne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 298
+    await testRunner.ThenAsync("erkennt der Entwurf den vorhandenen Wein \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 299
+    await testRunner.WhenAsync("ich die Flaschen zum vorhandenen Wein hinzufüge", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 300
+    await testRunner.ThenAsync("enthält mein Keller 3 Flaschen \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 301
+    await testRunner.AndAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Laufenden Entwurf verwerfen")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Laufenden Entwurf verwerfen")]
+        public async global::System.Threading.Tasks.Task LaufendenEntwurfVerwerfen()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Laufenden Entwurf verwerfen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 303
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 304
+    await testRunner.GivenAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 305
+    await testRunner.AndAsync("ich verwerfe den Entwurf, während recherchiert wird", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 306
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 307
+    await testRunner.ThenAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 308
+    await testRunner.AndAsync("es sind keine Bilder mehr gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Limit erreicht")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Limit erreicht")]
+        public async global::System.Threading.Tasks.Task LimitErreicht()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Limit erreicht", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 312
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 313
     await testRunner.GivenAsync("das Tageslimit ist 20 und ich habe heute 20 Recherchen gestartet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 238
+#line 314
     await testRunner.WhenAsync("ich ein Foto des Etiketts aufnehme und 1 Flaschen angebe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 239
+#line 315
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"Tageslimit\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
@@ -1327,7 +1724,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Verbleibende Recherchen", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 241
+#line 317
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1340,10 +1737,10 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 242
+#line 318
     await testRunner.GivenAsync("das Tageslimit ist 20 und ich habe heute 3 Recherchen gestartet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 243
+#line 319
     await testRunner.ThenAsync("habe ich heute noch 17 Recherchen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
@@ -1358,7 +1755,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Kein Schlüssel konfiguriert", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 245
+#line 321
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1371,16 +1768,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 246
+#line 322
     await testRunner.GivenAsync("der Server hat keinen API-Schlüssel für den KI-Dienst", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 247
+#line 323
     await testRunner.WhenAsync("ich ein Foto des Etiketts aufnehme und 1 Flaschen angebe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 248
+#line 324
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"nicht verfügbar\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 249
+#line 325
     await testRunner.AndAsync("die Foto-Erfassung wird als nicht verfügbar gemeldet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -1395,7 +1792,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Zuschnitt im Entwurf anpassen", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 253
+#line 329
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1408,22 +1805,22 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 254
+#line 330
     await testRunner.GivenAsync("der Agent erkennt die Ecken des Etiketts", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 255
+#line 331
     await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 256
+#line 332
     await testRunner.AndAsync("der Agent hat die Recherche abgeschlossen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 257
+#line 333
     await testRunner.WhenAsync("ich den Zuschnitt des Entwurfs anpasse", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 258
+#line 334
     await testRunner.ThenAsync("zeigt der Entwurf ein neues ausgeschnittenes Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 259
+#line 335
     await testRunner.AndAsync("ich habe heute 1 Recherchen verbraucht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -1438,7 +1835,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Bild nachträglich setzen und ersetzen", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 261
+#line 337
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1451,22 +1848,22 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 262
+#line 338
     await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 263
+#line 339
     await testRunner.AndAsync("\"Sassicaia\" hat ein Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 264
+#line 340
     await testRunner.WhenAsync("ich für \"Sassicaia\" ein neues Foto wähle und die Ecken des Etiketts bestätige", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 265
+#line 341
     await testRunner.ThenAsync("zeigt \"Sassicaia\" das neu ausgeschnittene Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 266
+#line 342
     await testRunner.AndAsync("das alte Etikettenbild samt Originalfoto ist gelöscht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 267
+#line 343
     await testRunner.AndAsync("ich habe heute 0 Recherchen verbraucht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -1481,7 +1878,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Ecken eines Weins korrigieren", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 269
+#line 345
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1494,19 +1891,19 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 270
+#line 346
     await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 271
+#line 347
     await testRunner.AndAsync("\"Sassicaia\" hat ein Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 272
+#line 348
     await testRunner.WhenAsync("ich bei \"Sassicaia\" den Zuschnitt anpasse", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 273
+#line 349
     await testRunner.ThenAsync("zeigt \"Sassicaia\" das neu ausgeschnittene Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 274
+#line 350
     await testRunner.AndAsync("das Originalfoto von \"Sassicaia\" ist unverändert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -1521,7 +1918,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Ungültige Ecken", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 276
+#line 352
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1534,13 +1931,13 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 277
+#line 353
     await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 278
+#line 354
     await testRunner.WhenAsync("ich für \"Sassicaia\" ein Foto mit Ecken außerhalb des Bildes wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 279
+#line 355
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"Ecken\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
@@ -1555,7 +1952,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Bild entfernen", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 281
+#line 357
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1568,19 +1965,19 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 282
+#line 358
     await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 283
+#line 359
     await testRunner.AndAsync("\"Sassicaia\" hat ein Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 284
+#line 360
     await testRunner.WhenAsync("ich bei \"Sassicaia\" das Etikettenbild entferne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 285
+#line 361
     await testRunner.ThenAsync("hat \"Sassicaia\" kein Etikettenbild mehr", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 286
+#line 362
     await testRunner.AndAsync("es sind keine Bilder mehr gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -1595,7 +1992,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Wein löschen löscht das Etikettenbild", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 288
+#line 364
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1608,16 +2005,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 289
+#line 365
     await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 290
+#line 366
     await testRunner.AndAsync("\"Sassicaia\" hat ein Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 291
+#line 367
     await testRunner.WhenAsync("ich den Wein \"Sassicaia\" lösche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 292
+#line 368
     await testRunner.ThenAsync("es sind keine Bilder mehr gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
@@ -1632,7 +2029,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Fremdes Bild", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 294
+#line 370
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1645,25 +2042,25 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 295
+#line 371
     await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 296
+#line 372
     await testRunner.AndAsync("\"Sassicaia\" hat ein Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 297
+#line 373
     await testRunner.AndAsync("ich bin als \"ben\" angemeldet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 298
+#line 374
     await testRunner.WhenAsync("ich Annas Etikettenbild abrufe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 299
+#line 375
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"nicht gefunden\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 300
+#line 376
     await testRunner.WhenAsync("ich Annas Originalfoto abrufe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 301
+#line 377
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"nicht gefunden\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
@@ -1678,7 +2075,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Barcode wird mit dem Entwurf gespeichert", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 305
+#line 381
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1691,16 +2088,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 306
+#line 382
     await testRunner.WhenAsync("ich ein Foto des Etiketts mit dem Barcode \"4006381333931\" aufnehme", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 307
+#line 383
     await testRunner.AndAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 308
+#line 384
     await testRunner.ThenAsync("hat der Entwurf den Barcode \"4006381333931\" vom Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 309
+#line 385
     await testRunner.AndAsync("der Agent kannte den Barcode \"4006381333931\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -1715,7 +2112,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Falsche Prüfziffer eingegeben", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 311
+#line 387
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1728,16 +2125,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 312
+#line 388
     await testRunner.WhenAsync("ich ein Foto des Etiketts mit dem Barcode \"4006381333932\" aufnehme", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 313
+#line 389
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"Prüfziffer\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 314
+#line 390
     await testRunner.AndAsync("es gibt keinen Entwurf", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 315
+#line 391
     await testRunner.AndAsync("ich habe heute 0 Recherchen verbraucht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -1752,105 +2149,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Angegebener Code hat Vorrang", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 317
-  this.ScenarioInitialize(scenarioInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 6
-  await this.FeatureBackgroundAsync();
-#line hidden
-                global::Reqnroll.Table table10 = new global::Reqnroll.Table(new string[] {
-                            "Feld",
-                            "Wert",
-                            "Herkunft"});
-                table10.AddRow(new string[] {
-                            "Name",
-                            "Hauswein",
-                            "Etikett"});
-                table10.AddRow(new string[] {
-                            "Barcode",
-                            "4001234567891",
-                            "Web"});
-#line 318
-    await testRunner.GivenAsync("der Agent erkennt:", ((string)(null)), table10, "Angenommen ");
-#line hidden
-#line 322
-    await testRunner.WhenAsync("ich ein Foto des Etiketts mit dem Barcode \"4006381333931\" aufnehme", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
-#line hidden
-#line 323
-    await testRunner.AndAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
-#line hidden
-#line 324
-    await testRunner.ThenAsync("hat der Entwurf den Barcode \"4006381333931\" vom Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
-#line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Agent liest Barcode vom Foto")]
-        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Agent liest Barcode vom Foto")]
-        public async global::System.Threading.Tasks.Task AgentLiestBarcodeVomFoto()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Agent liest Barcode vom Foto", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 326
-  this.ScenarioInitialize(scenarioInfo);
-#line hidden
-            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
-            {
-                testRunner.SkipScenario();
-            }
-            else
-            {
-                await this.ScenarioStartAsync();
-#line 6
-  await this.FeatureBackgroundAsync();
-#line hidden
-                global::Reqnroll.Table table11 = new global::Reqnroll.Table(new string[] {
-                            "Feld",
-                            "Wert",
-                            "Herkunft"});
-                table11.AddRow(new string[] {
-                            "Name",
-                            "Hauswein",
-                            "Etikett"});
-                table11.AddRow(new string[] {
-                            "Barcode",
-                            "4001234567891",
-                            "Etikett"});
-#line 327
-    await testRunner.GivenAsync("der Agent erkennt:", ((string)(null)), table11, "Angenommen ");
-#line hidden
-#line 331
-    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
-#line hidden
-#line 332
-    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
-#line hidden
-#line 333
-    await testRunner.ThenAsync("hat der Entwurf den Barcode \"4001234567891\" vom Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
-#line hidden
-            }
-            await this.ScenarioCleanupAsync();
-        }
-        
-        [Xunit.SkippableFactAttribute(DisplayName="Gelesener Code mit falscher Prüfziffer")]
-        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
-        [Xunit.TraitAttribute("Description", "Gelesener Code mit falscher Prüfziffer")]
-        public async global::System.Threading.Tasks.Task GelesenerCodeMitFalscherPrufziffer()
-        {
-            string[] tagsOfScenario = ((string[])(null));
-            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Gelesener Code mit falscher Prüfziffer", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 335
+#line 393
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -1873,18 +2172,116 @@ namespace WineCellar.Specs.Features
                             "Etikett"});
                 table12.AddRow(new string[] {
                             "Barcode",
-                            "4001234567892",
-                            "Etikett"});
-#line 336
+                            "4001234567891",
+                            "Web"});
+#line 394
     await testRunner.GivenAsync("der Agent erkennt:", ((string)(null)), table12, "Angenommen ");
 #line hidden
-#line 340
+#line 398
+    await testRunner.WhenAsync("ich ein Foto des Etiketts mit dem Barcode \"4006381333931\" aufnehme", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 399
+    await testRunner.AndAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 400
+    await testRunner.ThenAsync("hat der Entwurf den Barcode \"4006381333931\" vom Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Agent liest Barcode vom Foto")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Agent liest Barcode vom Foto")]
+        public async global::System.Threading.Tasks.Task AgentLiestBarcodeVomFoto()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Agent liest Barcode vom Foto", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 402
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+                global::Reqnroll.Table table13 = new global::Reqnroll.Table(new string[] {
+                            "Feld",
+                            "Wert",
+                            "Herkunft"});
+                table13.AddRow(new string[] {
+                            "Name",
+                            "Hauswein",
+                            "Etikett"});
+                table13.AddRow(new string[] {
+                            "Barcode",
+                            "4001234567891",
+                            "Etikett"});
+#line 403
+    await testRunner.GivenAsync("der Agent erkennt:", ((string)(null)), table13, "Angenommen ");
+#line hidden
+#line 407
     await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 341
+#line 408
     await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 342
+#line 409
+    await testRunner.ThenAsync("hat der Entwurf den Barcode \"4001234567891\" vom Etikett", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Gelesener Code mit falscher Prüfziffer")]
+        [Xunit.TraitAttribute("FeatureTitle", "Foto-Erfassung und Etikettenbild")]
+        [Xunit.TraitAttribute("Description", "Gelesener Code mit falscher Prüfziffer")]
+        public async global::System.Threading.Tasks.Task GelesenerCodeMitFalscherPrufziffer()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Gelesener Code mit falscher Prüfziffer", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 411
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+                global::Reqnroll.Table table14 = new global::Reqnroll.Table(new string[] {
+                            "Feld",
+                            "Wert",
+                            "Herkunft"});
+                table14.AddRow(new string[] {
+                            "Name",
+                            "Hauswein",
+                            "Etikett"});
+                table14.AddRow(new string[] {
+                            "Barcode",
+                            "4001234567892",
+                            "Etikett"});
+#line 412
+    await testRunner.GivenAsync("der Agent erkennt:", ((string)(null)), table14, "Angenommen ");
+#line hidden
+#line 416
+    await testRunner.AndAsync("ich habe ein Foto des Etiketts aufgenommen", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 417
+    await testRunner.WhenAsync("der Agent die Recherche abschließt", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 418
     await testRunner.ThenAsync("hat der Entwurf keinen Barcode", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }

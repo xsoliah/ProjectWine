@@ -173,6 +173,13 @@ namespace WineCellar.Infrastructure.Migrations
                     b.Property<int>("BottleCount")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("BottleImageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BottleShapeJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
@@ -493,6 +500,13 @@ namespace WineCellar.Infrastructure.Migrations
                     b.Property<string>("Barcode")
                         .HasMaxLength(14)
                         .HasColumnType("nvarchar(14)");
+
+                    b.Property<Guid?>("BottleImageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BottleShapeJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("BottleSizeMl")
                         .HasColumnType("int");

@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.Configure<PhotoCaptureOptions>(configuration.GetSection(PhotoCaptureOptions.Section));
         services.Configure<Research.AnthropicOptions>(configuration.GetSection(Research.AnthropicOptions.Section));
         services.AddSingleton<ILabelImageExtractor, Imaging.SkiaLabelImageExtractor>();
+        services.AddSingleton<IBottleImageExtractor, Imaging.SkiaBottleImageExtractor>();
         services.AddSingleton<Research.CaptureQueue>();
         services.AddSingleton<ICaptureQueue>(sp => sp.GetRequiredService<Research.CaptureQueue>());
         services.AddSingleton<ICaptureAvailability, Research.CaptureAvailability>();

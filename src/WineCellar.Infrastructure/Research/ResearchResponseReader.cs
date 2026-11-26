@@ -64,6 +64,7 @@ public static class ResearchResponseReader
             Notes = Field(root, "notes", e => e.GetString()!),
             Grapes = Grapes(root),
             LabelCorners = Corners(root),
+            Bottle = Bottle(root),
             Sources = Sources(list),
         };
     }
@@ -129,6 +130,26 @@ public static class ResearchResponseReader
         return P("topLeft") is { } tl && P("topRight") is { } tr && P("bottomRight") is { } br && P("bottomLeft") is { } bl
             ? new LabelCorners(tl, tr, br, bl)
             : null;
+    }
+
+    /// <summary>
+    /// The bottle silhouette: outline points with two numeric coordinates (anything else is dropped) and the completeness
+    /// flag. Fewer than <see cref="BottleShape.MinOutlinePoints"/> usable points mean no silhouette; a missing flag means
+    /// "not complete" (nothing is assumed).
+    /// </summary>
+    private static BottleDetection? Bottle(JsonElement root)
+    {
+        if (!root.TryGetProperty("bottle", out var b) || b.ValueKind != JsonValueKind.Object) return null;
+        if (!b.TryGetProperty("outline", out var outline) || outline.ValueKind != JsonValueKind.Array) return null;
+        var points = outline.EnumerateArray()
+            .Where(p => p.ValueKind == JsonValueKind.Object
+                        && p.TryGetProperty("x", out var x) && x.ValueKind == JsonValueKind.Number
+                        && p.TryGetProperty("y", out var y) && y.ValueKind == JsonValueKind.Number)
+            .Select(p => new LabelPoint(p.GetProperty("x").GetDouble(), p.GetProperty("y").GetDouble()))
+            .ToList();
+        if (points.Count < BottleShape.MinOutlinePoints) return null;
+        var complete = b.TryGetProperty("isComplete", out var c) && c.ValueKind == JsonValueKind.True;
+        return new BottleDetection(points, complete);
     }
 
     private static FieldSource SourceOf(JsonElement e) =>

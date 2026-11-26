@@ -49,6 +49,12 @@ public class CaptureDraft
     /// <summary>Label extracted from the front photo with the current corners (standard format).</summary>
     public Guid? LabelPreviewImageId { get; set; }
 
+    /// <summary>Bottle measurements (JSON of <see cref="BottleShape"/>), from the agent or adjusted by the user.</summary>
+    public string? BottleShapeJson { get; set; }
+
+    /// <summary>Bottle cut out of the front photo (transparent PNG); none until the bottle was detected or confirmed.</summary>
+    public Guid? BottleImageId { get; set; }
+
     public string? Error { get; set; }
     public int Attempts { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

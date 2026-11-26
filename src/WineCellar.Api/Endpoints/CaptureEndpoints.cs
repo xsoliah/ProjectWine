@@ -56,6 +56,10 @@ public static class CaptureEndpoints
         captures.MapPut("{id:guid}/label-corners", async (Guid id, SetLabelCornersRequest request, CaptureService service, CancellationToken ct) =>
             TypedResults.Ok(await service.SetLabelCornersAsync(id, request.Corners, ct)));
 
+        // Adjust outline and/or label placement of the bottle of a finished draft (no research, no quota).
+        captures.MapPut("{id:guid}/bottle-shape", async (Guid id, SetBottleShapeRequest request, CaptureService service, CancellationToken ct) =>
+            TypedResults.Ok(await service.SetBottleShapeAsync(id, request, ct)));
+
         // { wineId } after creating the wine from the form, or { addToWineId, count } for an existing wine.
         captures.MapPost("{id:guid}/accept", async (Guid id, AcceptCaptureRequest request, CaptureService service, CancellationToken ct) =>
             TypedResults.Ok(await service.AcceptAsync(id, request, ct)));
@@ -96,6 +100,16 @@ public static class CaptureEndpoints
 
         label.MapDelete("", async (Guid id, LabelImageService service, CancellationToken ct) =>
             TypedResults.Ok(await service.RemoveAsync(id, ct)));
+
+        var bottle = app.MapGroup("/api/wines/{id:guid}/bottle-shape").RequireAuthorization().WithTags("Wines");
+
+        // Adjust outline and/or label placement (no research, no quota).
+        bottle.MapPut("", async (Guid id, SetBottleShapeRequest request, BottleShapeService service, CancellationToken ct) =>
+            TypedResults.Ok(await service.SetAsync(id, request, ct)));
+
+        // Detect the bottle on the stored original photo: one research, counts towards the daily limit.
+        bottle.MapPost("detect", async (Guid id, BottleShapeService service, CancellationToken ct) =>
+            TypedResults.Ok(await service.DetectAsync(id, ct)));
 
         return app;
     }

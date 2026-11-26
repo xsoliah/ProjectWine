@@ -19,7 +19,10 @@ public class LabelImageService(IAppDbContext db, ICurrentUser user, ImageService
         var source = images.Add(photo);
         var label = images.AddGenerated(extractor.Extract(photo, labelCorners), LabelImageFormat.ContentType, user.UserId);
 
-        await images.RemoveAsync([wine.LabelImageId, wine.LabelSourceImageId], ct);
+        // The bottle measurements belong to the old photo.
+        await images.RemoveAsync([wine.LabelImageId, wine.LabelSourceImageId, wine.BottleImageId], ct);
+        wine.BottleImageId = null;
+        wine.BottleShapeJson = null;
         wine.LabelImageId = label.Id;
         wine.LabelSourceImageId = source.Id;
         wine.LabelCornersJson = LabelCornersJson.Serialize(labelCorners);
@@ -48,7 +51,9 @@ public class LabelImageService(IAppDbContext db, ICurrentUser user, ImageService
     public async Task<WineDto> RemoveAsync(Guid wineId, CancellationToken ct = default)
     {
         var wine = await FindWineAsync(wineId, ct);
-        await images.RemoveAsync([wine.LabelImageId, wine.LabelSourceImageId], ct);
+        await images.RemoveAsync([wine.LabelImageId, wine.LabelSourceImageId, wine.BottleImageId], ct);
+        wine.BottleImageId = null;
+        wine.BottleShapeJson = null;
         wine.LabelImageId = null;
         wine.LabelSourceImageId = null;
         wine.LabelCornersJson = null;

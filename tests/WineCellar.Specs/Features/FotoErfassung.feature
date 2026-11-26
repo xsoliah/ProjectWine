@@ -112,6 +112,82 @@ Funktionalität: Foto-Erfassung und Etikettenbild
     Wenn der Agent die Recherche abschließt
     Dann der Entwurf hat keine Etikett-Ecken und kein ausgeschnittenes Etikett
 
+  # ----- Flasche erkennen (bottle-recognition) -----
+
+  Szenario: Flasche vollständig im Bild
+    Angenommen der Agent erkennt die ganze Flasche
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Wenn der Agent die Recherche abschließt
+    Dann enthält der Entwurf Flaschenumriss und Etikettenlage
+    Und die Etikettenhöhe im Verhältnis zur Flaschenhöhe entspricht dem Foto
+
+  Szenario: Kein zusätzlicher Aufruf
+    Angenommen das Tageslimit ist 20 und ich habe heute 2 Recherchen gestartet
+    Und der Agent erkennt die ganze Flasche
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Wenn der Agent die Recherche abschließt
+    Dann ich habe heute 3 Recherchen verbraucht
+    Und der Agent wurde 1-mal aufgerufen
+
+  Szenario: Freigestellte Flasche
+    Angenommen der Agent erkennt die ganze Flasche
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Wenn der Agent die Recherche abschließt
+    Dann der Entwurf zeigt eine freigestellte Flasche mit dem Etikett in Originalgröße
+
+  Szenario: Flasche abgeschnitten
+    Angenommen der Agent erkennt eine abgeschnittene Flasche
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Wenn der Agent die Recherche abschließt
+    Dann hat der Entwurf den Status "fertig"
+    Und der Entwurf zeigt den Hinweis "Flasche prüfen" mit einer Standardflasche
+    Und der Entwurf hat noch kein Flaschenbild
+
+  Szenario: Kein Flaschenumriss
+    Angenommen der Agent erkennt keinen Flaschenumriss
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Wenn der Agent die Recherche abschließt
+    Dann der Entwurf zeigt den Hinweis "Flasche prüfen" mit einer Standardflasche
+    Und der Entwurf hat noch kein Flaschenbild
+
+  Szenario: Etikett im Entwurf versetzen
+    Angenommen der Agent erkennt keinen Flaschenumriss
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich im Entwurf die Etikettenlage nach oben schiebe
+    Dann sitzt das Etikett im Entwurf höher
+    Und ich habe heute 1 Recherchen verbraucht
+    Und der Agent wurde 1-mal aufgerufen
+
+  Szenario: Flasche im Entwurf bestätigen
+    Angenommen der Agent erkennt eine abgeschnittene Flasche
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich im Entwurf den Flaschenumriss bestätige
+    Dann der Entwurf hat ein Flaschenbild und keinen Hinweis "Flasche prüfen" mehr
+
+  Szenario: Flasche übernehmen
+    Angenommen der Agent erkennt die ganze Flasche
+    Und der Agent erkennt:
+      | Feld | Wert      | Herkunft |
+      | Name | Sassicaia | Etikett  |
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich den Entwurf als neuen Wein speichere
+    Dann der Wein "Sassicaia" hat Flaschenmaß und Flaschenbild des Entwurfs
+    Und es gibt keinen Entwurf
+
+  Szenario: Wein löschen löscht das Flaschenbild
+    Angenommen der Agent erkennt die ganze Flasche
+    Und der Agent erkennt:
+      | Feld | Wert      | Herkunft |
+      | Name | Sassicaia | Etikett  |
+    Und ich habe ein Foto einer Flasche aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich den Entwurf als neuen Wein speichere
+    Und ich den Wein "Sassicaia" lösche
+    Dann es sind keine Bilder mehr gespeichert
+
   Szenario: Dienst vorübergehend nicht erreichbar
     Angenommen der KI-Dienst ist beim ersten Versuch überlastet
     Und ich habe ein Foto des Etiketts aufgenommen

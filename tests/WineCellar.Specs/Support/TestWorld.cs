@@ -31,6 +31,8 @@ public sealed class TestWorld : IDisposable
     public ImageService Images { get; }
     public LabelImageService LabelImages { get; }
     public CaptureService Captures { get; }
+    public BottleShapeService BottleShapes { get; }
+    public BottleAnalyzer Bottles { get; }
     public CaptureProcessor Processor { get; }
     public FakeResearchAgent Agent { get; } = new();
     public FakeCaptureAvailability Availability { get; } = new();
@@ -77,8 +79,10 @@ public sealed class TestWorld : IDisposable
         Images = new ImageService(Db, User);
         LabelImages = new LabelImageService(Db, User, Images, Extractor);
         var captureOptions = Options.Create(CaptureOptions);
-        Captures = new CaptureService(Db, User, Images, Extractor, Availability, Queue, captureOptions, TimeProvider.System);
-        Processor = new CaptureProcessor(Db, Agent, Extractor, captureOptions, TimeProvider.System);
+        Bottles = new BottleAnalyzer(new SkiaBottleImageExtractor());
+        Captures = new CaptureService(Db, User, Images, Extractor, Bottles, Availability, Queue, captureOptions, TimeProvider.System);
+        BottleShapes = new BottleShapeService(Db, User, Images, Bottles, Agent, Captures);
+        Processor = new CaptureProcessor(Db, Agent, Extractor, Bottles, captureOptions, TimeProvider.System);
     }
 
     public async Task LoginAsync(string name)
