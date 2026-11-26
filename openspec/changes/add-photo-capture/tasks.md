@@ -41,7 +41,7 @@
 
 ## 7. Integration und Doku
 
-- [ ] 7.1 Durchgängig im Browser: Foto aufnehmen, App schließen und wieder öffnen, Entwurf prüfen und übernehmen, Zuschnitt prüfen und anpassen, Etikettenbild nachträglich setzen (nur Etikett, kein Hintergrund sichtbar), vorhandenen Wein erkennen, Limit erreichen (Limit testweise auf 2 setzen), Server während einer Recherche neu starten
+- [x] 7.1 Durchgängig im Browser: Foto aufnehmen, App schließen und wieder öffnen, Entwurf prüfen und übernehmen, Zuschnitt prüfen und anpassen, Etikettenbild nachträglich setzen (nur Etikett, kein Hintergrund sichtbar), vorhandenen Wein erkennen, Limit erreichen (Limit testweise auf 2 setzen), Server während einer Recherche neu starten
 - [x] 7.2 README ergänzen: API-Schlüssel einrichten (User Secrets, IIS-Umgebungsvariable), IIS-App-Pool „AlwaysRunning“/Preload, gemessene Kosten je Recherche, Datenschutzhinweis
 - [x] 7.3 `openspec validate add-photo-capture --strict` ausführen und Fehler beheben
 
