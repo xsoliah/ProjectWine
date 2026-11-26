@@ -40,6 +40,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { BOTTLE_LENGTH, BOTTLE_RADIUS, STANDARD_WALL, lathePoints } from '../core/bottle';
 import { ImageCache } from '../core/images';
 import { Rack, RackSlot } from '../core/models';
 import { cellFromIndex, cellIndex } from '../core/racks';
@@ -58,8 +59,6 @@ import {
 const CELL = 1;
 const DEPTH = 3.2;
 const BOARD = 0.06;
-const BOTTLE_RADIUS = 0.36;
-const BOTTLE_LENGTH = 2.9;
 /** Pointer movement (px) up to which a press counts as a tap, not as rotating. */
 const TAP_TOLERANCE = 6;
 /** How far a tipped-out bottle reaches above/below its row. */
@@ -72,11 +71,7 @@ const MAX_TILT = (25 * Math.PI) / 180;
  * Built along +Y with the base at 0, then turned so the neck points to the viewer (+Z) and centred.
  */
 function bordeauxBottle(): BufferGeometry {
-  const profile: [number, number][] = [
-    [0, 0], [0.33, 0], [0.36, 0.03], [0.36, 1.85], [0.345, 1.98], [0.29, 2.1], [0.2, 2.19],
-    [0.14, 2.26], [0.12, 2.36], [0.12, 2.78], [0.135, 2.8], [0.135, 2.88], [0.1, 2.9], [0, 2.9],
-  ];
-  const geometry = new LatheGeometry(profile.map(([r, y]) => new Vector2(r, y)), 20);
+  const geometry = new LatheGeometry(lathePoints(STANDARD_WALL).map(([r, y]) => new Vector2(r, y)), 20);
   geometry.translate(0, -BOTTLE_LENGTH / 2, 0);
   geometry.rotateX(Math.PI / 2);
   return geometry;

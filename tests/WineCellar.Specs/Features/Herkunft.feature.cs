@@ -647,23 +647,23 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-                global::Reqnroll.Table table13 = new global::Reqnroll.Table(new string[] {
+                global::Reqnroll.Table table15 = new global::Reqnroll.Table(new string[] {
                             "Wein",
                             "Flaschen",
                             "Land",
                             "Region"});
-                table13.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "Wein1",
                             "1",
                             "Italien",
                             "Toscana"});
-                table13.AddRow(new string[] {
+                table15.AddRow(new string[] {
                             "Wein2",
                             "1",
                             "Italien",
                             "Toscana"});
 #line 83
-    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table13, "Angenommen ");
+    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table15, "Angenommen ");
 #line hidden
 #line 87
     await testRunner.WhenAsync("ich die Region \"Toscana\" in \"Toskana\" umbenenne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
@@ -699,28 +699,28 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-                global::Reqnroll.Table table14 = new global::Reqnroll.Table(new string[] {
+                global::Reqnroll.Table table16 = new global::Reqnroll.Table(new string[] {
                             "Wein",
                             "Flaschen",
                             "Land",
                             "Region"});
-                table14.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "Wein1",
                             "1",
                             "Italy",
                             "Tuscany"});
-                table14.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "Wein2",
                             "1",
                             "Italien",
                             "Toskana"});
-                table14.AddRow(new string[] {
+                table16.AddRow(new string[] {
                             "Wein3",
                             "1",
                             "Italien",
                             "Toskana"});
 #line 92
-    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table14, "Angenommen ");
+    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table16, "Angenommen ");
 #line hidden
 #line 97
     await testRunner.WhenAsync("ich das Land \"Italy\" in \"Italien\" zusammenführe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
@@ -762,23 +762,23 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-                global::Reqnroll.Table table15 = new global::Reqnroll.Table(new string[] {
+                global::Reqnroll.Table table17 = new global::Reqnroll.Table(new string[] {
                             "Wein",
                             "Flaschen",
                             "Land",
                             "Region"});
-                table15.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "Wein1",
                             "1",
                             "Italy",
                             "Toskana"});
-                table15.AddRow(new string[] {
+                table17.AddRow(new string[] {
                             "Wein2",
                             "1",
                             "Italien",
                             "Toskana"});
 #line 104
-    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table15, "Angenommen ");
+    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table17, "Angenommen ");
 #line hidden
 #line 108
     await testRunner.WhenAsync("ich das Land \"Italy\" in \"Italien\" zusammenführe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
@@ -814,28 +814,28 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-                global::Reqnroll.Table table16 = new global::Reqnroll.Table(new string[] {
+                global::Reqnroll.Table table18 = new global::Reqnroll.Table(new string[] {
                             "Wein",
                             "Flaschen",
                             "Land",
                             "Region"});
-                table16.AddRow(new string[] {
+                table18.AddRow(new string[] {
                             "Wein1",
                             "1",
                             "Italien",
                             "Tuscany"});
-                table16.AddRow(new string[] {
+                table18.AddRow(new string[] {
                             "Wein2",
                             "1",
                             "Italien",
                             "Toskana"});
-                table16.AddRow(new string[] {
+                table18.AddRow(new string[] {
                             "Wein3",
                             "1",
                             "Italien",
                             "Toskana"});
 #line 113
-    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table16, "Angenommen ");
+    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table18, "Angenommen ");
 #line hidden
 #line 118
     await testRunner.WhenAsync("ich die Region \"Tuscany\" in \"Toskana\" zusammenführe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
@@ -942,16 +942,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-                global::Reqnroll.Table table17 = new global::Reqnroll.Table(new string[] {
+                global::Reqnroll.Table table19 = new global::Reqnroll.Table(new string[] {
                             "Wein",
                             "Flaschen",
                             "Land"});
-                table17.AddRow(new string[] {
+                table19.AddRow(new string[] {
                             "Chianti",
                             "1",
                             "Italien"});
 #line 134
-    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table17, "Angenommen ");
+    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table19, "Angenommen ");
 #line hidden
 #line 137
     await testRunner.WhenAsync("ich das Land \"Italien\" lösche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
@@ -984,16 +984,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-                global::Reqnroll.Table table18 = new global::Reqnroll.Table(new string[] {
+                global::Reqnroll.Table table20 = new global::Reqnroll.Table(new string[] {
                             "Wein",
                             "Flaschen",
                             "Land"});
-                table18.AddRow(new string[] {
+                table20.AddRow(new string[] {
                             "Chianti",
                             "1",
                             "Italien"});
 #line 141
-    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table18, "Angenommen ");
+    await testRunner.GivenAsync("mein Keller enthält folgende Weine:", ((string)(null)), table20, "Angenommen ");
 #line hidden
 #line 144
     await testRunner.WhenAsync("ich 1 Flasche \"Chianti\" trinke", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");

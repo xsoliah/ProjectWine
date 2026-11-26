@@ -11,7 +11,8 @@ internal static class Mapping
         w.IsCuvee,
         w.BottleSizeMl, w.Quantity, w.Slots.ToLocations(), w.Quantity - w.Slots.Count,
         w.DrinkFrom, w.DrinkUntil, w.PurchasePrice, w.Notes,
-        w.LabelImageId, w.LabelSourceImageId, Capture.LabelCornersJson.ToDto(w.LabelCornersJson));
+        w.LabelImageId, w.LabelSourceImageId, Capture.LabelCornersJson.ToDto(w.LabelCornersJson),
+        w.BottleImageId, Capture.BottleShapeJson.Deserialize(w.BottleShapeJson));
 
     /// <summary>Sorted by rack name, row, column (the order in which bottles are taken out automatically).</summary>
     public static IReadOnlyList<SlotLocationDto> ToLocations(this IEnumerable<RackSlot> slots) => slots

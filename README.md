@@ -185,6 +185,14 @@ grob 25–30 Cent. Haiku erkannte alle drei Weine richtig, setzte die Etikett-Ec
 fotografierten Etikett zu ungenau (Glas sichtbar) – dann hilft „Zuschnitt anpassen“, oder Opus für genauere Ecken.
 Für genauere Etikett-Ecken auf Opus umstellen: `"Anthropic": { "Model": "claude-opus-5-5" }`.
 
+**Flasche und 3D-Ansicht:** Dieselbe Recherche erkennt zusätzlich die ganze Flasche (Umriss, Lage und Größe des Etiketts);
+daraus entstehen ein Flaschenmaß, ein freigestelltes Flaschenbild und die drehbare 3D-Ansicht in der Einzelansicht.
+Dafür die Flasche beim Fotografieren **aufrecht und ganz im Bild** halten (Mündung und Boden sichtbar). Sonst wird eine
+Standardflasche mit dem Hinweis „Flasche prüfen“ gezeigt; Umriss und Etikettenlage lassen sich im Editor anpassen (ohne
+Recherche, ohne Tageslimit). Bei bestehenden Weinen mit Originalfoto erkennt „Flasche erkennen“ die Flasche nachträglich
+(eine Recherche, zählt aufs Tageslimit). Kosten und Dauer der erweiterten Recherche sind noch nicht mit echtem
+API-Schlüssel gemessen.
+
 ## API (alle Endpunkte außer `/api/auth/*` und `/health` brauchen `Authorization: Bearer …`)
 
 | Methode | Pfad | Zweck |
@@ -204,6 +212,8 @@ Für genauere Etikett-Ecken auf Opus umstellen: `"Anthropic": { "Model": "claude
 | POST | `/api/captures/{id}/retry`, `/api/captures/{id}/accept` | Erneut recherchieren; übernehmen (`wineId` oder `addToWineId`) |
 | PUT | `/api/captures/{id}/label-corners` | Etikett-Ecken im Entwurf anpassen |
 | GET | `/api/images/{id}` | Bild (nur für den Besitzer) |
+| PUT | `/api/wines/{id}/bottle-shape`, `/api/captures/{id}/bottle-shape` | Flaschenumriss und Etikettenlage anpassen (kein Limit) |
+| POST | `/api/wines/{id}/bottle-shape/detect` | Flasche auf dem Originalfoto erkennen (zählt aufs Tageslimit) |
 | PUT/DELETE | `/api/wines/{id}/label-image`, PUT `/api/wines/{id}/label-image/corners` | Etikettenbild setzen (Foto + Ecken), Zuschnitt anpassen, entfernen |
 
 ## Stand der Verifikation

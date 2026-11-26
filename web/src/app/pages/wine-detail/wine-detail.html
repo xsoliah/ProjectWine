@@ -19,12 +19,45 @@
 
     <section class="panel label-panel" aria-labelledby="label-title">
       <h2 id="label-title" class="sr-only">Etikett</h2>
-      @if (w.labelImageId) {
+      @if (webglOk() || w.bottleImageId) {
+        <div class="view-switch" role="group" aria-label="Ansicht">
+          <button type="button" class="btn btn-small" [attr.aria-pressed]="view() === 'label'" (click)="view.set('label')">Etikett</button>
+          @if (w.bottleImageId) {
+            <button type="button" class="btn btn-small" [attr.aria-pressed]="view() === 'bottle'" (click)="view.set('bottle')">Flasche</button>
+          }
+          @if (webglOk()) {
+            <button type="button" class="btn btn-small" [attr.aria-pressed]="view() === '3d'" (click)="view.set('3d')">3D-Ansicht</button>
+          }
+        </div>
+      }
+      @if (show3d()) {
+        <app-bottle-3d class="bottle-view" [shape]="w.bottleShape" [type]="w.type" [sizeMl]="w.bottleSizeMl"
+          [labelImageId]="w.labelImageId" [name]="w.name" (unavailable)="onWebglUnavailable()" />
+      } @else if (view() === 'bottle' && w.bottleImageId) {
+        <img class="bottle-image" [appAuthImage]="w.bottleImageId" [alt]="'Flasche ' + w.name" />
+      } @else if (w.labelImageId) {
         <img class="label-image" [appAuthImage]="w.labelImageId" [alt]="'Etikett von ' + w.name" />
       } @else {
         <div class="label-image empty-label"><app-icon name="image" /><span>Kein Etikettenbild</span></div>
       }
+      @if (!webglOk()) {
+        <p class="muted hint" role="status">Die 3D-Ansicht ist nicht verfügbar: Dieser Browser unterstützt WebGL nicht oder hat es abgeschaltet.</p>
+      }
+      @if (w.bottleShape?.needsReview) {
+        <p class="banner" role="status">Flasche prüfen: Die Flasche wurde nicht sicher erkannt.</p>
+      }
+      @if (bottleBusy()) {
+        <p class="muted hint" role="status">Flasche wird erkannt … Das kann bis zu ein paar Minuten dauern.</p>
+      }
       <div class="label-tools">
+        @if (w.labelSourceImageId) {
+          <button type="button" class="btn btn-small" [disabled]="bottleBusy()" (click)="openBottleEditor()">
+            {{ w.bottleShape?.needsReview ? 'Flasche prüfen' : 'Flasche anpassen' }}
+          </button>
+          @if (!w.bottleShape || w.bottleShape.needsReview) {
+            <button type="button" class="btn btn-small" [disabled]="bottleBusy()" (click)="detectBottle()">Flasche erkennen</button>
+          }
+        }
         @if (w.labelSourceImageId) {
           <button type="button" class="btn btn-small" [disabled]="labelBusy()" (click)="adjustLabel()">
             {{ w.labelImageId ? 'Zuschnitt anpassen' : 'Zuschnitt festlegen' }}
@@ -148,6 +181,12 @@
     @if (labelEditor(); as e) {
       <app-label-corner-editor [src]="e.url" [corners]="e.corners" [busy]="labelBusy()"
         (confirmed)="saveLabel($event)" (cancelled)="closeLabelEditor()" />
+    }
+
+    @if (bottleEditor(); as e) {
+      <app-bottle-shape-editor [src]="e.url" [shape]="w.bottleShape" [type]="w.type" [sizeMl]="w.bottleSizeMl"
+        [labelImageId]="w.labelImageId" [name]="w.name" [busy]="bottleBusy()"
+        (confirmed)="saveBottle($event)" (cancelled)="bottleEditor.set(null)" />
     }
 
     @if (consuming()) {

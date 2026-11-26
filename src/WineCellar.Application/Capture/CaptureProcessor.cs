@@ -16,6 +16,7 @@ public class CaptureProcessor(
     IAppDbContext db,
     IWineResearchAgent agent,
     ILabelImageExtractor extractor,
+    BottleAnalyzer bottles,
     IOptions<PhotoCaptureOptions> options,
     TimeProvider time,
     ILogger<CaptureProcessor>? logger = null)
@@ -127,7 +128,7 @@ public class CaptureProcessor(
         var clean = Sanitize(result, time.GetUtcNow().Year);
         // A barcode from the user's device beats whatever the agent read or found.
         if (draft.Barcode is { } ownBarcode) clean = clean with { Barcode = new Researched<string>(ownBarcode, FieldSource.Label) };
-        draft.ResultJson = JsonSerializer.Serialize(clean with { Sources = [], LabelCorners = null }, LabelCornersJson.Options);
+        draft.ResultJson = JsonSerializer.Serialize(clean with { Sources = [], LabelCorners = null, Bottle = null }, LabelCornersJson.Options);
         draft.SourcesJson = JsonSerializer.Serialize(clean.Sources, LabelCornersJson.Options);
         if (clean.LabelCorners is { } corners)
         {
@@ -149,7 +150,32 @@ public class CaptureProcessor(
                 _log.LogWarning(ex, "Label preview for draft {DraftId} could not be created", draftId);
             }
         }
+        DetectBottle(draft, front.Data, clean);
         await FinishAsync(draft, failed: null, ct);
+    }
+
+    /// <summary>
+    /// Bottle measurements and bottle image from what the agent saw. A bottle that is cut off, missing or implausible
+    /// becomes a standard bottle flagged "Flasche prüfen" (no bottle image yet). Never fails the research.
+    /// </summary>
+    private void DetectBottle(CaptureDraft draft, byte[] photo, WineResearchResult clean)
+    {
+        try
+        {
+            var analysis = bottles.Analyze(photo, clean.Bottle, clean.LabelCorners, clean.Type?.Value ?? WineType.Red);
+            draft.BottleShapeJson = BottleShapeJson.Serialize(analysis.Shape);
+            if (analysis.Image is { } png)
+            {
+                var image = new StoredImage { OwnerId = draft.OwnerId, ContentType = BottleImageFormat.ContentType, Data = png };
+                db.StoredImages.Add(image);
+                draft.BottleImageId = image.Id;
+            }
+        }
+        catch (DomainException ex)
+        {
+            _log.LogWarning(ex, "Bottle of draft {DraftId} could not be cut out", draft.Id);
+            draft.BottleShapeJson = BottleShapeJson.Serialize(BottleShape.Standard(clean.Type?.Value ?? WineType.Red) with { NeedsReview = true });
+        }
     }
 
     private async Task FinishAsync(CaptureDraft draft, string? failed, CancellationToken ct)
@@ -209,6 +235,7 @@ public class CaptureProcessor(
             Notes = Text(r.Notes, MaxNoteLength),
             Grapes = grapes,
             LabelCorners = r.LabelCorners is { } c && c.IsPlausible() ? c : null,
+            Bottle = r.Bottle is { } b && BottleShape.OutlineIsPlausible(b.Outline) ? b : null,
             Sources = r.Sources
                 .Where(s => Uri.TryCreate(s.Url, UriKind.Absolute, out var u) && (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps))
                 .DistinctBy(s => s.Url)

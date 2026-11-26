@@ -105,7 +105,7 @@ public class SkiaLabelImageExtractor : ILabelImageExtractor
     }
 
     /// <summary>Decodes the photo and applies the EXIF orientation.</summary>
-    private static SKBitmap Decode(byte[] photo)
+    internal static SKBitmap Decode(byte[] photo)
     {
         using var stream = new SKMemoryStream(photo);
         using var codec = SKCodec.Create(stream) ?? throw new DomainException("Das Foto kann nicht gelesen werden.");

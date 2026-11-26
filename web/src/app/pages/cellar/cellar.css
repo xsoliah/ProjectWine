@@ -80,6 +80,12 @@
   column-gap: var(--space-3);
 }
 
+/* The cut-out bottle is tall and has a transparent background: show it whole, without a frame. */
+.thumb.bottle {
+  object-fit: contain;
+  background: transparent;
+}
+
 .thumb {
   grid-row: 1 / span 3;
   width: 3rem;

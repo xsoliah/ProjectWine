@@ -20,6 +20,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CaptureDraft> CaptureDrafts => Set<CaptureDraft>();
     public DbSet<CaptureUsage> CaptureUsages => Set<CaptureUsage>();
 
+    /// <summary>Profile (up to 64 points) and outline (up to 100 points) as JSON.</summary>
+    private const int BottleShapeJsonMaxLength = 8000;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -38,6 +41,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             // cascade path from the user (user -> image and user -> wine); the services delete the images themselves.
             e.HasIndex(x => x.LabelImageId);
             e.Property(x => x.LabelCornersJson).HasMaxLength(1000);
+            e.Property(x => x.BottleShapeJson).HasMaxLength(BottleShapeJsonMaxLength);
             e.Property(x => x.Quantity);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.PurchasePrice).HasPrecision(10, 2);
@@ -156,6 +160,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.UserNote).HasMaxLength(CaptureDraft.MaxNoteLength);
             e.Property(x => x.Barcode).HasMaxLength(14);
             e.Property(x => x.LabelCornersJson).HasMaxLength(1000);
+            e.Property(x => x.BottleShapeJson).HasMaxLength(BottleShapeJsonMaxLength);
             e.Property(x => x.Error).HasMaxLength(1000);
             // Optimistic concurrency: claiming (Pending -> Researching) and discarding cannot overlap unnoticed.
             e.Property(x => x.Version).IsConcurrencyToken();
