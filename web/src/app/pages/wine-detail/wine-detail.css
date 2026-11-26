@@ -111,6 +111,26 @@ dd {
   background: var(--surface-2);
 }
 
+.view-switch {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.view-switch .btn[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.bottle-view {
+  width: min(100%, 22rem);
+}
+
+.bottle-image {
+  max-width: min(100%, 16rem);
+  max-height: 26rem;
+  object-fit: contain;
+}
+
 .empty-label {
   display: grid;
   place-items: center;

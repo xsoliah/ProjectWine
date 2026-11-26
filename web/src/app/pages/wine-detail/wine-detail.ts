@@ -5,7 +5,10 @@ import { ConfirmService } from '../../core/confirm.service';
 import { drinkWindow } from '../../core/drink-window';
 import { errorMessage } from '../../core/errors';
 import { formatPrice, wineTitle } from '../../core/format';
-import { LabelPoint, RackSummary, SlotLocation } from '../../core/models';
+import { LabelPoint, RackSummary, SetBottleShapeRequest, SlotLocation } from '../../core/models';
+import { hasWebGl } from '../../core/webgl';
+import { Bottle3d } from '../../shared/bottle-3d';
+import { BottleShapeEditor } from '../../shared/bottle-shape-editor';
 import { slotLabel } from '../../core/racks';
 import { ToastService } from '../../core/toast.service';
 import { ArchiveEntryItem } from '../../shared/archive-entry-item';
@@ -20,7 +23,7 @@ import { TypeBadge } from '../../shared/type-badge';
 
 @Component({
   selector: 'app-wine-detail',
-  imports: [RouterLink, Icon, Modal, Stepper, TypeBadge, ArchiveEntryItem, ConsumeDialog, AuthImage, LabelCornerEditor],
+  imports: [RouterLink, Icon, Modal, Stepper, TypeBadge, ArchiveEntryItem, ConsumeDialog, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './wine-detail.html',
   styleUrl: './wine-detail.css',
@@ -69,6 +72,64 @@ export class WineDetail {
   /** Corner editor for the label image: a new photo (blob) or the stored original (adjust the cut). */
   protected readonly labelEditor = signal<{ url: string; corners: LabelPoint[] | null; photo: Blob | null } | null>(null);
   protected readonly labelBusy = signal(false);
+
+  // ----- Bottle: flat label, cut-out bottle or 3D view -----
+
+  /** Which picture the label panel shows. */
+  protected readonly view = signal<'label' | 'bottle' | '3d'>('label');
+  /** Cleared when the browser has no WebGL or drops the context: the flat label is shown with a notice. */
+  private readonly webglFailed = signal(!hasWebGl());
+  protected readonly webglOk = computed(() => !this.webglFailed());
+  protected readonly show3d = computed(() => this.view() === '3d' && this.webglOk());
+  protected readonly bottleEditor = signal<{ url: string } | null>(null);
+  protected readonly bottleBusy = signal(false);
+
+  protected onWebglUnavailable(): void {
+    this.webglFailed.set(true);
+  }
+
+  protected async openBottleEditor(): Promise<void> {
+    const sourceId = this.wine()?.labelSourceImageId;
+    if (!sourceId) return;
+    try {
+      this.bottleEditor.set({ url: await this.images.url(sourceId) });
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    }
+  }
+
+  /** Outline and label placement: the server cuts the bottle again (no research, no quota). */
+  protected async saveBottle(request: SetBottleShapeRequest): Promise<void> {
+    this.bottleBusy.set(true);
+    try {
+      this.wineResource.set(await this.api.setBottleShape(this.id(), request));
+      this.bottleEditor.set(null);
+      this.toast.info('Flasche gespeichert.');
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    } finally {
+      this.bottleBusy.set(false);
+    }
+  }
+
+  /** One research on the original photo; counts towards the daily limit, so it is confirmed first. */
+  protected async detectBottle(): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: 'Flasche erkennen?',
+      message: 'Die Flasche wird auf dem Originalfoto erkannt. Das zählt als eine Recherche deines Tageslimits und kann eine Weile dauern.',
+      confirmLabel: 'Erkennen',
+    });
+    if (!ok) return;
+    this.bottleBusy.set(true);
+    try {
+      this.wineResource.set(await this.api.detectBottle(this.id()));
+      this.toast.info('Flasche erkannt.');
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    } finally {
+      this.bottleBusy.set(false);
+    }
+  }
 
   protected async pickLabel(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;

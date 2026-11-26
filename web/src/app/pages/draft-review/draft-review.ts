@@ -5,8 +5,11 @@ import { STATUS_LABELS, captureMarks, captureToInitial } from '../../core/captur
 import { CaptureCountsService } from '../../core/capture-counts.service';
 import { errorMessage } from '../../core/errors';
 import { AuthImage, ImageCache } from '../../core/images';
-import { CaptureDetail, LabelPoint, SaveWineRequest } from '../../core/models';
+import { CaptureDetail, LabelPoint, SaveWineRequest, SetBottleShapeRequest } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
+import { hasWebGl } from '../../core/webgl';
+import { Bottle3d } from '../../shared/bottle-3d';
+import { BottleShapeEditor } from '../../shared/bottle-shape-editor';
 import { Icon } from '../../shared/icon';
 import { LabelCornerEditor } from '../../shared/label-corner-editor';
 import { Stepper } from '../../shared/stepper';
@@ -21,7 +24,7 @@ const NO_CORNERS_HINT = 'Zuschnitt prüfen: Die Ecken des Etiketts wurden nicht 
  */
 @Component({
   selector: 'app-draft-review',
-  imports: [RouterLink, Icon, Stepper, TypeBadge, WineForm, AuthImage, LabelCornerEditor],
+  imports: [RouterLink, Icon, Stepper, TypeBadge, WineForm, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './draft-review.html',
   styleUrl: './draft-review.css',
@@ -75,6 +78,24 @@ export class DraftReview {
       this.detail.set(await this.api.setCaptureCorners(this.id(), corners));
       this.editorOpen.set(false);
       this.toast.info('Zuschnitt übernommen.');
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected readonly bottleEditorOpen = signal(false);
+  /** The 3D preview needs WebGL; without it the draft only shows the notice and the editor. */
+  protected readonly webgl = signal(hasWebGl());
+
+  /** Outline and label placement of the bottle: the server cuts the bottle again (no research, no quota). */
+  protected async saveBottle(request: SetBottleShapeRequest): Promise<void> {
+    this.busy.set(true);
+    try {
+      this.detail.set(await this.api.setCaptureBottleShape(this.id(), request));
+      this.bottleEditorOpen.set(false);
+      this.toast.info('Flasche übernommen.');
     } catch (error) {
       this.toast.error(errorMessage(error));
     } finally {

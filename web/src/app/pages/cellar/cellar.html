@@ -62,8 +62,10 @@
     <ul class="wines">
       @for (wine of wines(); track wine.id) {
         <li class="wine" [attr.data-type]="wine.type">
-          <a class="main" [class.with-thumb]="!!wine.labelImageId" [routerLink]="['/wines', wine.id]">
-            @if (wine.labelImageId) {
+          <a class="main" [class.with-thumb]="!!(wine.bottleImageId || wine.labelImageId)" [routerLink]="['/wines', wine.id]">
+            @if (wine.bottleImageId) {
+              <img class="thumb bottle" [appAuthImage]="wine.bottleImageId" [alt]="wine.name" loading="lazy" />
+            } @else if (wine.labelImageId) {
               <img class="thumb" [appAuthImage]="wine.labelImageId" [alt]="'Etikett von ' + wine.name" loading="lazy" />
             }
             <span class="name">{{ wine.name }}</span>

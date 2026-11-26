@@ -26,13 +26,17 @@ export interface Wine {
   /** Original photo the label was cut from (only for the corner editor). */
   labelSourceImageId?: string | null;
   labelCorners?: LabelPoint[] | null;
+  /** Bottle cut out of the original photo (transparent PNG); load with appAuthImage. */
+  bottleImageId?: string | null;
+  /** Measured bottle: profile and label placement; null shows the standard bottle. */
+  bottleShape?: BottleShape | null;
   drinkFrom: number | null;
   drinkUntil: number | null;
   purchasePrice: number | null;
   notes: string | null;
 }
 
-export type SaveWineRequest = Omit<Wine, 'id' | 'country' | 'region' | 'grapes' | 'isCuvee' | 'slots' | 'unplacedCount' | 'labelImageId' | 'labelSourceImageId' | 'labelCorners'> & {
+export type SaveWineRequest = Omit<Wine, 'id' | 'country' | 'region' | 'grapes' | 'isCuvee' | 'slots' | 'unplacedCount' | 'labelImageId' | 'labelSourceImageId' | 'labelCorners' | 'bottleImageId' | 'bottleShape'> & {
   countryId: string | null;
   regionId: string | null;
   grapes: WineGrapeRequest[];
@@ -248,7 +252,39 @@ export interface LabelPoint {
   y: number;
 }
 
-export type CaptureStatus = 'Pending' | 'Researching' | 'Ready' | 'Failed';
+/** A point of the bottle wall: height 0 (base) to 1 (mouth), radius as a share of the bottle height. */
+export interface BottleProfilePoint {
+  height: number;
+  radius: number;
+}
+
+/**
+ * Where the label sits on the bottle: heights of its upper and lower edge (0 = base, 1 = mouth), its width as a share
+ * of the body diameter, and the turn of its centre around the bottle in radians (0 = facing the viewer).
+ */
+export interface BottleLabelPlacement {
+  top: number;
+  bottom: number;
+  widthFraction: number;
+  centerAngle: number;
+}
+
+/** Bottle measurements ("Flaschenmaß"); the outline lies on the original photo like the label corners. */
+export interface BottleShape {
+  profile: BottleProfilePoint[];
+  label: BottleLabelPlacement;
+  outline?: LabelPoint[] | null;
+  /** The bottle was not detected reliably ("Flasche prüfen"). */
+  needsReview: boolean;
+}
+
+/** Adjusts the bottle: a new outline (optional) and the label placement. */
+export interface SetBottleShapeRequest {
+  outline: LabelPoint[] | null;
+  label: BottleLabelPlacement;
+}
+
+export type CaptureStatus ='Pending' | 'Researching' | 'Ready' | 'Failed';
 export type FieldSource = 'Label' | 'Web';
 
 export interface CaptureQuota {
@@ -316,6 +352,8 @@ export interface CaptureDetail {
   countryId: string | null;
   regionId: string | null;
   existingWine: Wine | null;
+  bottleImageId?: string | null;
+  bottleShape?: BottleShape | null;
 }
 
 export interface AcceptCaptureRequest {

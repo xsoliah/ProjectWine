@@ -19,6 +19,7 @@ import {
   RackSummary,
   SaveRackRequest,
   SaveWineRequest,
+  SetBottleShapeRequest,
   Statistics,
   StatisticsGrouping,
   UpdateArchiveEntryRequest,
@@ -232,6 +233,11 @@ export class ApiService {
     return firstValueFrom(this.http.put<CaptureDetail>(`/api/captures/${id}/label-corners`, { corners }));
   }
 
+  /** Adjusts outline and/or label placement of the bottle of a draft (no research, no quota). */
+  setCaptureBottleShape(id: string, request: SetBottleShapeRequest): Promise<CaptureDetail> {
+    return firstValueFrom(this.http.put<CaptureDetail>(`/api/captures/${id}/bottle-shape`, request));
+  }
+
   acceptCapture(id: string, request: AcceptCaptureRequest): Promise<Wine> {
     return firstValueFrom(this.http.post<Wine>(`/api/captures/${id}/accept`, request));
   }
@@ -261,6 +267,16 @@ export class ApiService {
 
   removeLabelImage(wineId: string): Promise<Wine> {
     return firstValueFrom(this.http.delete<Wine>(`/api/wines/${wineId}/label-image`));
+  }
+
+  /** Adjusts outline and/or label placement of a wine's bottle (no research, no quota). */
+  setBottleShape(wineId: string, request: SetBottleShapeRequest): Promise<Wine> {
+    return firstValueFrom(this.http.put<Wine>(`/api/wines/${wineId}/bottle-shape`, request));
+  }
+
+  /** Detects the bottle on the stored original photo: one research, counts towards the daily limit. */
+  detectBottle(wineId: string): Promise<Wine> {
+    return firstValueFrom(this.http.post<Wine>(`/api/wines/${wineId}/bottle-shape/detect`, null));
   }
 
   // ----- Statistics -----

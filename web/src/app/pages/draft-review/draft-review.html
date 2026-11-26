@@ -65,6 +65,23 @@
             (saved)="create($event)"
             (cancelled)="back()"
           />
+          <section class="panel stack" aria-labelledby="bottle-title">
+            <h2 id="bottle-title">Flasche</h2>
+            @if (d.bottleShape?.needsReview) {
+              <p class="banner" role="status">Flasche prüfen: Die Flasche wurde nicht sicher erkannt. Es wird eine Standardflasche gezeigt.</p>
+            }
+            @if (webgl()) {
+              <app-bottle-3d [shape]="d.bottleShape" [type]="d.type?.value ?? 'Red'" [sizeMl]="d.bottleSizeMl?.value"
+                [labelImageId]="d.summary.labelPreviewImageId" [name]="d.name?.value ?? 'Entwurf'" (unavailable)="webgl.set(false)" />
+            } @else {
+              <p class="muted" role="status">Die 3D-Ansicht ist nicht verfügbar: Dieser Browser unterstützt WebGL nicht oder hat es abgeschaltet.</p>
+            }
+            <div>
+              <button type="button" class="btn" [disabled]="!frontUrl()" (click)="bottleEditorOpen.set(true)">
+                {{ d.bottleShape?.needsReview ? 'Flasche prüfen' : 'Flasche anpassen' }}
+              </button>
+            </div>
+          </section>
           @if (d.sources.length > 0) {
             <section class="panel" aria-labelledby="sources-title">
               <h2 id="sources-title">Quellen</h2>
@@ -83,6 +100,12 @@
     @if (editorOpen() && frontUrl(); as url) {
       <app-label-corner-editor [src]="url" [corners]="d.labelCorners" [hint]="editorHint()" [busy]="busy()"
         (confirmed)="saveCorners($event)" (cancelled)="editorOpen.set(false)" />
+    }
+    @if (bottleEditorOpen() && frontUrl(); as url) {
+      <app-bottle-shape-editor [src]="url" [shape]="d.bottleShape" [type]="d.type?.value ?? 'Red'"
+        [sizeMl]="d.bottleSizeMl?.value" [labelImageId]="d.summary.labelPreviewImageId"
+        [name]="d.name?.value ?? 'Entwurf'" [busy]="busy()"
+        (confirmed)="saveBottle($event)" (cancelled)="bottleEditorOpen.set(false)" />
     }
   } @else {
     <p class="muted" role="status">Entwurf wird geladen …</p>
