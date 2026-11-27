@@ -29,3 +29,8 @@ describe('resolveView', () => {
   it('falls back to the front when 3D is no longer available', () =>
     expect(resolveView('3d', viewOptions({}, false))).toBe('label'));
 });
+
+describe('default view', () => {
+  it('stays on 3D when WebGL is available', () =>
+    expect(resolveView('3d', viewOptions({ backImageId: 'b1' }, true))).toBe('3d'));
+});

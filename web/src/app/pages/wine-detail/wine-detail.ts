@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, resource, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, resource, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
@@ -76,12 +76,12 @@ export class WineDetail {
 
   // ----- Bottle: flat label, cut-out bottle or 3D view -----
 
-  /** Which picture the label panel shows. */
-  protected readonly view = signal<WineView>('label');
+  /** Which picture the label panel shows: the 3D view by default, reset for every wine. */
+  protected readonly view = linkedSignal<string, WineView>({ source: this.id, computation: () => '3d' });
   /** Cleared when the browser has no WebGL or drops the context: the flat label is shown with a notice. */
   private readonly webglFailed = signal(!hasWebGl());
   protected readonly webglOk = computed(() => !this.webglFailed());
-  protected readonly show3d = computed(() => this.view() === '3d' && this.webglOk());
+  protected readonly show3d = computed(() => this.shown() === '3d');
   /** Views on offer for this wine; the switch appears only when there is more than the front. */
   protected readonly viewOptions = computed(() => {
     const wine = this.wine();
