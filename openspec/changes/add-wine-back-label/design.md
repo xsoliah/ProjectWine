@@ -13,7 +13,7 @@ Siehe proposal.md – Why. Heute hat `CaptureDraft` ein optionales `BackImageId`
 ## Decisions
 
 - **Ganzes Foto statt Zuschnitt.** Der Agent liefert nur Ecken fürs Vorderetikett; eine Rückseite ist oft Text auf Flaschenglas oder ein langer Streifen, bei dem 3:4-Entzerren Inhalt verlöre. Das Foto wird unbearbeitet gespeichert (im Browser wie bisher verkleinert). Alternative: eigener Ecken-Editor – aufwendiger, ohne klaren Nutzen; später ergänzbar.
-- **Eine Spalte `Wine.BackImageId` (nullable, FK auf `stored_images`).** Kein Original/Ecken nötig. Löschen mit dem Wein und beim Ersetzen/Entfernen über `ImageService.RemoveAsync`.
+- **Eine Spalte `Wine.BackImageId` (nullable, ohne FK – wie `LabelImageId`: ein FK auf `stored_images` ergäbe unter SQL Server einen zweiten Kaskadenpfad).** Kein Original/Ecken nötig. Löschen mit dem Wein und beim Ersetzen/Entfernen über `ImageService.RemoveAsync`.
 - **Übernahme im Entwurf.** `AcceptAsync`: Bei neuem Wein oder vorhandenem Wein ohne Rückseite wird `draft.BackImageId` zu `wine.BackImageId` und aus der Löschliste genommen; hat der vorhandene Wein schon eins, wird das Entwurfsfoto wie bisher gelöscht (nichts überschreiben).
 - **Eigene Endpunkte** `PUT/DELETE /api/wines/{id}/back-image` im Stil der Etikett-Endpunkte; Upload als Rohbild mit denselben Typ- und Größenprüfungen wie `ImageService.Add`.
 - **UI:** In der Detailansicht ein Segment „Vorderseite | Rückseite“ nur bei vorhandenem Rückseitenbild; Werkzeuge „Rückseite hinzufügen / Neues Foto / Entfernen“ im Etikett-Bereich. Die Rückseite wird mit `object-fit: contain` gezeigt, damit nichts beschnitten wird.

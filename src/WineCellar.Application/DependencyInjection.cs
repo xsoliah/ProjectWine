@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<RackService>();
         services.AddScoped<ImageService>();
         services.AddScoped<LabelImageService>();
+        services.AddScoped<BackImageService>();
         services.AddScoped<CaptureService>();
         services.AddScoped<BottleShapeService>();
         services.AddScoped<Capture.BottleAnalyzer>();

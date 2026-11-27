@@ -52,6 +52,9 @@ public class Wine
     /// <summary>Bottle cut out of the original photo (PNG with transparent background).</summary>
     public Guid? BottleImageId { get; set; }
 
+    /// <summary>Photo of the back label, stored whole and unedited; shown only in the detail view.</summary>
+    public Guid? BackImageId { get; set; }
+
     /// <summary>Two or more grape varieties make a cuvée; exactly one means single-varietal.</summary>
     public bool IsCuvee => Grapes.Count >= 2;
 

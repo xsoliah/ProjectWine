@@ -244,6 +244,14 @@ public class CaptureService(
             if (draft.LabelPreviewImageId is { } previewId) keep.Add(previewId);
         }
 
+        // The back photo is kept whole as the wine's back image, unless the wine already has one (never overwritten).
+        if (draft.BackImageId is { } backId && (request.WineId is not null || wine.BackImageId is null))
+        {
+            await images.RemoveAsync([wine.BackImageId], ct);
+            wine.BackImageId = backId;
+            keep.Add(backId);
+        }
+
         var drop = new[] { draft.FrontImageId, draft.BackImageId, draft.LabelPreviewImageId, draft.BottleImageId }
             .Where(i => i is not null && !keep.Contains(i.Value));
         await images.RemoveAsync(drop, ct);

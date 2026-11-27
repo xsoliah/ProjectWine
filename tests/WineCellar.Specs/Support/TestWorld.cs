@@ -30,6 +30,7 @@ public sealed class TestWorld : IDisposable
     public RackService Racks { get; }
     public ImageService Images { get; }
     public LabelImageService LabelImages { get; }
+    public BackImageService BackImages { get; }
     public CaptureService Captures { get; }
     public BottleShapeService BottleShapes { get; }
     public BottleAnalyzer Bottles { get; }
@@ -78,6 +79,7 @@ public sealed class TestWorld : IDisposable
         Racks = new RackService(Db, User, TimeProvider.System);
         Images = new ImageService(Db, User);
         LabelImages = new LabelImageService(Db, User, Images, Extractor);
+        BackImages = new BackImageService(Db, User, Images);
         var captureOptions = Options.Create(CaptureOptions);
         Bottles = new BottleAnalyzer(new SkiaBottleImageExtractor());
         Captures = new CaptureService(Db, User, Images, Extractor, Bottles, Availability, Queue, captureOptions, TimeProvider.System);

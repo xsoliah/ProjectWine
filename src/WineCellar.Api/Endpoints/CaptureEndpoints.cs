@@ -101,6 +101,23 @@ public static class CaptureEndpoints
         label.MapDelete("", async (Guid id, LabelImageService service, CancellationToken ct) =>
             TypedResults.Ok(await service.RemoveAsync(id, ct)));
 
+        var back = app.MapGroup("/api/wines/{id:guid}/back-image").RequireAuthorization().WithTags("Wines");
+
+        // Multipart: image (the whole back label photo, stored unedited).
+        back.MapPut("", async (Guid id, HttpRequest request, BackImageService service, CancellationToken ct) =>
+            {
+                if (!request.HasFormContentType) throw new DomainException("Bitte das Foto als multipart/form-data senden.");
+                var form = await request.ReadFormAsync(ct);
+                var photo = await ReadAsync(form.Files.GetFile("image"), ct)
+                            ?? throw new DomainException("Bitte ein Foto auswählen.");
+                return TypedResults.Ok(await service.SetAsync(id, photo, ct));
+            })
+            .WithMetadata(new RequestSizeLimitAttribute(MaxUploadBytes))
+            .DisableAntiforgery();
+
+        back.MapDelete("", async (Guid id, BackImageService service, CancellationToken ct) =>
+            TypedResults.Ok(await service.RemoveAsync(id, ct)));
+
         var bottle = app.MapGroup("/api/wines/{id:guid}/bottle-shape").RequireAuthorization().WithTags("Wines");
 
         // Adjust outline and/or label placement (no research, no quota).

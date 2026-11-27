@@ -7,6 +7,7 @@ import { errorMessage } from '../../core/errors';
 import { formatPrice, wineTitle } from '../../core/format';
 import { LabelPoint, RackSummary, SetBottleShapeRequest, SlotLocation } from '../../core/models';
 import { hasWebGl } from '../../core/webgl';
+import { resolveView, viewOptions, WineView } from '../../core/wine-views';
 import { Bottle3d } from '../../shared/bottle-3d';
 import { BottleShapeEditor } from '../../shared/bottle-shape-editor';
 import { slotLabel } from '../../core/racks';
@@ -76,11 +77,19 @@ export class WineDetail {
   // ----- Bottle: flat label, cut-out bottle or 3D view -----
 
   /** Which picture the label panel shows. */
-  protected readonly view = signal<'label' | 'bottle' | '3d'>('label');
+  protected readonly view = signal<WineView>('label');
   /** Cleared when the browser has no WebGL or drops the context: the flat label is shown with a notice. */
   private readonly webglFailed = signal(!hasWebGl());
   protected readonly webglOk = computed(() => !this.webglFailed());
   protected readonly show3d = computed(() => this.view() === '3d' && this.webglOk());
+  /** Views on offer for this wine; the switch appears only when there is more than the front. */
+  protected readonly viewOptions = computed(() => {
+    const wine = this.wine();
+    return wine ? viewOptions(wine, this.webglOk()) : [];
+  });
+  /** The view the user chose, or the front if it is gone (e.g. the back image was just removed). */
+  protected readonly shown = computed(() => resolveView(this.view(), this.viewOptions()));
+  protected readonly backBusy = signal(false);
   protected readonly bottleEditor = signal<{ url: string } | null>(null);
   protected readonly bottleBusy = signal(false);
 
@@ -196,6 +205,45 @@ export class WineDetail {
       this.toast.error(errorMessage(error));
     } finally {
       this.labelBusy.set(false);
+    }
+  }
+
+  // ----- Back label: the whole photo, set, replaced or removed independently of the front -----
+
+  protected async pickBack(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    this.backBusy.set(true);
+    try {
+      const photo = await preparePhoto(file);
+      this.wineResource.set(await this.api.setBackImage(this.id(), photo));
+      this.view.set('back');
+      this.toast.info('Rückseite gespeichert.');
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    } finally {
+      this.backBusy.set(false);
+    }
+  }
+
+  protected async removeBack(): Promise<void> {
+    const ok = await this.confirm.ask({
+      title: 'Rückseite entfernen?',
+      message: 'Das Foto des Rückenetiketts wird gelöscht.',
+      confirmLabel: 'Entfernen',
+      danger: true,
+    });
+    if (!ok) return;
+    this.backBusy.set(true);
+    try {
+      this.wineResource.set(await this.api.removeBackImage(this.id()));
+      this.toast.info('Rückseite entfernt.');
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    } finally {
+      this.backBusy.set(false);
     }
   }
 
