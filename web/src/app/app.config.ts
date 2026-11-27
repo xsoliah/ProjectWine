@@ -10,6 +10,7 @@ import { routes } from './app.routes';
 import { ApiConfigService } from './core/api-config.service';
 import { apiInterceptor } from './core/api.interceptor';
 import { AuthService } from './core/auth.service';
+import { ThemeService } from './core/theme.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withInterceptors([apiInterceptor])),
     provideAppInitializer(() =>
-      Promise.all([inject(ApiConfigService).init(), inject(AuthService).init()]),
+      Promise.all([inject(ApiConfigService).init(), inject(AuthService).init(), inject(ThemeService).init()]),
     ),
   ],
 };

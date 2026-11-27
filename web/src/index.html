@@ -7,6 +7,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#3f0f1c" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      // Gemerktes Theme vor dem ersten Rendern setzen (kein Aufblitzen). Gegenstück: core/themes.ts, core/theme.service.ts.
+      (function () {
+        var themes = {
+          klassik: ['auto', '#3f0f1c'],
+          pergament: ['light', '#3f0f1c'],
+          nacht: ['dark', '#0b0d10'],
+          bordeaux: ['dark', '#1d0710'],
+          riesling: ['light', '#1b3a20'],
+          rose: ['light', '#5a1a3a'],
+        };
+        var id = 'klassik';
+        try {
+          var stored = localStorage.getItem('theme');
+          if (stored && Object.prototype.hasOwnProperty.call(themes, stored)) id = stored;
+        } catch (e) {}
+        var scheme = themes[id][0];
+        if (scheme === 'auto') {
+          scheme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        var root = document.documentElement;
+        root.setAttribute('data-theme', id);
+        root.setAttribute('data-scheme', scheme);
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', themes[id][1]);
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

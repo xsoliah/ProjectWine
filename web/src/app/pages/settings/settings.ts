@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiConfigService, isValidServerUrl } from '../../core/api-config.service';
 import { AuthService } from '../../core/auth.service';
+import { ThemeService } from '../../core/theme.service';
+import { THEMES, ThemeId } from '../../core/themes';
 import { ToastService } from '../../core/toast.service';
 
 @Component({
@@ -14,6 +16,8 @@ import { ToastService } from '../../core/toast.service';
 export class Settings {
   protected readonly config = inject(ApiConfigService);
   protected readonly auth = inject(AuthService);
+  protected readonly themes = THEMES;
+  protected readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
@@ -29,6 +33,14 @@ export class Settings {
     await this.config.setServerUrl(this.url());
     this.toast.info('Server-Adresse gespeichert.');
     await this.router.navigateByUrl('/');
+  }
+
+  protected schemeLabel(scheme: string): string {
+    return scheme === 'auto' ? 'folgt dem Gerät' : scheme === 'dark' ? 'dunkel' : 'hell';
+  }
+
+  protected pick(id: ThemeId): void {
+    void this.themeService.set(id);
   }
 
   protected async logout(): Promise<void> {
