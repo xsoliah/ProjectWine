@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { errorMessage } from '../../core/errors';
@@ -18,6 +18,7 @@ import { ConsumeDialog } from '../../shared/consume-dialog';
 import { Icon } from '../../shared/icon';
 import { Modal } from '../../shared/modal';
 import { Rack3d } from '../../shared/rack-3d';
+import { neighborSlot, rowPosition } from '../../shared/rack-3d-look';
 import { TypeBadge } from '../../shared/type-badge';
 
 type View = 'grid' | '3d';
@@ -29,6 +30,7 @@ type View = 'grid' | '3d';
 @Component({
   selector: 'app-rack-detail',
   imports: [RouterLink, Icon, Modal, TypeBadge, ConsumeDialog, Rack3d],
+  host: { '(document:keydown)': 'onKey($event)' },
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rack-detail.html',
   styleUrl: './rack-detail.css',
@@ -67,6 +69,24 @@ export class RackDetail {
     const row = this.selectedRow();
     return rack && row !== null ? rowEntries(rack, row) : [];
   });
+  /** Slot whose bottle the 3D view is zoomed onto (its description sheet is open). */
+  protected readonly focusedId = signal<string | null>(null);
+  protected readonly focusedSlot = computed(() => {
+    const id = this.focusedId();
+    return id ? (this.rack()?.slots.find((s) => s.id === id) ?? null) : null;
+  });
+  /** Full wine of the focused bottle (origin, grapes, drinking window, note); loaded after the zoom starts. */
+  protected readonly focusedWine = signal<Wine | null>(null);
+  protected readonly focusedPosition = computed(() => {
+    const rack = this.rack();
+    const slot = this.focusedSlot();
+    return rack && slot ? rowPosition(rack.slots, slot) : null;
+  });
+  protected readonly hasPrev = computed(() => this.neighbor('prev') !== null);
+  protected readonly hasNext = computed(() => this.neighbor('next') !== null);
+  private wineRequest = 0;
+  private readonly sheetTitle = viewChild<ElementRef<HTMLElement>>('sheetTitle');
+
   protected readonly rows = computed(() => {
     const rack = this.rack();
     return rack
@@ -95,6 +115,7 @@ export class RackDetail {
     effect(() => {
       const id = this.id();
       this.selectedRow.set(null);
+      this.clearFocus();
       this.active.set(null);
       void this.load(id);
     });
@@ -121,6 +142,7 @@ export class RackDetail {
 
   protected setView(view: View): void {
     this.selectedRow.set(null);
+    this.clearFocus();
     void this.router.navigate([], {
       queryParams: { view: view === '3d' ? '3d' : null },
       queryParamsHandling: 'merge',
@@ -144,7 +166,59 @@ export class RackDetail {
   }
 
   protected selectRow(row: number): void {
+    this.clearFocus();
     this.selectedRow.set(row);
+  }
+
+  /** Zooms onto a bottle (selecting its row) and opens its description sheet. */
+  protected focusSlot(slot: RackSlot): void {
+    const opening = this.focusedId() === null;
+    this.selectedRow.set(slot.row);
+    this.focusedId.set(slot.id);
+    void this.loadFocusedWine(slot.wine.id);
+    // Opening the sheet moves the keyboard focus to its heading; moving between bottles keeps it on the pressed button.
+    if (opening) setTimeout(() => this.sheetTitle()?.nativeElement.focus());
+  }
+
+  protected clearFocus(): void {
+    this.focusedId.set(null);
+    this.focusedWine.set(null);
+    this.wineRequest++;
+  }
+
+  /** Moves the zoom to the previous/next bottle of the row (nothing at the ends of the row). */
+  protected step(direction: 'prev' | 'next'): void {
+    const target = this.neighbor(direction);
+    if (target) this.focusSlot(target);
+  }
+
+  private neighbor(direction: 'prev' | 'next'): RackSlot | null {
+    const rack = this.rack();
+    const slot = this.focusedSlot();
+    return rack && slot ? neighborSlot(rack.slots, slot, direction) : null;
+  }
+
+  protected onKey(event: KeyboardEvent): void {
+    if (!this.focusedSlot() || this.active() || this.consuming()) return;
+    const target = event.target as HTMLElement | null;
+    if (target && /^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName)) return;
+    if (event.key === 'Escape') this.clearFocus();
+    else if (event.key === 'ArrowLeft') this.step('prev');
+    else if (event.key === 'ArrowRight') this.step('next');
+    else return;
+    event.preventDefault();
+  }
+
+  /** Loads the full wine for the sheet; an answer to an earlier request is discarded, a failure keeps the short details. */
+  private async loadFocusedWine(id: string): Promise<void> {
+    const request = ++this.wineRequest;
+    if (this.focusedWine()?.id !== id) this.focusedWine.set(null);
+    try {
+      const wine = await this.api.getWine(id);
+      if (request === this.wineRequest) this.focusedWine.set(wine);
+    } catch {
+      // The sheet shows name, producer, vintage and type from the slot.
+    }
   }
 
   /** A tap on a slot (grid, row panel): completes a move/placement or opens the slot actions. */

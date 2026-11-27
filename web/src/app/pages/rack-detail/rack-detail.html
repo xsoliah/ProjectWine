@@ -83,11 +83,66 @@
         </div>
       </div>
     } @else {
-      <div class="three" [class.with-panel]="selectedRow() !== null">
+      <div class="three" [class.with-panel]="selectedRow() !== null && !focusedSlot()">
         <div class="stage">
           @defer (on immediate) {
-            <app-rack-3d [rack]="r" [selectedRow]="selectedRow()" (rowSelected)="selectRow($event)"
-              (contextLost)="onContextLost()" />
+            <div class="canvas-wrap">
+              <app-rack-3d [rack]="r" [selectedRow]="selectedRow()" [focusedSlot]="focusedId()"
+                (rowSelected)="selectRow($event)" (bottleTapped)="focusSlot($event)" (emptyTapped)="clearFocus()"
+                (swipe)="step($event)" (viewReset)="clearFocus()" (contextLost)="onContextLost()" />
+
+              @if (focusedSlot(); as f) {
+                <button type="button" class="nav-btn prev" aria-label="Vorherige Flasche" [disabled]="!hasPrev()"
+                  (click)="step('prev')"><app-icon name="back" /></button>
+                <button type="button" class="nav-btn next" aria-label="Nächste Flasche" [disabled]="!hasNext()"
+                  (click)="step('next')"><app-icon name="back" /></button>
+
+                <section class="sheet" role="region" [attr.aria-label]="'Weinbeschreibung ' + wineLabel(f)">
+                  <div class="sheet-body" aria-live="polite">
+                    <h2 #sheetTitle tabindex="-1">{{ f.wine.name }}</h2>
+                    <p class="sheet-meta">
+                      @if (f.wine.vintage !== null) { <strong>{{ f.wine.vintage }}</strong> }
+                      @if (f.wine.producer) { <span>{{ f.wine.producer }}</span> }
+                      <app-type-badge [type]="f.wine.type" />
+                    </p>
+                    @if (focusedPosition(); as pos) {
+                      <p class="muted small">
+                        Spalte {{ f.column }} von {{ r.width }} · Flasche {{ pos.rank }} von {{ pos.count }}
+                      </p>
+                    }
+                    @if (focusedWine(); as w) {
+                      <dl class="sheet-facts">
+                        @if (w.country || w.region) {
+                          <dt>Herkunft</dt>
+                          <dd>{{ w.country?.name }}@if (w.country && w.region) { / }{{ w.region?.name }}</dd>
+                        }
+                        @if (w.grapes.length) {
+                          <dt>Rebsorten</dt>
+                          <dd>
+                            @for (g of w.grapes; track g.id; let last = $last) {
+                              {{ g.name }}@if (g.percent !== null) { ({{ g.percent }} %) }@if (!last) { , }
+                            }
+                          </dd>
+                        }
+                        @if (w.drinkFrom !== null || w.drinkUntil !== null) {
+                          <dt>Trinkfenster</dt>
+                          <dd>
+                            @if (w.drinkFrom !== null) { ab {{ w.drinkFrom }} }
+                            @if (w.drinkUntil !== null) { bis {{ w.drinkUntil }} }
+                          </dd>
+                        }
+                        @if (w.notes) { <dt>Notiz</dt><dd>{{ w.notes }}</dd> }
+                      </dl>
+                    }
+                  </div>
+                  <div class="sheet-actions">
+                    <button type="button" class="btn btn-small" (click)="onCell(f.row, f.column)">Fach-Aktionen</button>
+                    <a class="btn btn-small" [routerLink]="['/wines', f.wine.id]">Zum Wein</a>
+                    <button type="button" class="btn btn-small" (click)="clearFocus()">Zurück zur Reihe</button>
+                  </div>
+                </section>
+              }
+            </div>
           } @loading (minimum 200ms) {
             <p class="muted loading" role="status">3D-Ansicht wird geladen …</p>
           } @error {
@@ -107,6 +162,7 @@
         </div>
 
         @if (selectedRow(); as row) {
+          @if (!focusedSlot()) {
           <aside class="row-panel panel" [attr.aria-label]="'Fächer in Reihe ' + row">
             <div class="row-head">
               <h2>Reihe {{ row }}</h2>
@@ -116,7 +172,7 @@
             </div>
             <ol class="entries">
               @for (entry of rowList(); track entry.column) {
-                <li>
+                <li class="entry-line">
                   <button type="button" class="entry" [class.free]="!entry.slot" [attr.data-type]="entry.slot?.wine?.type"
                     (click)="onCell(row, entry.column)">
                     <span class="col">Spalte {{ entry.column }}</span>
@@ -130,10 +186,15 @@
                       <span class="what muted">frei</span>
                     }
                   </button>
+                  @if (entry.slot; as s) {
+                    <button type="button" class="btn btn-small" [attr.aria-label]="'Weinbeschreibung ' + wineLabel(s)"
+                      (click)="focusSlot(s)">Beschreibung</button>
+                  }
                 </li>
               }
             </ol>
           </aside>
+          }
         }
       </div>
     }
