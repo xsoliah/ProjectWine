@@ -23,7 +23,7 @@ public class BottleShapeService(
         var source = await LoadSourceAsync(wine, ct);
         var placement = request.Label ?? throw new DomainException("Bitte die Lage des Etiketts angeben.");
         var analysis = bottles.Adjust(source.Data, BottleShapeJson.Deserialize(wine.BottleShapeJson),
-            CaptureService.ToOutline(request.Outline), placement, wine.Type);
+            CaptureService.ToOutline(request.Outline), placement, wine.Type, wine.BottleForm);
         await ApplyAsync(wine, analysis, ct);
         await db.SaveChangesAsync(ct);
         return wine.ToDto();
@@ -50,7 +50,7 @@ public class BottleShapeService(
         // The corners the user confirmed belong to the same photo and win over the agent's.
         var corners = LabelCornersJson.Deserialize(wine.LabelCornersJson) ?? result.LabelCorners;
         var sanitized = CaptureProcessor.Sanitize(result, DateTime.UtcNow.Year);
-        var analysis = bottles.Analyze(source.Data, sanitized.Bottle, corners is { } c && c.IsPlausible() ? c : null, wine.Type);
+        var analysis = bottles.Analyze(source.Data, sanitized.Bottle, corners is { } c && c.IsPlausible() ? c : null, wine.Type, wine.BottleForm);
         await ApplyAsync(wine, analysis, ct);
         await captures.ConsumeQuotaAndSaveAsync(ct);
         return wine.ToDto();

@@ -4,8 +4,10 @@ import {
   LABEL_IMAGE_ASPECT,
   MAX_AZIMUTH,
   MAX_LABEL_ARC,
+  MAX_RACK_SCALE,
   MAX_TILT,
   bottleScale,
+  capsuleDimensions,
   effectiveShape,
   labelArc,
   labelFrame,
@@ -14,7 +16,9 @@ import {
   moveLabel,
   outlineValid,
   placementValid,
+  rackBottleScale,
   radiusAt,
+  resolveForm,
   standardShape,
   stepView,
   templateOutline,
@@ -163,5 +167,55 @@ describe('bottle size', () => {
     expect(bottleScale(50)).toBe(0.6);
     expect(bottleScale(30000)).toBe(1.6);
     expect(bottleScale(null)).toBe(1);
+  });
+});
+
+describe('bottle forms', () => {
+  const forms = ['Bordeaux', 'Burgundy', 'Champagne', 'Flute'] as const;
+  const maxRadius = (form: (typeof forms)[number]) => Math.max(...standardShape('Red', form).profile.map((p) => p.radius));
+
+  it('follows the wine type unless a form is chosen', () => {
+    expect(resolveForm(null, 'Sparkling')).toBe('Champagne');
+    expect(resolveForm(undefined, 'Red')).toBe('Bordeaux');
+    expect(resolveForm('Burgundy', 'Sparkling')).toBe('Burgundy');
+    expect(standardShape('Sparkling').profile).toEqual(standardShape('Red', 'Champagne').profile);
+  });
+
+  it('gives every form its own, valid profile (radius within the server limit, from base to mouth)', () => {
+    const signatures = new Set<string>();
+    for (const form of forms) {
+      const { profile } = standardShape('Red', form);
+      expect(profile[0].height).toBe(0);
+      expect(profile[profile.length - 1].height).toBeCloseTo(1, 3);
+      expect(maxRadius(form)).toBeLessThanOrEqual(0.35);
+      signatures.add(profile.map((p) => p.radius).join(','));
+    }
+    expect(signatures.size).toBe(forms.length);
+    expect(maxRadius('Flute')).toBeLessThan(maxRadius('Bordeaux'));
+    expect(maxRadius('Champagne')).toBeGreaterThan(maxRadius('Bordeaux'));
+  });
+
+  it('covers more of the neck with foil on sparkling wine bottles', () => {
+    const length = (form: (typeof forms)[number]) => {
+      const c = capsuleDimensions(standardShape('Red', form), form);
+      return c.top - c.start;
+    };
+    expect(length('Champagne')).toBeGreaterThan(length('Bordeaux') * 1.2);
+  });
+
+  it('keeps a measured shape and only uses the form for the fallback', () => {
+    const own: BottleShape = { ...standardShape('Red'), label: { top: 0.6, bottom: 0.3, widthFraction: 0.5, centerAngle: 0.2 } };
+    expect(effectiveShape(own, 'Sparkling', 'Champagne')).toBe(own);
+    expect(effectiveShape(null, 'Red', 'Flute').profile).toEqual(standardShape('Red', 'Flute').profile);
+  });
+});
+
+describe('bottle size in the rack', () => {
+  it('makes a half bottle smaller and a magnum larger, within the slot', () => {
+    expect(rackBottleScale(375)).toBeLessThan(rackBottleScale(750));
+    expect(rackBottleScale(750)).toBe(1);
+    expect(rackBottleScale(1500)).toBeGreaterThan(1);
+    expect(rackBottleScale(30000)).toBe(MAX_RACK_SCALE);
+    expect(rackBottleScale(undefined)).toBe(1);
   });
 });

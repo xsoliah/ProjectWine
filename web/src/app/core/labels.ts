@@ -1,4 +1,15 @@
-import { ConsumptionKind, WineType } from './models';
+import { BottleForm, ConsumptionKind, WineType } from './models';
+
+export const BOTTLE_FORM_OPTIONS: readonly { value: BottleForm; label: string }[] = [
+  { value: 'Bordeaux', label: 'Bordeaux' },
+  { value: 'Burgundy', label: 'Burgunder' },
+  { value: 'Champagne', label: 'Champagner / Schaumwein' },
+  { value: 'Flute', label: 'Schlegel (Flöte)' },
+];
+
+export function bottleFormLabel(form: BottleForm): string {
+  return BOTTLE_FORM_OPTIONS.find((f) => f.value === form)?.label ?? form;
+}
 
 export const WINE_TYPES: readonly { value: WineType; label: string }[] = [
   { value: 'Red', label: 'Rotwein' },

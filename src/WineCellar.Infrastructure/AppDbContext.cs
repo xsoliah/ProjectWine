@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.BottleShapeJson).HasMaxLength(BottleShapeJsonMaxLength);
             e.Property(x => x.Quantity);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.BottleForm).HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.PurchasePrice).HasPrecision(10, 2);
 
             // A barcode identifies one wine per user. SQL Server treats NULLs as equal in unique

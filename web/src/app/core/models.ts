@@ -1,4 +1,5 @@
 export type WineType = 'Red' | 'White' | 'Rose' | 'Sparkling' | 'Dessert' | 'Fortified' | 'Other';
+export type BottleForm = 'Bordeaux' | 'Burgundy' | 'Champagne' | 'Flute';
 export type ConsumptionKind = 'Drunk' | 'Sold' | 'Gifted';
 export type LookupSource = 'Cellar' | 'External' | 'None';
 
@@ -16,6 +17,8 @@ export interface Wine {
   /** Two or more grape varieties. */
   isCuvee: boolean;
   bottleSizeMl: number;
+  /** Chosen bottle form; null/absent = automatic (follows the wine type). */
+  bottleForm?: BottleForm | null;
   quantity: number;
   /** Rack slots holding bottles of this wine (sorted by rack name, row, column). */
   slots: SlotLocation[];
@@ -224,6 +227,8 @@ export interface RackWine {
   producer: string | null;
   vintage: number | null;
   type: WineType;
+  bottleSizeMl?: number;
+  bottleForm?: BottleForm | null;
   /** Label image of the wine (load via ImageCache); null if it has none. */
   labelImageId?: string | null;
 }

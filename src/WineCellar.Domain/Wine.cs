@@ -20,6 +20,9 @@ public class Wine
     public Region? Region { get; set; }
     public int BottleSizeMl { get; set; } = 750;
 
+    /// <summary>Chosen bottle form; null = automatic (see <see cref="BottleShape.ResolveForm"/>).</summary>
+    public BottleForm? BottleForm { get; set; }
+
     /// <summary>Bottles currently in the cellar.</summary>
     public int Quantity { get; private set; }
 
@@ -139,6 +142,7 @@ public class Wine
         if (Name.Length > 200) throw new DomainException("Der Name des Weins darf höchstens 200 Zeichen lang sein.");
         if (Vintage is { } v && (v < 1800 || v > currentYear + 1)) throw new DomainException($"Ungültiger Jahrgang: {v}.");
         if (BottleSizeMl is < 50 or > 30000) throw new DomainException("Ungültige Flaschengröße.");
+        if (BottleForm is { } form && !Enum.IsDefined(form)) throw new DomainException("Ungültige Flaschenform.");
         if (DrinkFrom is { } from && DrinkUntil is { } until && until < from)
             throw new DomainException("Das Ende des Trinkfensters liegt vor dessen Beginn.");
         if (PurchasePrice is < 0m) throw new DomainException("Der Preis darf nicht negativ sein.");

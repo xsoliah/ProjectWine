@@ -145,6 +145,24 @@ public class BottleShapeTests
         Assert.True(BottleShape.Standard(WineType.Sparkling).Profile.Max(p => p.Radius) > BottleShape.Standard(WineType.Red).Profile.Max(p => p.Radius));
     }
 
+    [Fact]
+    public void Every_form_is_plausible_and_different()
+    {
+        var shapes = Enum.GetValues<BottleForm>().ToDictionary(f => f, f => BottleShape.Standard(WineType.Red, f));
+        foreach (var (form, shape) in shapes) Assert.True(shape.IsPlausible(), form.ToString());
+        Assert.Equal(shapes.Count, shapes.Values.Select(s => string.Join(';', s.Profile.Select(p => p.Radius))).Distinct().Count());
+        Assert.True(shapes[BottleForm.Flute].Profile.Max(p => p.Radius) < shapes[BottleForm.Bordeaux].Profile.Max(p => p.Radius));
+    }
+
+    [Fact]
+    public void Form_follows_the_type_unless_chosen()
+    {
+        Assert.Equal(BottleForm.Champagne, BottleShape.ResolveForm(WineType.Sparkling, null));
+        Assert.Equal(BottleForm.Bordeaux, BottleShape.ResolveForm(WineType.Red, null));
+        Assert.Equal(BottleForm.Burgundy, BottleShape.ResolveForm(WineType.Sparkling, BottleForm.Burgundy));
+        Assert.Equal(BottleShape.Standard(WineType.Sparkling).Profile, BottleShape.Standard(WineType.Red, BottleForm.Champagne).Profile);
+    }
+
     [Theory]
     [InlineData(0.5, 0.5)]     // no height
     [InlineData(1.2, 0.2)]     // above the mouth

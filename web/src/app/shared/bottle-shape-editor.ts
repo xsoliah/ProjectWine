@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { effectiveShape, moveLabel, outlineValid, placementValid, templateOutline } from '../core/bottle';
-import { BottleLabelPlacement, BottleShape, LabelPoint, SetBottleShapeRequest, WineType } from '../core/models';
+import { BottleForm, BottleLabelPlacement, BottleShape, LabelPoint, SetBottleShapeRequest, WineType } from '../core/models';
 import { nudge, toNormalized } from '../core/photo';
 import { hasWebGl } from '../core/webgl';
 import { Bottle3d } from './bottle-3d';
@@ -71,7 +71,7 @@ import { Modal } from './modal';
           <section class="stack" aria-labelledby="label-title">
             <h3 id="label-title">Lage des Etiketts</h3>
             @if (webgl) {
-              <app-bottle-3d [shape]="preview()" [type]="type()" [sizeMl]="sizeMl()" [labelImageId]="labelImageId()"
+              <app-bottle-3d [shape]="preview()" [type]="type()" [form]="form()" [sizeMl]="sizeMl()" [labelImageId]="labelImageId()"
                 [name]="name()" />
             }
             <div class="control">
@@ -220,6 +220,7 @@ export class BottleShapeEditor {
   /** Measured bottle; null starts from the standard bottle. */
   readonly shape = input<BottleShape | null | undefined>(null);
   readonly type = input<WineType>('Red');
+  readonly form = input<BottleForm | null | undefined>(null);
   readonly sizeMl = input<number | null | undefined>(750);
   readonly labelImageId = input<string | null | undefined>(null);
   readonly name = input.required<string>();
@@ -247,7 +248,7 @@ export class BottleShapeEditor {
   protected readonly positionValue = computed(() => Math.round(this.label().bottom * 100));
   /** The shape of the preview: the stored profile with the label as edited. */
   protected readonly preview = computed<BottleShape>(() => ({
-    ...effectiveShape(this.shape(), this.type()),
+    ...effectiveShape(this.shape(), this.type(), this.form()),
     label: this.label(),
   }));
 
@@ -256,7 +257,7 @@ export class BottleShapeEditor {
       const shape = this.shape();
       this.outline.set(shape?.outline ? shape.outline.map((p) => ({ ...p })) : null);
       this.outlineTouched.set(false);
-      this.label.set({ ...effectiveShape(shape, this.type()).label });
+      this.label.set({ ...effectiveShape(shape, this.type(), this.form()).label });
     });
   }
 
@@ -268,7 +269,7 @@ export class BottleShapeEditor {
   protected createOutline(): void {
     const img = this.img()?.nativeElement;
     const aspect = img && img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 0.75;
-    this.outline.set(templateOutline(effectiveShape(this.shape(), this.type()), aspect));
+    this.outline.set(templateOutline(effectiveShape(this.shape(), this.type(), this.form()), aspect));
     this.outlineTouched.set(true);
   }
 
@@ -276,7 +277,7 @@ export class BottleShapeEditor {
     const shape = this.shape();
     this.outline.set(shape?.outline ? shape.outline.map((p) => ({ ...p })) : null);
     this.outlineTouched.set(false);
-    this.label.set({ ...effectiveShape(shape, this.type()).label });
+    this.label.set({ ...effectiveShape(shape, this.type(), this.form()).label });
   }
 
   protected startDrag(event: PointerEvent, index: number): void {

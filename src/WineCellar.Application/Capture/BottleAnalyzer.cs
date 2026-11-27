@@ -30,7 +30,7 @@ public class BottleAnalyzer(IBottleImageExtractor extractor)
     /// Detected bottle: shape from the outline and the label corners plus the cut-out. Without a complete, plausible
     /// bottle the standard bottle of the wine type is used, flagged for review, without a bottle image.
     /// </summary>
-    public BottleAnalysis Analyze(byte[] photo, BottleDetection? detection, LabelCorners? label, WineType type)
+    public BottleAnalysis Analyze(byte[] photo, BottleDetection? detection, LabelCorners? label, WineType type, BottleForm? form = null)
     {
         if (detection is { IsComplete: true } found)
         {
@@ -38,7 +38,7 @@ public class BottleAnalyzer(IBottleImageExtractor extractor)
             if (BottleShapeBuilder.FromOutline(found.Outline, (double)width / height, label) is { Outline: { } outline } shape)
                 return new BottleAnalysis(shape, extractor.Extract(photo, outline));
         }
-        return new BottleAnalysis(BottleShape.Standard(type) with { NeedsReview = true }, null);
+        return new BottleAnalysis(BottleShape.Standard(type, form) with { NeedsReview = true }, null);
     }
 
     /// <summary>
@@ -46,9 +46,9 @@ public class BottleAnalyzer(IBottleImageExtractor extractor)
     /// image is cut again. Without an outline the existing profile is kept (and no image can be cut).
     /// </summary>
     /// <exception cref="DomainException">Outline or placement are implausible.</exception>
-    public BottleAnalysis Adjust(byte[] photo, BottleShape? current, IReadOnlyList<LabelPoint>? outline, BottleLabelPlacement label, WineType type)
+    public BottleAnalysis Adjust(byte[] photo, BottleShape? current, IReadOnlyList<LabelPoint>? outline, BottleLabelPlacement label, WineType type, BottleForm? form = null)
     {
-        var profile = current?.Profile ?? BottleShape.Standard(type).Profile;
+        var profile = current?.Profile ?? BottleShape.Standard(type, form).Profile;
         var kept = current?.Outline;
         if (outline is not null)
         {

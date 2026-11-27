@@ -26,7 +26,8 @@ public record WineDto(
     IReadOnlyList<LabelPointDto>? LabelCorners = null,
     Guid? BottleImageId = null,
     BottleShape? BottleShape = null,
-    Guid? BackImageId = null);
+    Guid? BackImageId = null,
+    BottleForm? BottleForm = null);
 
 /// <summary>Used for create and update (update replaces all fields, including the bottle count).</summary>
 public record SaveWineRequest(
@@ -43,7 +44,8 @@ public record SaveWineRequest(
     int? DrinkFrom = null,
     int? DrinkUntil = null,
     decimal? PurchasePrice = null,
-    string? Notes = null);
+    string? Notes = null,
+    BottleForm? BottleForm = null);
 
 public record WineQuery(string? Search = null, WineType? Type = null, bool InCellarOnly = true);
 
@@ -177,7 +179,7 @@ public record SlotLocationDto(Guid SlotId, Guid RackId, string RackName, int Row
 public record RackSummaryDto(Guid Id, string Name, int Height, int Width, int Capacity, int Occupied, int Free);
 
 /// <summary>Short info about the wine in a slot.</summary>
-public record RackWineDto(Guid Id, string Name, string? Producer, int? Vintage, WineType Type, Guid? LabelImageId = null);
+public record RackWineDto(Guid Id, string Name, string? Producer, int? Vintage, WineType Type, Guid? LabelImageId = null, int BottleSizeMl = 750, BottleForm? BottleForm = null);
 
 public record RackSlotDto(Guid Id, int Row, int Column, RackWineDto Wine);
 
