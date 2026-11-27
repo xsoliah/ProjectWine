@@ -19,7 +19,16 @@ public class ConsumptionRecord
     public string? Counterparty { get; set; }
     public decimal? Price { get; set; }
 
-    /// <summary>0.5 to 5 stars in half steps. Only for <see cref="ConsumptionKind.Drunk"/>.</summary>
+    /// <summary>Rating of a personal scale above five stars: "Top".</summary>
+    public const double RatingTop = 6;
+
+    /// <summary>Rating of a personal scale above "Top": "Hammer".</summary>
+    public const double RatingHammer = 7;
+
+    /// <summary>
+    /// 0.5 to 5 stars in half steps, or <see cref="RatingTop"/> / <see cref="RatingHammer"/> above that.
+    /// Only for <see cref="ConsumptionKind.Drunk"/>.
+    /// </summary>
     public double? Rating { get; set; }
     public string? TastingNote { get; set; }
 
@@ -42,7 +51,9 @@ public class ConsumptionRecord
     public static void EnsureValidRating(double? rating)
     {
         if (rating is not { } r) return;
+        if (r == RatingTop || r == RatingHammer) return;
         if (r < 0.5 || r > 5 || Math.Abs(r * 2 - Math.Round(r * 2)) > 1e-9)
-            throw new DomainException("Ungültige Bewertung: erlaubt sind 0,5 bis 5 Sterne in Halbschritten.");
+            throw new DomainException(
+                "Ungültige Bewertung: erlaubt sind 0,5 bis 5 Sterne in Halbschritten sowie Top (6) und Hammer (7).");
     }
 }

@@ -1,7 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
+import { Icon, IconName } from './icon';
 import {
   MAX_STARS,
+  RATING_HAMMER,
   RATING_STEP,
+  RATING_TOP,
+  isTier,
   ratingFromPointer,
   ratingLabel,
   starFill,
@@ -12,15 +16,22 @@ const STAR_PATH = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.
 
 @Component({
   selector: 'app-star-rating',
+  imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
+    @if (readonly() && tier(); as t) {
+      <span class="tier-badge" [class.hammer]="t.value === hammer" role="img" [attr.aria-label]="label()">
+        <app-icon [name]="t.icon" />
+        {{ t.text }}
+      </span>
+    } @else {
+      <div
       class="stars"
       [attr.role]="readonly() ? 'img' : 'slider'"
       [attr.tabindex]="readonly() ? null : 0"
       [attr.aria-label]="readonly() ? label() : 'Bewertung'"
       [attr.aria-valuemin]="readonly() ? null : 0"
-      [attr.aria-valuemax]="readonly() ? null : 5"
+      [attr.aria-valuemax]="readonly() ? null : hammer"
       [attr.aria-valuenow]="readonly() ? null : (value() ?? 0)"
       [attr.aria-valuetext]="readonly() ? null : label()"
       [class.interactive]="!readonly()"
@@ -34,7 +45,24 @@ const STAR_PATH = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.
           </span>
         </span>
       }
-    </div>
+      </div>
+    }
+    @if (!readonly()) {
+      <span class="tiers">
+        @for (t of tiers; track t.value) {
+          <button
+            type="button"
+            class="tier"
+            [class.on]="value() === t.value"
+            [attr.aria-pressed]="value() === t.value"
+            (click)="value.set(t.value)"
+          >
+            <app-icon [name]="t.icon" />
+            {{ t.text }}
+          </button>
+        }
+      </span>
+    }
     @if (!readonly() && value() !== null) {
       <button type="button" class="btn-link" (click)="value.set(null)">Bewertung entfernen</button>
     }
@@ -70,6 +98,38 @@ const STAR_PATH = 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.
       stroke-width: 1.4;
       stroke-linejoin: round;
     }
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1, 0.25rem);
+      color: var(--gold);
+      font-weight: 600;
+      font-size: 0.9em;
+    }
+    .tier-badge.hammer {
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tiers {
+      display: inline-flex;
+      gap: var(--space-2);
+    }
+    .tier {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1, 0.25rem);
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--gold);
+      border-radius: var(--radius-s);
+      background: transparent;
+      color: var(--gold);
+      font: inherit;
+      cursor: pointer;
+    }
+    .tier.on {
+      background: var(--gold);
+      color: var(--bg, #fff);
+    }
     .fill {
       position: absolute;
       inset: 0 auto 0 0;
@@ -90,6 +150,15 @@ export class StarRating {
 
   protected readonly stars = Array.from({ length: MAX_STARS }, (_, i) => i + 1);
   protected readonly path = STAR_PATH;
+  protected readonly hammer = RATING_HAMMER;
+  protected readonly tiers: readonly { value: number; text: string; icon: IconName }[] = [
+    { value: RATING_TOP, text: 'Top', icon: 'crown' },
+    { value: RATING_HAMMER, text: 'Hammer', icon: 'bolt' },
+  ];
+  protected readonly tier = computed(() => {
+    const v = this.value();
+    return isTier(v) ? (this.tiers.find((t) => t.value === v) ?? null) : null;
+  });
   protected readonly label = computed(() => ratingLabel(this.value()));
 
   protected fillOf(star: number): number {
@@ -115,7 +184,7 @@ export class StarRating {
     } else if (event.key === 'Home') {
       this.value.set(RATING_STEP);
     } else if (event.key === 'End') {
-      this.value.set(MAX_STARS);
+      this.value.set(RATING_HAMMER);
     } else if (event.key === 'Delete' || event.key === 'Backspace') {
       this.value.set(null);
     } else {

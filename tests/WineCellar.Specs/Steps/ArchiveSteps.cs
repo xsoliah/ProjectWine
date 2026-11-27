@@ -17,6 +17,19 @@ public class ArchiveSteps(TestWorld world)
         await Consume(name, new ConsumeRequest(
             ConsumptionKind.Drunk, quantity, Rating: CommonSteps.ParseStars(stars), TastingNote: note));
 
+    [When(@"ich (\d+) Flaschen? ""([^""]*)"" trinke und mit ""(Top|Hammer)"" bewerte")]
+    public async Task WhenDrinkAndRateTier(int quantity, string name, string tier) =>
+        await Consume(name, new ConsumeRequest(
+            ConsumptionKind.Drunk, quantity, Rating: CommonSteps.ParseStars(tier)));
+
+    [When(@"ich den Archiveintrag für ""([^""]*)"" nachträglich mit ""(Top|Hammer)"" bewerte")]
+    public async Task WhenRateLaterTier(string name, string tier) =>
+        await WhenRateLater(name, tier);
+
+    [Then(@"hat der Archiveintrag für ""([^""]*)"" die Bewertung ""(Top|Hammer)""")]
+    public async Task ThenHasTier(string name, string tier) =>
+        await ThenHasRating(name, tier);
+
     [When(@"ich (\d+) Flaschen? ""([^""]*)"" für ([\d,]+) € an ""([^""]*)"" verkaufe")]
     public async Task WhenSell(int quantity, string name, string price, string buyer) =>
         await Consume(name, new ConsumeRequest(

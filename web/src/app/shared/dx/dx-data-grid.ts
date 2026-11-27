@@ -116,7 +116,7 @@ export class DxDataGrid<T> {
         column['fixed'] = true;
         column['cellTemplate'] = (container: HTMLElement, info: { data: { __row: T }; text: string }) =>
           this.linkCell(container, info.data.__row, info.text);
-      } else if (f.display) {
+      } else if (f.display || f.valueText) {
         column['cellTemplate'] = (container: HTMLElement, info: { data: { __row: T } }) => {
           container.textContent = cellText(f, info.data.__row);
         };

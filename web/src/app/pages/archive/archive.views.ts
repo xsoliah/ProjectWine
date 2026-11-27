@@ -5,6 +5,7 @@ import { ListField, ListMeasure, parseIsoDate } from '../../core/list-model';
 import { PivotLayout } from '../../core/list-view-state';
 import { ListKpi, PivotPreset, averageOf, sumOf } from '../../core/pivot-insights';
 import { ArchiveEntry } from '../../core/models';
+import { RATING_LEVELS, ratingText } from '../../shared/star-rating.logic';
 
 /** Felder des Archivs; die erste (Wein) ist immer sichtbar. Das Datum ist im Pivot nach Jahr, Quartal und Monat gruppiert. */
 export function archiveFields(): ListField<ArchiveEntry>[] {
@@ -40,7 +41,16 @@ export function archiveFields(): ListField<ArchiveEntry>[] {
       pivot: true,
     },
     { key: 'quantity', title: 'Anzahl', type: 'number', value: (e) => e.quantity, column: 'default' },
-    { key: 'rating', title: 'Bewertung', type: 'number', value: (e) => e.rating, column: 'default', pivot: true },
+    {
+      key: 'rating',
+      title: 'Bewertung',
+      type: 'number',
+      value: (e) => e.rating,
+      valueText: ratingText,
+      levels: RATING_LEVELS,
+      column: 'default',
+      pivot: true,
+    },
     { key: 'price', title: 'Preis', type: 'number', value: (e) => e.price, format: 'currency', column: 'default' },
     { key: 'counterparty', title: 'Gegenpartei', type: 'string', value: (e) => e.counterparty, column: 'optional' },
   ];
