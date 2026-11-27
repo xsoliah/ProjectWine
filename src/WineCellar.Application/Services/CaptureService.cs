@@ -247,8 +247,10 @@ public class CaptureService(
         // The back photo is kept whole as the wine's back image, unless the wine already has one (never overwritten).
         if (draft.BackImageId is { } backId && (request.WineId is not null || wine.BackImageId is null))
         {
-            await images.RemoveAsync([wine.BackImageId], ct);
+            await images.RemoveAsync([wine.BackImageId, wine.BackSourceImageId], ct);
             wine.BackImageId = backId;
+            wine.BackSourceImageId = null;
+            wine.BackCornersJson = null;
             keep.Add(backId);
         }
 

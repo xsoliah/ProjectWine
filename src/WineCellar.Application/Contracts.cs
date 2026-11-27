@@ -27,7 +27,9 @@ public record WineDto(
     Guid? BottleImageId = null,
     BottleShape? BottleShape = null,
     Guid? BackImageId = null,
-    BottleForm? BottleForm = null);
+    BottleForm? BottleForm = null,
+    Guid? BackSourceImageId = null,
+    IReadOnlyList<LabelPointDto>? BackCorners = null);
 
 /// <summary>Used for create and update (update replaces all fields, including the bottle count).</summary>
 public record SaveWineRequest(

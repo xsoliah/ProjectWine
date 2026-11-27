@@ -211,17 +211,54 @@ export class WineDetail {
     }
   }
 
-  // ----- Back label: the whole photo, set, replaced or removed independently of the front -----
+  // ----- Back label: cut out with four corners like the front label, set, adjusted or removed independently -----
+
+  /** Corner editor for the back label: a new photo (blob) or the stored original / unedited back photo. */
+  protected readonly backEditor = signal<{ url: string; corners: LabelPoint[] | null; photo: Blob | null } | null>(null);
 
   protected async pickBack(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
-    this.backBusy.set(true);
     try {
       const photo = await preparePhoto(file);
-      this.wineResource.set(await this.api.setBackImage(this.id(), photo));
+      this.backEditor.set({ url: URL.createObjectURL(photo), corners: null, photo });
+    } catch {
+      this.toast.error('Das Foto konnte nicht gelesen werden. Bitte ein anderes Foto wählen.');
+    }
+  }
+
+  /** Opens the editor on the original photo; an older wine without one uses its unedited back photo. */
+  protected async adjustBack(): Promise<void> {
+    const wine = this.wine();
+    const sourceId = wine?.backSourceImageId ?? wine?.backImageId;
+    if (!wine || !sourceId) return;
+    try {
+      const url = await this.images.url(sourceId);
+      this.backEditor.set({ url, corners: wine.backCorners ?? null, photo: null });
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    }
+  }
+
+  protected closeBackEditor(): void {
+    const editor = this.backEditor();
+    if (editor?.photo) URL.revokeObjectURL(editor.url);
+    this.backEditor.set(null);
+  }
+
+  /** The server cuts the back label out of the photo with the confirmed corners (no research, no quota). */
+  protected async saveBack(corners: LabelPoint[]): Promise<void> {
+    const editor = this.backEditor();
+    if (!editor) return;
+    this.backBusy.set(true);
+    try {
+      const updated = editor.photo
+        ? await this.api.setBackImage(this.id(), editor.photo, corners)
+        : await this.api.setBackCorners(this.id(), corners);
+      this.wineResource.set(updated);
+      this.closeBackEditor();
       this.view.set('back');
       this.toast.info('Rückseite gespeichert.');
     } catch (error) {
@@ -234,7 +271,7 @@ export class WineDetail {
   protected async removeBack(): Promise<void> {
     const ok = await this.confirm.ask({
       title: 'Rückseite entfernen?',
-      message: 'Das Foto des Rückenetiketts wird gelöscht.',
+      message: 'Das Rückseitenbild und das zugehörige Originalfoto werden gelöscht.',
       confirmLabel: 'Entfernen',
       danger: true,
     });

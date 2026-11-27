@@ -497,7 +497,14 @@ namespace WineCellar.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("BackCornersJson")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<Guid?>("BackImageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BackSourceImageId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Barcode")

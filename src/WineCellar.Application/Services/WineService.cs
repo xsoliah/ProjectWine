@@ -72,7 +72,7 @@ public class WineService(
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var wine = await FindOwnedAsync(id, track: true, ct);
-        var imageIds = new[] { wine.LabelImageId, wine.LabelSourceImageId, wine.BottleImageId, wine.BackImageId }.OfType<Guid>().ToList();
+        var imageIds = new[] { wine.LabelImageId, wine.LabelSourceImageId, wine.BottleImageId, wine.BackImageId, wine.BackSourceImageId }.OfType<Guid>().ToList();
         db.StoredImages.RemoveRange(await db.StoredImages.Where(i => imageIds.Contains(i.Id)).ToListAsync(ct));
         db.Wines.Remove(wine);
         await db.SaveChangesAsync(ct);

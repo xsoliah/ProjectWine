@@ -24,9 +24,9 @@ namespace WineCellar.Specs.Features
         
         private static string[] featureTags = ((string[])(null));
         
-        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new global::System.Globalization.CultureInfo("de"), "Features", "Rückseitenbild eines Weins", "  Als Weinsammler möchte ich das Rückenetikett eines Weins als Foto speichern, da" +
-                "mit ich Angaben wie Rebsorten,\r\n  Trinkfenster oder Importeur später nachlesen k" +
-                "ann. Das Foto wird unbearbeitet gespeichert.", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
+        private static global::Reqnroll.FeatureInfo featureInfo = new global::Reqnroll.FeatureInfo(new global::System.Globalization.CultureInfo("de"), "Features", "Rückseitenbild eines Weins", "  Als Weinsammler möchte ich das Rückenetikett eines Weins als zugeschnittenes Bi" +
+                "ld speichern, damit ich Angaben wie\r\n  Rebsorten, Trinkfenster oder Importeur sp" +
+                "äter nachlesen kann. Der Zuschnitt funktioniert wie beim Vorderetikett.", global::Reqnroll.ProgrammingLanguage.CSharp, featureTags);
         
         private Xunit.Abstractions.ITestOutputHelper _testOutputHelper;
         
@@ -163,7 +163,7 @@ namespace WineCellar.Specs.Features
   await this.FeatureBackgroundAsync();
 #line hidden
 #line 11
-    await testRunner.WhenAsync("ich bei \"Sassicaia\" ein Foto des Rückenetiketts wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+    await testRunner.WhenAsync("ich bei \"Sassicaia\" ein Foto des Rückenetiketts wähle und die Ecken bestätige", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
 #line 12
     await testRunner.ThenAsync("hat der Wein \"Sassicaia\" ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
@@ -175,14 +175,14 @@ namespace WineCellar.Specs.Features
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Rückseite wird unbearbeitet gespeichert")]
+        [Xunit.SkippableFactAttribute(DisplayName="Rückenetikett wird zugeschnitten")]
         [Xunit.TraitAttribute("FeatureTitle", "Rückseitenbild eines Weins")]
-        [Xunit.TraitAttribute("Description", "Rückseite wird unbearbeitet gespeichert")]
-        public async global::System.Threading.Tasks.Task RuckseiteWirdUnbearbeitetGespeichert()
+        [Xunit.TraitAttribute("Description", "Rückenetikett wird zugeschnitten")]
+        public async global::System.Threading.Tasks.Task RuckenetikettWirdZugeschnitten()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Rückseite wird unbearbeitet gespeichert", null, tagsOfScenario, argumentsOfScenario, featureTags);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Rückenetikett wird zugeschnitten", null, tagsOfScenario, argumentsOfScenario, featureTags);
 #line 15
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
@@ -197,10 +197,13 @@ namespace WineCellar.Specs.Features
   await this.FeatureBackgroundAsync();
 #line hidden
 #line 16
-    await testRunner.WhenAsync("ich bei \"Sassicaia\" ein Foto des Rückenetiketts wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+    await testRunner.WhenAsync("ich bei \"Sassicaia\" ein Foto des Rückenetiketts wähle und die Ecken bestätige", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
 #line 17
-    await testRunner.ThenAsync("ist das Rückseitenbild von \"Sassicaia\" das gewählte Foto", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.ThenAsync("zeigt das Rückseitenbild von \"Sassicaia\" nur das Etikett im Format 900 × 1200", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 18
+    await testRunner.AndAsync("das Originalfoto der Rückseite von \"Sassicaia\" ist gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
@@ -214,7 +217,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Rückseite ersetzen", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 19
+#line 20
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -227,17 +230,92 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 20
+#line 21
     await testRunner.GivenAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 21
-    await testRunner.WhenAsync("ich bei \"Sassicaia\" ein neues Foto des Rückenetiketts wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
-#line hidden
 #line 22
-    await testRunner.ThenAsync("zeigt \"Sassicaia\" das neue Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+    await testRunner.WhenAsync("ich bei \"Sassicaia\" ein neues Foto des Rückenetiketts wähle und die Ecken bestäti" +
+                        "ge", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
 #line 23
-    await testRunner.AndAsync("das alte Rückseitenbild ist gelöscht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+    await testRunner.ThenAsync("zeigt \"Sassicaia\" das neue Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 24
+    await testRunner.AndAsync("das alte Rückseitenbild samt Originalfoto ist gelöscht", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Zuschnitt der Rückseite anpassen")]
+        [Xunit.TraitAttribute("FeatureTitle", "Rückseitenbild eines Weins")]
+        [Xunit.TraitAttribute("Description", "Zuschnitt der Rückseite anpassen")]
+        public async global::System.Threading.Tasks.Task ZuschnittDerRuckseiteAnpassen()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Zuschnitt der Rückseite anpassen", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 26
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 27
+    await testRunner.GivenAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 28
+    await testRunner.WhenAsync("ich bei \"Sassicaia\" den Zuschnitt der Rückseite anpasse", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 29
+    await testRunner.ThenAsync("zeigt \"Sassicaia\" das neue Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 30
+    await testRunner.AndAsync("das Originalfoto der Rückseite von \"Sassicaia\" ist unverändert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Unbearbeitetes Rückseitenbild zuschneiden")]
+        [Xunit.TraitAttribute("FeatureTitle", "Rückseitenbild eines Weins")]
+        [Xunit.TraitAttribute("Description", "Unbearbeitetes Rückseitenbild zuschneiden")]
+        public async global::System.Threading.Tasks.Task UnbearbeitetesRuckseitenbildZuschneiden()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Unbearbeitetes Rückseitenbild zuschneiden", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 32
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 33
+    await testRunner.GivenAsync("\"Sassicaia\" hat ein unbearbeitetes Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 34
+    await testRunner.WhenAsync("ich bei \"Sassicaia\" den Zuschnitt der Rückseite anpasse", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 35
+    await testRunner.ThenAsync("zeigt das Rückseitenbild von \"Sassicaia\" nur das Etikett im Format 900 × 1200", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 36
+    await testRunner.AndAsync("das bisherige Rückseitenbild ist jetzt das Originalfoto von \"Sassicaia\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
@@ -251,7 +329,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Rückseite entfernen", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 25
+#line 38
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -264,16 +342,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 26
+#line 39
     await testRunner.GivenAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 27
+#line 40
     await testRunner.WhenAsync("ich bei \"Sassicaia\" das Rückseitenbild entferne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 28
+#line 41
     await testRunner.ThenAsync("hat der Wein \"Sassicaia\" kein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 29
+#line 42
     await testRunner.AndAsync("es sind keine Bilder mehr gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
@@ -288,7 +366,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Rückseite unabhängig vom Vorderetikett", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 31
+#line 44
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -301,16 +379,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 32
+#line 45
     await testRunner.GivenAsync("\"Sassicaia\" hat ein Etikettenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 33
+#line 46
     await testRunner.AndAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 34
+#line 47
     await testRunner.WhenAsync("ich bei \"Sassicaia\" das Etikettenbild entferne", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 35
+#line 48
     await testRunner.ThenAsync("hat der Wein \"Sassicaia\" ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
@@ -329,7 +407,7 @@ namespace WineCellar.Specs.Features
             argumentsOfScenario.Add("Datei", datei);
             argumentsOfScenario.Add("Hinweis", hinweis);
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Ungültige Datei", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 37
+#line 50
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -342,31 +420,31 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 38
+#line 51
     await testRunner.GivenAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 39
+#line 52
     await testRunner.WhenAsync(string.Format("ich bei \"Sassicaia\" als Rückseite {0} wähle", datei), ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 40
+#line 53
     await testRunner.ThenAsync(string.Format("wird die Aktion abgelehnt mit \"{0}\"", hinweis), ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
-#line 41
+#line 54
     await testRunner.AndAsync("das bisherige Rückseitenbild von \"Sassicaia\" bleibt erhalten", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Wein löschen löscht das Rückseitenbild")]
+        [Xunit.SkippableFactAttribute(DisplayName="Ungültige Ecken")]
         [Xunit.TraitAttribute("FeatureTitle", "Rückseitenbild eines Weins")]
-        [Xunit.TraitAttribute("Description", "Wein löschen löscht das Rückseitenbild")]
-        public async global::System.Threading.Tasks.Task WeinLoschenLoschtDasRuckseitenbild()
+        [Xunit.TraitAttribute("Description", "Ungültige Ecken")]
+        public async global::System.Threading.Tasks.Task UngultigeEcken()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Wein löschen löscht das Rückseitenbild", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 48
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Ungültige Ecken", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 61
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -379,28 +457,65 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 49
+#line 62
     await testRunner.GivenAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 50
+#line 63
+    await testRunner.WhenAsync("ich bei \"Sassicaia\" ein Foto der Rückseite mit Ecken außerhalb des Bildes wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 64
+    await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"Ecken\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 65
+    await testRunner.AndAsync("das bisherige Rückseitenbild von \"Sassicaia\" bleibt erhalten", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Wein löschen löscht Rückseitenbild und Originalfoto")]
+        [Xunit.TraitAttribute("FeatureTitle", "Rückseitenbild eines Weins")]
+        [Xunit.TraitAttribute("Description", "Wein löschen löscht Rückseitenbild und Originalfoto")]
+        public async global::System.Threading.Tasks.Task WeinLoschenLoschtRuckseitenbildUndOriginalfoto()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Wein löschen löscht Rückseitenbild und Originalfoto", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 67
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 68
+    await testRunner.GivenAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 69
     await testRunner.WhenAsync("ich den Wein \"Sassicaia\" lösche", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 51
+#line 70
     await testRunner.ThenAsync("es sind keine Bilder mehr gespeichert", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();
         }
         
-        [Xunit.SkippableFactAttribute(DisplayName="Fremdes Bild")]
+        [Xunit.SkippableFactAttribute(DisplayName="Fremdes Originalfoto")]
         [Xunit.TraitAttribute("FeatureTitle", "Rückseitenbild eines Weins")]
-        [Xunit.TraitAttribute("Description", "Fremdes Bild")]
-        public async global::System.Threading.Tasks.Task FremdesBild()
+        [Xunit.TraitAttribute("Description", "Fremdes Originalfoto")]
+        public async global::System.Threading.Tasks.Task FremdesOriginalfoto()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Fremdes Bild", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 53
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Fremdes Originalfoto", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 72
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -413,16 +528,16 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 54
+#line 73
     await testRunner.GivenAsync("\"Sassicaia\" hat ein Rückseitenbild", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 55
+#line 74
     await testRunner.AndAsync("ich bin als \"ben\" angemeldet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
 #line hidden
-#line 56
-    await testRunner.WhenAsync("ich Annas Rückseitenbild abrufe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line 75
+    await testRunner.WhenAsync("ich Annas Originalfoto der Rückseite abrufe", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 57
+#line 76
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"nicht gefunden\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
@@ -437,7 +552,7 @@ namespace WineCellar.Specs.Features
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Fremder Wein", null, tagsOfScenario, argumentsOfScenario, featureTags);
-#line 59
+#line 78
   this.ScenarioInitialize(scenarioInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -450,13 +565,14 @@ namespace WineCellar.Specs.Features
 #line 6
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 60
+#line 79
     await testRunner.GivenAsync("ich bin als \"ben\" angemeldet", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
 #line hidden
-#line 61
-    await testRunner.WhenAsync("ich bei \"Sassicaia\" von Anna ein Foto des Rückenetiketts wähle", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line 80
+    await testRunner.WhenAsync("ich bei \"Sassicaia\" von Anna ein Foto des Rückenetiketts wähle und die Ecken best" +
+                        "ätige", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
 #line hidden
-#line 62
+#line 81
     await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"nicht gefunden\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
 #line hidden
             }
