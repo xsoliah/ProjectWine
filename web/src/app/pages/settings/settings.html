@@ -23,6 +23,20 @@
     <p class="muted">Im Browser läuft die App direkt auf deinem Server. Es ist nichts einzustellen.</p>
   }
 
+  <fieldset class="panel stack themes">
+    <legend><h2>Design</h2></legend>
+    <div class="theme-grid">
+      @for (t of themes; track t.id) {
+        <label class="theme-tile" [style.--sw-surface]="t.swatch[0]" [style.--sw-accent]="t.swatch[1]" [style.--sw-nav]="t.swatch[2]">
+          <input type="radio" name="theme" [value]="t.id" [checked]="themeService.theme() === t.id" (change)="pick(t.id)" />
+          <span class="preview" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="theme-name">{{ t.title }}</span>
+          <span class="theme-scheme muted">{{ schemeLabel(t.scheme) }}</span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
   @if (auth.isAuthenticated()) {
     <div class="panel stack">
       <h2>Stammdaten</h2>

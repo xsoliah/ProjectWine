@@ -54,47 +54,148 @@
   --chart-7: #6250d6;
   --chart-8: #e34948;
   --chart-muted: #898781;
+
+  /* Theme-Akzente: Navigation, Verläufe, Links auf dunklen Flächen (Palette siehe core/themes.ts). */
+  --gold-bright: #f4d98a;
+  --link: var(--accent);
+  --nav-gradient: linear-gradient(160deg, #3f0f1c 0%, #5a1527 100%);
+  --nav-ink: #d8cbb2;
+  --nav-active: var(--gold-bright);
+  --bg-image: radial-gradient(ellipse 70% 50% at 100% 0%, rgb(154 116 32 / 0.1), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 0% 100%, rgb(107 27 46 / 0.07), transparent 70%);
+  --btn-gradient: linear-gradient(180deg, #7b2338, #5a1527);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #181516;
-    --surface: #231f20;
-    --surface-2: #2c2728;
-    --ink: #eee3cf;
-    --ink-soft: #b5a899;
-    --line: #3d3536;
-    --burgundy: #8e2a40;
-    --burgundy-deep: #2a0d16;
-    --on-burgundy: #f8f2e4;
-    --accent: #e39aa9;
-    --gold: #c9a24a;
-    --danger: #d9574c;
-    --focus: #7fb0ff;
+/* Das Schema (light|dark) setzen index.html und ThemeService als data-scheme; bei „Klassik“ folgt es dem Gerät.
+   Der dunkle Block ist zugleich die Grundlage von Klassik (dunkel), Nacht und Bordeaux. */
+:root[data-scheme='dark'] {
+  color-scheme: dark;
 
-    --t-red: #c4425d;
-    --t-white: #d9c65a;
-    --t-rose: #e58aa2;
-    --t-sparkling: #7fb2c6;
-    --t-dessert: #e29a45;
-    --t-fortified: #9a80c4;
-    --t-other: #a39b93;
+  --bg: #181516;
+  --surface: #231f20;
+  --surface-2: #2c2728;
+  --ink: #eee3cf;
+  --ink-soft: #b5a899;
+  --line: #3d3536;
+  --burgundy: #8e2a40;
+  --burgundy-deep: #2a0d16;
+  --on-burgundy: #f8f2e4;
+  --accent: #e39aa9;
+  --gold: #c9a24a;
+  --danger: #d9574c;
+  --focus: #7fb0ff;
 
-    --state-early: #86b4d8;
-    --state-ready: #86c78f;
-    --state-late: #ec8b82;
-    --shadow-lifted: 0 10px 30px rgb(0 0 0 / 0.6);
+  --t-red: #c4425d;
+  --t-white: #d9c65a;
+  --t-rose: #e58aa2;
+  --t-sparkling: #7fb2c6;
+  --t-dessert: #e29a45;
+  --t-fortified: #9a80c4;
+  --t-other: #a39b93;
 
-    --chart-1: #3987e5;
-    --chart-2: #d95926;
-    --chart-3: #199e70;
-    --chart-4: #c98500;
-    --chart-5: #d55181;
-    --chart-6: #008300;
-    --chart-7: #9085e9;
-    --chart-8: #e66767;
-    --chart-muted: #898781;
-  }
+  --state-early: #86b4d8;
+  --state-ready: #86c78f;
+  --state-late: #ec8b82;
+  --shadow-lifted: 0 10px 30px rgb(0 0 0 / 0.6);
+
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
+  --chart-muted: #898781;
+
+  --link: var(--gold-bright);
+  --nav-gradient: linear-gradient(160deg, #2a0d16 0%, #3a1220 100%);
+  --bg-image: radial-gradient(ellipse 70% 50% at 100% 0%, rgb(201 162 74 / 0.07), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 0% 100%, rgb(142 42 64 / 0.12), transparent 70%);
+  --btn-gradient: linear-gradient(180deg, #9a3148, #7a2237);
+}
+
+/* Nacht: neutrales Anthrazit mit Gold. */
+:root[data-theme='nacht'] {
+  --bg: #101216;
+  --surface: #181b21;
+  --surface-2: #20242c;
+  --ink: #e9e7e2;
+  --ink-soft: #a9adb7;
+  --line: #2f343e;
+  --burgundy: #c9a24a;
+  --burgundy-deep: #0b0d10;
+  --on-burgundy: #17130a;
+  --accent: #e6c15a;
+  --gold: #c9a24a;
+  --nav-gradient: linear-gradient(160deg, #0b0d10 0%, #1a1d24 100%);
+  --nav-ink: #b7bbc5;
+  --bg-image: radial-gradient(ellipse 70% 50% at 100% 0%, rgb(201 162 74 / 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 0% 100%, rgb(80 100 150 / 0.1), transparent 70%);
+  --btn-gradient: linear-gradient(180deg, #d4af55, #b38c34);
+}
+
+/* Bordeaux: tiefrot, kräftig, mit warmem Gold. */
+:root[data-theme='bordeaux'] {
+  --bg: #2a0c15;
+  --surface: #3a1220;
+  --surface-2: #451828;
+  --ink: #f6e9e4;
+  --ink-soft: #d1b0b2;
+  --line: #5e2536;
+  --burgundy: #b0324f;
+  --burgundy-deep: #1d0710;
+  --on-burgundy: #fff6f2;
+  --accent: #f4adbb;
+  --gold: #e0b955;
+  --shadow-lifted: 0 10px 30px rgb(10 0 4 / 0.65);
+  --nav-gradient: linear-gradient(160deg, #1d0710 0%, #4a1328 100%);
+  --bg-image: radial-gradient(ellipse 70% 55% at 100% 0%, rgb(224 185 85 / 0.1), transparent 70%),
+    radial-gradient(ellipse 65% 50% at 0% 100%, rgb(176 50 79 / 0.22), transparent 70%);
+  --btn-gradient: linear-gradient(180deg, #c23d5c, #9a2a45);
+}
+
+/* Riesling: helles Salbeigrün mit Gold. */
+:root[data-theme='riesling'] {
+  --bg: #e4ebd3;
+  --surface: #f5f8ec;
+  --surface-2: #ebf1dc;
+  --ink: #1f2a1c;
+  --ink-soft: #515f4b;
+  --line: #bfcca4;
+  --burgundy: #3f6b3a;
+  --burgundy-deep: #1b3a20;
+  --on-burgundy: #f5f8ec;
+  --accent: #2f5a2c;
+  --gold: #8a6d10;
+  --shadow-lifted: 0 10px 30px rgb(20 40 15 / 0.25);
+  --nav-gradient: linear-gradient(160deg, #1b3a20 0%, #2f5a2c 100%);
+  --nav-ink: #d3e0c4;
+  --bg-image: radial-gradient(ellipse 70% 50% at 100% 0%, rgb(190 170 60 / 0.2), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 0% 100%, rgb(63 107 58 / 0.12), transparent 70%);
+  --btn-gradient: linear-gradient(180deg, #4d7d47, #34602f);
+}
+
+/* Rosé: Rosa und Pfirsich mit Beerenakzent. */
+:root[data-theme='rose'] {
+  --bg: #f7e0df;
+  --surface: #fdf1ef;
+  --surface-2: #f9e5e2;
+  --ink: #3a1b26;
+  --ink-soft: #764f5b;
+  --line: #e4bcc0;
+  --burgundy: #b0336a;
+  --burgundy-deep: #5a1a3a;
+  --on-burgundy: #fff5f6;
+  --accent: #98285a;
+  --gold: #a2641c;
+  --shadow-lifted: 0 10px 30px rgb(90 20 50 / 0.25);
+  --nav-gradient: linear-gradient(160deg, #5a1a3a 0%, #b0336a 100%);
+  --nav-ink: #f4d6dc;
+  --nav-active: #ffe3b8;
+  --bg-image: radial-gradient(ellipse 70% 50% at 100% 0%, rgb(255 170 130 / 0.25), transparent 70%),
+    radial-gradient(ellipse 60% 45% at 0% 100%, rgb(176 51 106 / 0.12), transparent 70%);
+  --btn-gradient: linear-gradient(180deg, #c64a80, #9a2a5c);
 }
 
 @media (min-width: 960px) {
@@ -115,7 +216,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: var(--bg-image);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--ink);
   font: 1rem/1.5 var(--font-body);
   -webkit-tap-highlight-color: transparent;
@@ -289,7 +393,7 @@ a {
 
 .btn-primary {
   border-color: var(--burgundy);
-  background: var(--burgundy);
+  background: var(--burgundy) var(--btn-gradient);
   color: var(--on-burgundy);
 }
 
@@ -453,7 +557,7 @@ a {
 }
 
 /* DevExtreme (wird nur mit Tabelle, Pivot und Filter-Editor geladen): Schrift und Rundungen der App übernehmen.
-   Das Theme (hell/dunkel) folgt dem Gerät, siehe shared/dx/dx-theme.ts. */
+   Das Stylesheet (hell/dunkel) folgt dem gewählten Theme, siehe shared/dx/dx-theme.ts. */
 .dx-widget,
 .dx-widget input,
 .dx-widget textarea {
@@ -467,41 +571,57 @@ a {
 }
 
 .dx-datagrid .dx-row a {
-  color: var(--accent);
+  color: var(--link);
 }
 
-@media (prefers-color-scheme: dark) {
-  .dx-datagrid .dx-row a {
-    color: #f4d98a;
+/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
+.dx-pivotgrid td.pv-heat-1 {
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.dx-pivotgrid td.pv-heat-2 {
+  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.dx-pivotgrid td.pv-heat-3 {
+  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.dx-pivotgrid td.pv-heat-4 {
+  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  font-weight: 600;
+}
+
+/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
+.dx-pivotgrid td.pv-heat-1 {
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.dx-pivotgrid td.pv-heat-2 {
+  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.dx-pivotgrid td.pv-heat-3 {
+  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.dx-pivotgrid td.pv-heat-4 {
+  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  font-weight: 600;
+}
+
+/* Weicher Wechsel: nur kurz beim Umschalten (ThemeService setzt die Klasse), nie dauerhaft. */
+:root.theme-changing,
+:root.theme-changing *,
+:root.theme-changing *::before,
+:root.theme-changing *::after {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    fill 0.25s ease,
+    stroke 0.25s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.theme-changing,
+  :root.theme-changing *,
+  :root.theme-changing *::before,
+  :root.theme-changing *::after {
+    transition: none !important;
   }
-}
-
-/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
-.dx-pivotgrid td.pv-heat-1 {
-  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-.dx-pivotgrid td.pv-heat-2 {
-  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
-}
-.dx-pivotgrid td.pv-heat-3 {
-  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
-}
-.dx-pivotgrid td.pv-heat-4 {
-  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  font-weight: 600;
-}
-
-/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
-.dx-pivotgrid td.pv-heat-1 {
-  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-.dx-pivotgrid td.pv-heat-2 {
-  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
-}
-.dx-pivotgrid td.pv-heat-3 {
-  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
-}
-.dx-pivotgrid td.pv-heat-4 {
-  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  font-weight: 600;
 }
