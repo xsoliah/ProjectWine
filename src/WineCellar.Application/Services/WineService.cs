@@ -167,6 +167,8 @@ public class WineService(
         wine.BottleForm = r.BottleForm;
         wine.DrinkFrom = r.DrinkFrom;
         wine.DrinkUntil = r.DrinkUntil;
+        wine.DrinkPeak = r.DrinkPeak;
+        wine.DrinkSpread = r.DrinkSpread;
         wine.PurchasePrice = r.PurchasePrice;
         wine.Notes = Clean(r.Notes);
         wine.SetQuantity(r.Quantity);

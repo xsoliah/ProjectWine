@@ -19,6 +19,8 @@ import { findCountry, findRegion } from '../../core/origins';
 import { ToastService } from '../../core/toast.service';
 import { GrapePicker } from '../../shared/grape-picker';
 import { SourceMark } from '../../shared/source-mark';
+import { DrinkingCurveChart } from '../../shared/drinking-curve-chart';
+import { Curve } from '../../core/drinking-curve.logic';
 import { FieldMarks } from '../../core/capture';
 import { sumPercent, toRequests, unknownNames } from '../../shared/grape-picker.logic';
 
@@ -26,7 +28,7 @@ const blankToNull = (value: string | null): string | null => value?.trim() || nu
 
 @Component({
   selector: 'app-wine-form',
-  imports: [ReactiveFormsModule, GrapePicker, SourceMark],
+  imports: [ReactiveFormsModule, GrapePicker, SourceMark, DrinkingCurveChart],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './wine-form.html',
 })
@@ -59,6 +61,8 @@ export class WineForm implements OnInit {
     quantity: [1, [Validators.required, Validators.min(1)]],
     drinkFrom: new FormControl<number | null>(null),
     drinkUntil: new FormControl<number | null>(null),
+    drinkPeak: new FormControl<number | null>(null, [Validators.min(1800), Validators.max(2300)]),
+    drinkSpread: new FormControl<number | null>(null, [Validators.min(0.1), Validators.max(50)]),
     purchasePrice: new FormControl<number | null>(null, Validators.min(0)),
     notes: '',
   });
@@ -72,7 +76,20 @@ export class WineForm implements OnInit {
   protected readonly grapes = signal<GrapeEntry[]>([]);
   protected readonly saving = signal(false);
 
-  private readonly countryText = toSignal(this.form.controls.country.valueChanges, { initialValue: '' });
+  private readonly peakValue = toSignal(this.form.controls.drinkPeak.valueChanges, { initialValue: null as number | null });
+  private readonly spreadValue = toSignal(this.form.controls.drinkSpread.valueChanges, { initialValue: null as number | null });
+  protected readonly year = new Date().getFullYear();
+
+  /** Preview of the entered curve (only when both values are valid). */
+  protected readonly previewCurve = computed<Curve | null>(() => {
+    const peak = this.peakValue() ?? this.form.controls.drinkPeak.value;
+    const spread = this.spreadValue() ?? this.form.controls.drinkSpread.value;
+    return peak != null && spread != null && spread > 0 && peak >= 1800
+      ? { peak, spread, derived: false }
+      : null;
+  });
+
+  private readonly countryText =toSignal(this.form.controls.country.valueChanges, { initialValue: '' });
   private readonly regionText = toSignal(this.form.controls.region.valueChanges, { initialValue: '' });
 
   protected readonly selectedCountry = computed(() => findCountry(this.countries(), this.countryText()));
@@ -162,6 +179,11 @@ export class WineForm implements OnInit {
       this.form.markAllAsTouched();
       return;
     }
+    const curve = this.form.getRawValue();
+    if ((curve.drinkPeak === null) !== (curve.drinkSpread === null)) {
+      this.originError.set('Trinkzeitpunkt und Streuung müssen gemeinsam angegeben werden.');
+      return;
+    }
     if (this.newCountryName()) {
       this.originError.set(`Das Land „${this.newCountryName()}“ gibt es noch nicht – bitte anlegen oder auswählen.`);
       return;
@@ -216,6 +238,8 @@ export class WineForm implements OnInit {
       quantity: v.quantity,
       drinkFrom: v.drinkFrom,
       drinkUntil: v.drinkUntil,
+      drinkPeak: v.drinkPeak,
+      drinkSpread: v.drinkSpread,
       purchasePrice: v.purchasePrice,
       notes: blankToNull(v.notes),
     });

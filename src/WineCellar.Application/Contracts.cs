@@ -29,7 +29,9 @@ public record WineDto(
     Guid? BackImageId = null,
     BottleForm? BottleForm = null,
     Guid? BackSourceImageId = null,
-    IReadOnlyList<LabelPointDto>? BackCorners = null);
+    IReadOnlyList<LabelPointDto>? BackCorners = null,
+    int? DrinkPeak = null,
+    double? DrinkSpread = null);
 
 /// <summary>Used for create and update (update replaces all fields, including the bottle count).</summary>
 public record SaveWineRequest(
@@ -47,7 +49,9 @@ public record SaveWineRequest(
     int? DrinkUntil = null,
     decimal? PurchasePrice = null,
     string? Notes = null,
-    BottleForm? BottleForm = null);
+    BottleForm? BottleForm = null,
+    int? DrinkPeak = null,
+    double? DrinkSpread = null);
 
 public record WineQuery(string? Search = null, WineType? Type = null, bool InCellarOnly = true);
 
@@ -264,6 +268,8 @@ public record CaptureDetailDto(
     FieldDto<int>? BottleSizeMl,
     FieldDto<int>? DrinkFrom,
     FieldDto<int>? DrinkUntil,
+    FieldDto<int>? DrinkPeak,
+    FieldDto<double>? DrinkSpread,
     FieldDto<string>? Barcode,
     FieldDto<string>? Notes,
     IReadOnlyList<CaptureGrapeDto> Grapes,

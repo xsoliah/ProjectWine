@@ -12,7 +12,8 @@ public interface IWineResearchAgent
     /// <exception cref="WineResearchException">The research failed; <see cref="WineResearchException.IsTransient"/> tells whether a retry may help.</exception>
     /// <param name="knownBarcode">Barcode already known from the user's device (valid check digit), or null.</param>
     /// <param name="bottleOnly">Only the bottle outline and label corners matter (detecting the bottle of an existing wine): no web research.</param>
-    Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct, bool bottleOnly = false);
+    /// <param name="curveOnly">No photos: only estimate the drinking curve (peak year and spread) from the wine data in <paramref name="hint"/>.</param>
+    Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct, bool bottleOnly = false, bool curveOnly = false);
 }
 
 public class WineResearchException(string message, bool isTransient, Exception? inner = null) : Exception(message, inner)
@@ -69,7 +70,13 @@ public class QuotaExceededException(string message) : Exception(message);
 public enum FieldSource
 {
     Label,
-    Web
+    Web,
+
+    /// <summary>Estimated from grape, region, vintage and style rather than quoted from a page.</summary>
+    Estimate,
+
+    /// <summary>Derived by the server from the drinking window.</summary>
+    Derived
 }
 
 public sealed record Researched<T>(T Value, FieldSource Source);
@@ -92,6 +99,8 @@ public sealed record WineResearchResult
     public Researched<int>? BottleSizeMl { get; init; }
     public Researched<int>? DrinkFrom { get; init; }
     public Researched<int>? DrinkUntil { get; init; }
+    public Researched<int>? DrinkPeak { get; init; }
+    public Researched<double>? DrinkSpread { get; init; }
     public Researched<string>? Barcode { get; init; }
     public Researched<string>? Notes { get; init; }
     public IReadOnlyList<ResearchedGrape> Grapes { get; init; } = [];

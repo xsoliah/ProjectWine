@@ -130,7 +130,7 @@ public class CaptureService(
             result?.Summary,
             NothingFoundOnWeb: draft.Status == CaptureStatus.Ready && !webFound,
             F(result?.Name), F(result?.Producer), F(result?.Vintage), F(result?.Type), F(result?.Country),
-            F(result?.Region), F(result?.BottleSizeMl), F(result?.DrinkFrom), F(result?.DrinkUntil),
+            F(result?.Region), F(result?.BottleSizeMl), F(result?.DrinkFrom), F(result?.DrinkUntil), F(result?.DrinkPeak), F(result?.DrinkSpread),
             F(result?.Barcode), F(result?.Notes),
             grapes, sources, countryId, regionId, existing?.ToDto(),
             draft.BottleImageId, BottleShapeJson.Deserialize(draft.BottleShapeJson));
@@ -358,7 +358,7 @@ public class CaptureService(
         new FieldSource?[]
             {
                 r.Name?.Source, r.Producer?.Source, r.Vintage?.Source, r.Type?.Source, r.Country?.Source,
-                r.Region?.Source, r.BottleSizeMl?.Source, r.DrinkFrom?.Source, r.DrinkUntil?.Source,
+                r.Region?.Source, r.BottleSizeMl?.Source, r.DrinkFrom?.Source, r.DrinkUntil?.Source, r.DrinkPeak?.Source, r.DrinkSpread?.Source,
                 r.Barcode?.Source, r.Notes?.Source
             }
             .OfType<FieldSource>()

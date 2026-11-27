@@ -124,6 +124,23 @@
       }
     </section>
 
+    <section class="panel" aria-labelledby="curve-title">
+      <h2 id="curve-title">Trinkzeitpunkt</h2>
+      @if (curve()) {
+        <app-drinking-curve-chart [curve]="curve()" [year]="year" />
+      } @else {
+        <p class="muted hint">Noch keine Schätzung, wann dieser Wein am besten schmeckt.</p>
+      }
+      <div class="row">
+        <button type="button" class="btn btn-small" [disabled]="curveBusy()" (click)="estimateCurve()">
+          {{ w.drinkPeak != null ? 'Neu schätzen' : 'Trinkzeitpunkt schätzen' }}
+        </button>
+        @if (curveBusy()) {
+          <span class="muted hint" role="status">Wird recherchiert … Das kann bis zu ein paar Minuten dauern.</span>
+        }
+      </div>
+    </section>
+
     <section class="panel" aria-label="Details">
       <dl>
         @if (w.region) { <dt>Region</dt><dd>{{ w.region.name }}</dd> }

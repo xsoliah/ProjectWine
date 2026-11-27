@@ -60,6 +60,8 @@ public static class ResearchResponseReader
             BottleSizeMl = Field(root, "bottleSizeMl", e => e.GetInt32()),
             DrinkFrom = Field(root, "drinkFrom", e => e.GetInt32()),
             DrinkUntil = Field(root, "drinkUntil", e => e.GetInt32()),
+            DrinkPeak = Field(root, "drinkPeak", e => e.GetInt32()),
+            DrinkSpread = Field(root, "drinkSpread", e => e.GetDouble()),
             Barcode = Field(root, "barcode", e => e.ValueKind == JsonValueKind.Number ? e.GetRawText() : e.GetString()!),
             Notes = Field(root, "notes", e => e.GetString()!),
             Grapes = Grapes(root),
@@ -153,7 +155,12 @@ public static class ResearchResponseReader
     }
 
     private static FieldSource SourceOf(JsonElement e) =>
-        Str(e, "source") == "web" ? FieldSource.Web : FieldSource.Label;
+        Str(e, "source") switch
+        {
+            "web" => FieldSource.Web,
+            "estimate" => FieldSource.Estimate,
+            _ => FieldSource.Label,
+        };
 
     private static string? TypeOf(JsonElement e) => e.ValueKind == JsonValueKind.Object ? Str(e, "type") : null;
 

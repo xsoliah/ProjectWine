@@ -534,6 +534,12 @@ namespace WineCellar.Infrastructure.Migrations
                     b.Property<int?>("DrinkFrom")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DrinkPeak")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("DrinkSpread")
+                        .HasColumnType("float");
+
                     b.Property<int?>("DrinkUntil")
                         .HasColumnType("int");
 
