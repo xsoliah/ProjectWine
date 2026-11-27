@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { ListView } from '../core/list-views';
+import { ListView } from '../core/list-model';
 
 const OPTIONS: readonly { value: ListView; label: string }[] = [
   { value: 'tiles', label: 'Kacheln' },

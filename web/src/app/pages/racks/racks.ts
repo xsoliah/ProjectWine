@@ -4,29 +4,17 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
 import { errorMessage } from '../../core/errors';
-import { downloadText } from '../../core/download';
+import { distinctOptions } from '../../core/list-options';
 import { ListViewState } from '../../core/list-view-state';
-import { tableCsv } from '../../core/list-views';
 import { Rack, RackSummary } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
-import { ColumnPicker } from '../../shared/column-picker';
-import { DataTable } from '../../shared/data-table';
-import { FilterBar } from '../../shared/filter-bar';
+import { DxDataGrid } from '../../shared/dx/dx-data-grid';
+import { DxPivotGrid } from '../../shared/dx/dx-pivot-grid';
 import { Icon } from '../../shared/icon';
+import { ListFilter } from '../../shared/list-filter';
 import { Modal } from '../../shared/modal';
-import { PivotCellEvent, PivotTable } from '../../shared/pivot-table';
 import { ViewSwitch } from '../../shared/view-switch';
-import {
-  RACKS_PIVOT,
-  bottleFacts,
-  factDimensions,
-  factMeasures,
-  occupancyFacts,
-  rackColumns,
-  rackFilters,
-  rackKeyDimensions,
-  rackKeyMeasures,
-} from './racks.views';
+import { RACKS_PIVOT, RackRow, bottleFacts, factFields, factMeasures, rackFields, rackRows } from './racks.views';
 
 interface RackDraft {
   id: string | null;
@@ -40,7 +28,7 @@ const MAX_SIZE = 50;
 /** The user's wine racks: capacity, occupied and free slots; create, edit and delete. */
 @Component({
   selector: 'app-racks',
-  imports: [FormsModule, RouterLink, Icon, Modal, ViewSwitch, ColumnPicker, DataTable, FilterBar, PivotTable],
+  imports: [FormsModule, RouterLink, Icon, Modal, ViewSwitch, ListFilter, DxDataGrid, DxPivotGrid],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './racks.css',
   template: `
@@ -59,24 +47,20 @@ const MAX_SIZE = 50;
       @if (racks().length > 0) {
         <div class="view-tools">
           <app-view-switch [view]="view.view()" (changed)="view.setView($event)" />
-          @if (view.view() === 'table') {
-            <app-column-picker [columns]="allColumns" [visible]="visibleKeys()" (changed)="view.setColumns($event)" />
-            <button type="button" class="btn btn-small" [disabled]="tableRows().length === 0" (click)="exportTable()">
-              Als CSV exportieren
-            </button>
-          }
         </div>
-        <app-filter-bar [defs]="filterDefs" [rows]="racks()" [state]="view.filters()"
-          (stateChange)="view.setFilters($event)" (reset)="view.resetFilters()" />
+        <app-list-filter [fields]="fields" [filter]="view.filter()" [on]="view.filterOn()" [options]="options()"
+          (filterChange)="view.setFilter($event)" (toggle)="view.toggleFilter()" />
+        @if (view.drilled() && view.view() !== 'pivot') {
+          <div class="banner" role="status">
+            Aufgeschlüsselt: Regale der angetippten Pivotzelle
+            <button type="button" class="btn-link" (click)="view.endDrill()">Zurück zum Pivot</button>
+          </div>
+        }
       }
 
       @if (loading()) {
         <p class="muted" role="status">Regale werden geladen …</p>
       } @else if (view.view() === 'pivot' && racks().length > 0) {
-        <div class="chips" role="group" aria-label="Pivot-Auswertung">
-          <button type="button" class="chip" [attr.aria-pressed]="mode() === 'type'" (click)="setMode('type')">Regal × Weinart</button>
-          <button type="button" class="chip" [attr.aria-pressed]="mode() === 'occ'" (click)="setMode('occ')">Regal × Belegung</button>
-        </div>
         @if (detailsError(); as text) {
           <div class="banner error" role="alert">
             {{ text }} <button type="button" class="btn-link" (click)="loadDetails()">Erneut laden</button>
@@ -84,19 +68,26 @@ const MAX_SIZE = 50;
         } @else if (detailsLoading()) {
           <p class="muted" role="status">Belegung der Regale wird geladen …</p>
         } @else {
-          <app-pivot-table [rows]="facts()" [dimensions]="pivotDims()" [measures]="pivotMeasures()"
-            [config]="view.pivotConfig()" [extraRowKeys]="rackNames()" fileName="regale-pivot.csv"
-            (configChange)="view.setPivot($event)" (cell)="onCell($event)" />
+          @defer {
+            <app-dx-pivot-grid [rows]="facts()" [fields]="factFields" [measures]="factMeasures" [layout]="pivotLayout"
+              storageId="racks" label="Pivot der Regale" fileName="regale-pivot.csv" (drill)="view.drill($event)" />
+          } @placeholder {
+            <p class="muted" role="status">Pivot wird geladen …</p>
+          }
+        }
+      } @else if (view.view() === 'table' && racks().length > 0) {
+        @defer {
+          <app-dx-data-grid [rows]="rackRowsAll()" [fields]="fields" [filter]="view.activeFilter()" [link]="link"
+            storageId="racks" label="Regale" fileName="regale.csv" (filterChange)="view.setFilter($event)" />
+        } @placeholder {
+          <p class="muted" role="status">Tabelle wird geladen …</p>
         }
       } @else if (filteredRacks().length === 0 && racks().length > 0) {
         <div class="empty">
           <h2>Keine passenden Einträge</h2>
           <p>Ändere die Filter.</p>
-          <button type="button" class="btn" (click)="view.resetFilters()">Filter zurücksetzen</button>
+          <button type="button" class="btn" (click)="view.reset()">Filter zurücksetzen</button>
         </div>
-      } @else if (view.view() === 'table' && racks().length > 0) {
-        <app-data-table [rows]="tableRows()" [columns]="visibleColumns()" [sortKey]="view.sortKey()"
-          [sortDir]="view.sortDir()" [link]="link" label="Regale" (sortChange)="view.toggleSort($event)" />
       } @else if (racks().length === 0 && !error()) {
         <div class="empty">
           <app-icon name="rack" />
@@ -165,14 +156,11 @@ export class Racks {
   readonly create = input<string | undefined>();
 
   private readonly api = inject(ApiService);
-  protected readonly view = new ListViewState<RackSummary>({
-    id: 'racks',
-    filters: rackFilters(),
-    columns: rackColumns(),
-    dimensions: rackKeyDimensions(),
-    measures: rackKeyMeasures(),
-    pivot: RACKS_PIVOT,
-  });
+  protected readonly fields = rackFields();
+  protected readonly factFields = factFields();
+  protected readonly factMeasures = factMeasures();
+  protected readonly pivotLayout = RACKS_PIVOT;
+  protected readonly view = new ListViewState<RackRow>({ id: 'racks', fields: this.fields });
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
 
@@ -183,58 +171,30 @@ export class Racks {
   protected readonly busy = signal(false);
   protected readonly draft = signal<RackDraft | null>(null);
 
-  protected readonly filterDefs = this.view.config.filters;
-  protected readonly allColumns = this.view.config.columns;
-  protected readonly visibleColumns = this.view.columns;
-  protected readonly visibleKeys = computed(() => this.visibleColumns().map((c) => c.key));
-  protected readonly filteredRacks = computed(() => this.view.apply(this.racks()));
-  protected readonly tableRows = computed(() => this.view.sorted(this.filteredRacks()));
-  protected readonly rackNames = computed(() => this.filteredRacks().map((r) => r.name));
-
-  /** Regal × Weinart (Flaschen) oder Regal × Belegung (Fächer). */
-  protected readonly mode = computed<'type' | 'occ'>(() => {
-    const { row, col } = this.view.pivotConfig();
-    return row === 'occ' || col === 'occ' ? 'occ' : 'type';
-  });
-  protected readonly pivotDims = computed(() => factDimensions(this.mode()));
-  protected readonly pivotMeasures = computed(() => factMeasures(this.mode()));
-
-  /** Regaldetails (belegte Fächer mit Wein), nur für das Weinart-Pivot nachgeladen. */
+  /** Regaldetails (belegte Fächer mit Wein) für Pivot und die Spalten Weinarten/Weine, nachgeladen. */
   private readonly details = signal<ReadonlyMap<string, Rack>>(new Map());
   protected readonly detailsLoading = signal(false);
   protected readonly detailsError = signal<string | null>(null);
 
-  protected readonly facts = computed(() =>
-    this.mode() === 'type' ? bottleFacts(this.filteredRacks(), this.details()) : occupancyFacts(this.filteredRacks()),
-  );
+  protected readonly rackRowsAll = computed(() => rackRows(this.racks(), this.details()));
+  protected readonly options = computed(() => distinctOptions(this.fields, this.rackRowsAll()));
+  protected readonly filteredRacks = computed(() => this.view.apply(this.rackRowsAll()));
+  /** Pivot-Zeilen: eine je Flasche der Regale, die durch den Filter kommen. */
+  protected readonly facts = computed(() => {
+    const names = new Set(this.filteredRacks().map((r) => r.id));
+    return bottleFacts(this.racks().filter((r) => names.has(r.id)), this.details());
+  });
 
   protected link = (rack: RackSummary): unknown[] => ['/racks', rack.id];
 
   constructor() {
     effect(() => {
-      if (this.view.view() === 'pivot' && this.mode() === 'type' && this.racks().length > 0) {
-        void this.loadDetails();
-      }
+      if (this.view.view() !== 'tiles' && this.racks().length > 0) void this.loadDetails();
     });
     void this.load();
     queueMicrotask(() => {
       if (this.create()) this.startCreate();
     });
-  }
-
-  protected setMode(mode: 'type' | 'occ'): void {
-    this.view.setPivot({ row: 'rack', col: mode, measure: 'count' });
-  }
-
-  protected exportTable(): void {
-    downloadText('regale.csv', tableCsv(this.tableRows(), this.visibleColumns()));
-  }
-
-  /** Antippen einer Pivotzelle zeigt das Regal (bzw. alle Regale) als Tabelle. */
-  protected onCell(event: PivotCellEvent): void {
-    const name = event.row ?? '';
-    this.view.setFilters({ ...this.view.filters(), ...(name ? { name } : {}) });
-    this.view.setView('table');
   }
 
   /** Lädt die Details der Regale, die noch fehlen (einmal je Regal). */

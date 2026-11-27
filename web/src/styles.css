@@ -451,3 +451,27 @@ a {
   align-items: center;
   gap: var(--space-2) var(--space-3);
 }
+
+/* DevExtreme (wird nur mit Tabelle, Pivot und Filter-Editor geladen): Schrift und Rundungen der App übernehmen.
+   Das Theme (hell/dunkel) folgt dem Gerät, siehe shared/dx/dx-theme.ts. */
+.dx-widget,
+.dx-widget input,
+.dx-widget textarea {
+  font-family: var(--font-body);
+}
+
+.dx-datagrid,
+.dx-pivotgrid {
+  border-radius: var(--radius-m);
+  overflow: hidden;
+}
+
+.dx-datagrid .dx-row a {
+  color: var(--accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .dx-datagrid .dx-row a {
+    color: #f4d98a;
+  }
+}
