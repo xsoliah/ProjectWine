@@ -37,7 +37,7 @@ public class ClaudeWineResearchAgent(IOptions<AnthropicOptions> options, ILogger
         Timeout = TimeSpan.FromMinutes(5),
     };
 
-    public async Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct, bool bottleOnly = false)
+    public async Task<WineResearchResult> ResearchAsync(IReadOnlyList<ResearchImage> images, string? hint, string? knownBarcode, CancellationToken ct, bool bottleOnly = false, bool curveOnly = false)
     {
         var settings = options.Value;
         var userContent = new List<BetaContentBlockParam>();
@@ -58,7 +58,7 @@ public class ClaudeWineResearchAgent(IOptions<AnthropicOptions> options, ILogger
                 },
             });
         }
-        userContent.Add(new BetaTextBlockParam { Text = ResearchPrompt.UserInstruction(hint, knownBarcode, bottleOnly) });
+        userContent.Add(new BetaTextBlockParam { Text = ResearchPrompt.UserInstruction(hint, knownBarcode, bottleOnly, curveOnly) });
 
         List<BetaMessageParam> messages = [new BetaUserMessageParam { Content = userContent }];
         var collected = new List<BetaContentBlock>();

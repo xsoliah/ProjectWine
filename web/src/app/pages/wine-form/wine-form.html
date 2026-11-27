@@ -121,6 +121,20 @@
       <input id="f-until" type="number" inputmode="numeric" formControlName="drinkUntil" />
     </div>
     <div class="field">
+      <label for="f-peak">Bester Trinkzeitpunkt (Jahr)<app-source-mark [source]="marks().drinkPeak" /></label>
+      <input id="f-peak" type="number" inputmode="numeric" formControlName="drinkPeak" [attr.aria-invalid]="invalid('drinkPeak')" />
+    </div>
+    <div class="field">
+      <label for="f-spread">Streuung (Jahre)<app-source-mark [source]="marks().drinkSpread" /></label>
+      <input id="f-spread" type="number" inputmode="decimal" step="0.5" formControlName="drinkSpread" [attr.aria-invalid]="invalid('drinkSpread')" />
+      <small class="muted">Je größer, desto länger schmeckt der Wein rund um den Höhepunkt gut.</small>
+    </div>
+    @if (previewCurve(); as c) {
+      <div class="field curve-preview">
+        <app-drinking-curve-chart [curve]="c" [year]="year" />
+      </div>
+    }
+    <div class="field">
       <label for="f-price">Kaufpreis (€)</label>
       <input id="f-price" type="number" inputmode="decimal" step="0.01" formControlName="purchasePrice"
         [attr.aria-invalid]="invalid('purchasePrice')" />

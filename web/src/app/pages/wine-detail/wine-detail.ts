@@ -3,6 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
 import { drinkWindow } from '../../core/drink-window';
+import { curveOf } from '../../core/drinking-curve.logic';
+import { DrinkingCurveChart } from '../../shared/drinking-curve-chart';
 import { errorMessage } from '../../core/errors';
 import { bottleFormLabel } from '../../core/labels';
 import { formatPrice, wineTitle } from '../../core/format';
@@ -26,7 +28,7 @@ import { TypeBadge } from '../../shared/type-badge';
 
 @Component({
   selector: 'app-wine-detail',
-  imports: [RouterLink, Icon, Modal, PlacementStep, Stepper, TypeBadge, ArchiveEntryItem, ConsumeDialog, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor],
+  imports: [RouterLink, Icon, Modal, PlacementStep, Stepper, TypeBadge, ArchiveEntryItem, ConsumeDialog, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor, DrinkingCurveChart],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './wine-detail.html',
   styleUrl: './wine-detail.css',
@@ -65,6 +67,13 @@ export class WineDetail {
     const wine = this.wine();
     return wine ? drinkWindow(wine, new Date().getFullYear()) : null;
   });
+  protected readonly year = new Date().getFullYear();
+  /** Stored curve, else one derived from the drinking window; null shows no chart. */
+  protected readonly curve = computed(() => {
+    const wine = this.wine();
+    return wine ? curveOf(wine) : null;
+  });
+  protected readonly curveBusy = signal(false);
   protected readonly price = computed(() => formatPrice(this.wine()?.purchasePrice ?? null));
 
   protected readonly bottles = signal(1);
@@ -140,6 +149,28 @@ export class WineDetail {
       this.toast.error(errorMessage(error));
     } finally {
       this.bottleBusy.set(false);
+    }
+  }
+
+  /** Peak year and spread from a web research; counts towards the daily limit, so it is confirmed first. */
+  protected async estimateCurve(): Promise<void> {
+    const existing = this.wine()?.drinkPeak != null;
+    const ok = await this.confirm.ask({
+      title: 'Trinkzeitpunkt schätzen?',
+      message:
+        'Optimaler Trinkzeitpunkt und Streuung werden per Webrecherche geschätzt. Das zählt als eine Recherche deines Tageslimits und kann eine Weile dauern.' +
+        (existing ? ' Die bisherigen Werte werden überschrieben.' : ''),
+      confirmLabel: 'Schätzen',
+    });
+    if (!ok) return;
+    this.curveBusy.set(true);
+    try {
+      this.wineResource.set(await this.api.estimateDrinkingCurve(this.id()));
+      this.toast.info('Trinkzeitpunkt geschätzt.');
+    } catch (error) {
+      this.toast.error(errorMessage(error));
+    } finally {
+      this.curveBusy.set(false);
     }
   }
 

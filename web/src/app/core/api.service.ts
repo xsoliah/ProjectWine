@@ -310,6 +310,11 @@ export class ApiService {
     return firstValueFrom(this.http.post<Wine>(`/api/wines/${wineId}/bottle-shape/detect`, null));
   }
 
+  /** Estimates peak year and spread of the drinking curve on the web: one research, counts towards the daily limit. */
+  estimateDrinkingCurve(wineId: string): Promise<Wine> {
+    return firstValueFrom(this.http.post<Wine>(`/api/wines/${wineId}/estimate-drinking-curve`, null));
+  }
+
   // ----- Statistics -----
 
   getStatistics(

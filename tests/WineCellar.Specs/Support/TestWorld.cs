@@ -34,6 +34,7 @@ public sealed class TestWorld : IDisposable
     public BackImageService BackImages { get; }
     public CaptureService Captures { get; }
     public BottleShapeService BottleShapes { get; }
+    public DrinkingCurveService DrinkingCurves { get; }
     public BottleAnalyzer Bottles { get; }
     public CaptureProcessor Processor { get; }
     public FakeResearchAgent Agent { get; } = new();
@@ -86,6 +87,7 @@ public sealed class TestWorld : IDisposable
         Bottles = new BottleAnalyzer(new SkiaBottleImageExtractor());
         Captures = new CaptureService(Db, User, Images, Extractor, Bottles, Availability, Queue, captureOptions, TimeProvider.System);
         BottleShapes = new BottleShapeService(Db, User, Images, Bottles, Agent, Captures);
+        DrinkingCurves = new DrinkingCurveService(Db, User, Agent, Captures, TimeProvider.System);
         Processor = new CaptureProcessor(Db, Agent, Extractor, Bottles, captureOptions, TimeProvider.System);
     }
 

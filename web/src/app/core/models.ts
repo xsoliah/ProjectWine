@@ -39,6 +39,9 @@ export interface Wine {
   backCorners?: LabelPoint[] | null;
   drinkFrom: number | null;
   drinkUntil: number | null;
+  /** Best drinking year and spread (years) of the drinking curve; both or none. */
+  drinkPeak?: number | null;
+  drinkSpread?: number | null;
   purchasePrice: number | null;
   notes: string | null;
 }
@@ -316,7 +319,7 @@ export interface SetBottleShapeRequest {
 }
 
 export type CaptureStatus ='Pending' | 'Researching' | 'Ready' | 'Failed';
-export type FieldSource = 'Label' | 'Web';
+export type FieldSource = 'Label' | 'Web' | 'Estimate' | 'Derived';
 
 export interface CaptureQuota {
   limit: number;
@@ -376,6 +379,8 @@ export interface CaptureDetail {
   bottleSizeMl: Field<number> | null;
   drinkFrom: Field<number> | null;
   drinkUntil: Field<number> | null;
+  drinkPeak: Field<number> | null;
+  drinkSpread: Field<number> | null;
   barcode: Field<string> | null;
   notes: Field<string> | null;
   grapes: CaptureGrape[];

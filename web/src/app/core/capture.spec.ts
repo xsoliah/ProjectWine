@@ -15,6 +15,7 @@ const detail = (patch: Partial<CaptureDetail> = {}): CaptureDetail => ({
   country: { value: 'Italien', source: 'Web' },
   region: { value: 'Bolgheri', source: 'Label' },
   bottleSizeMl: null, drinkFrom: { value: 2028, source: 'Web' }, drinkUntil: { value: 2045, source: 'Web' },
+  drinkPeak: null, drinkSpread: null,
   barcode: null, notes: { value: 'Kraftvoll.', source: 'Web' },
   grapes: [
     { name: 'Cabernet Sauvignon', percent: 85, source: 'Web', grapeId: null },
@@ -60,5 +61,30 @@ describe('barcode of a draft', () => {
 
   it('marks the barcode as coming from the label', () => {
     expect(captureMarks(withBarcode).barcode).toBe('Label');
+  });
+});
+
+describe('drinking curve of a draft', () => {
+  const withCurve = detail({
+    drinkPeak: { value: 2031, source: 'Estimate' },
+    drinkSpread: { value: 3, source: 'Estimate' },
+  });
+
+  it('prefills peak and spread together', () => {
+    const initial = captureToInitial(withCurve);
+    expect(initial.drinkPeak).toBe(2031);
+    expect(initial.drinkSpread).toBe(3);
+  });
+
+  it('leaves both empty when the draft has no curve', () => {
+    const initial = captureToInitial(detail());
+    expect(initial.drinkPeak).toBeUndefined();
+    expect(initial.drinkSpread).toBeUndefined();
+  });
+
+  it('marks both as estimated or derived', () => {
+    expect(captureMarks(withCurve).drinkPeak).toBe('Estimate');
+    const derived = detail({ drinkPeak: { value: 2030, source: 'Derived' }, drinkSpread: { value: 2, source: 'Derived' } });
+    expect(captureMarks(derived).drinkSpread).toBe('Derived');
   });
 });

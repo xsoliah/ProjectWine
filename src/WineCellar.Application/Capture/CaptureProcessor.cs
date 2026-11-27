@@ -217,6 +217,24 @@ public class CaptureProcessor(
         var drinkUntil = Range(r.DrinkUntil, 1800, currentYear + 100);
         if (drinkFrom is not null && drinkUntil is not null && drinkUntil.Value < drinkFrom.Value) drinkUntil = null;
 
+        var vintage = Range(r.Vintage, 1800, currentYear + 1);
+        Researched<int>? peak = null;
+        Researched<double>? spread = null;
+        if (r.DrinkPeak is { } p && r.DrinkSpread is { } s && DrinkingCurve.IsPlausible(p.Value, s.Value, vintage?.Value, currentYear))
+        {
+            peak = p;
+            spread = s with { Value = Math.Round(s.Value, 2) };
+        }
+        else if (drinkFrom is not null && drinkUntil is not null)
+        {
+            var (derivedPeak, derivedSpread) = DrinkingCurve.FromWindow(drinkFrom.Value, drinkUntil.Value);
+            if (DrinkingCurve.IsPlausible(derivedPeak, derivedSpread, vintage?.Value, currentYear))
+            {
+                peak = new Researched<int>(derivedPeak, FieldSource.Derived);
+                spread = new Researched<double>(derivedSpread, FieldSource.Derived);
+            }
+        }
+
         var barcode = r.Barcode is null ? null : BarcodeNormalizer.TryNormalizeChecked(r.Barcode.Value) is { } code ? r.Barcode with { Value = code } : null;
 
         return r with
@@ -224,13 +242,15 @@ public class CaptureProcessor(
             Summary = r.Summary is null ? null : Cut(r.Summary.Trim(), 500),
             Name = Text(r.Name, 200),
             Producer = Text(r.Producer, 200),
-            Vintage = Range(r.Vintage, 1800, currentYear + 1),
+            Vintage = vintage,
             Type = r.Type is not null && Enum.IsDefined(r.Type.Value) ? r.Type : null,
             Country = Text(r.Country, Country.MaxNameLength),
             Region = Text(r.Region, Region.MaxNameLength),
             BottleSizeMl = Range(r.BottleSizeMl, 50, 30000),
             DrinkFrom = drinkFrom,
             DrinkUntil = drinkUntil,
+            DrinkPeak = peak,
+            DrinkSpread = spread,
             Barcode = barcode,
             Notes = Text(r.Notes, MaxNoteLength),
             Grapes = grapes,

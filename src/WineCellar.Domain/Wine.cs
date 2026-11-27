@@ -28,6 +28,12 @@ public class Wine
 
     public int? DrinkFrom { get; set; }
     public int? DrinkUntil { get; set; }
+
+    /// <summary>Estimated optimal drinking year (peak of the drinking curve); set together with <see cref="DrinkSpread"/>.</summary>
+    public int? DrinkPeak { get; set; }
+
+    /// <summary>Standard deviation of the drinking curve in years (wider = tastes good for longer).</summary>
+    public double? DrinkSpread { get; set; }
     public decimal? PurchasePrice { get; set; }
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -151,6 +157,12 @@ public class Wine
         if (BottleForm is { } form && !Enum.IsDefined(form)) throw new DomainException("Ungültige Flaschenform.");
         if (DrinkFrom is { } from && DrinkUntil is { } until && until < from)
             throw new DomainException("Das Ende des Trinkfensters liegt vor dessen Beginn.");
+        if ((DrinkPeak is null) != (DrinkSpread is null))
+            throw new DomainException("Trinkzeitpunkt und Streuung müssen gemeinsam angegeben werden.");
+        if (DrinkPeak is { } peak && (peak < 1800 || peak > currentYear + 100))
+            throw new DomainException($"Ungültiger Trinkzeitpunkt: {peak}.");
+        if (DrinkSpread is { } spread && (double.IsNaN(spread) || spread <= 0 || spread > 50))
+            throw new DomainException("Die Streuung muss größer als 0 und höchstens 50 Jahre sein.");
         if (PurchasePrice is < 0m) throw new DomainException("Der Preis darf nicht negativ sein.");
     }
 }

@@ -132,6 +132,10 @@ public static class CaptureEndpoints
         bottle.MapPost("detect", async (Guid id, BottleShapeService service, CancellationToken ct) =>
             TypedResults.Ok(await service.DetectAsync(id, ct)));
 
+        // Estimate the drinking curve with a text-only research: counts towards the daily limit.
+        app.MapPost("/api/wines/{id:guid}/estimate-drinking-curve", async (Guid id, DrinkingCurveService service, CancellationToken ct) =>
+            TypedResults.Ok(await service.EstimateAsync(id, ct))).RequireAuthorization().WithTags("Wines");
+
         return app;
     }
 

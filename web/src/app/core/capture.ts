@@ -22,6 +22,8 @@ export type MarkedField =
   | 'bottleSizeMl'
   | 'drinkFrom'
   | 'drinkUntil'
+  | 'drinkPeak'
+  | 'drinkSpread'
   | 'barcode'
   | 'notes'
   | 'grapes';
@@ -40,6 +42,10 @@ export function captureToInitial(d: CaptureDetail): WineFormInitial {
   if (d.bottleSizeMl) initial.bottleSizeMl = d.bottleSizeMl.value;
   if (d.drinkFrom) initial.drinkFrom = d.drinkFrom.value;
   if (d.drinkUntil) initial.drinkUntil = d.drinkUntil.value;
+  if (d.drinkPeak && d.drinkSpread) {
+    initial.drinkPeak = d.drinkPeak.value;
+    initial.drinkSpread = d.drinkSpread.value;
+  }
   if (d.barcode) initial.barcode = d.barcode.value;
   const notes = [d.notes?.value, d.userNote].filter((n): n is string => !!n);
   if (notes.length > 0) initial.notes = notes.join('\n');
@@ -60,6 +66,8 @@ export function captureMarks(d: CaptureDetail): FieldMarks {
     ['bottleSizeMl', d.bottleSizeMl],
     ['drinkFrom', d.drinkFrom],
     ['drinkUntil', d.drinkUntil],
+    ['drinkPeak', d.drinkPeak],
+    ['drinkSpread', d.drinkSpread],
     ['barcode', d.barcode],
     ['notes', d.notes],
   ];
