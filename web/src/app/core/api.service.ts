@@ -29,6 +29,7 @@ import {
   Wine,
   WineQuery,
 } from './models';
+import { CellarRoom, RackPlacement } from './cellar-room';
 
 /** Typed access to the wine cellar API. Base URL and auth are handled by the interceptor. */
 @Injectable({ providedIn: 'root' })
@@ -161,6 +162,24 @@ export class ApiService {
 
   mergeGrape(id: string, targetId: string): Promise<GrapeVariety> {
     return firstValueFrom(this.http.post<GrapeVariety>(`/api/grapes/${id}/merge-into/${targetId}`, null));
+  }
+
+  // ----- Cellar room -----
+
+  getCellarRoom(): Promise<CellarRoom> {
+    return firstValueFrom(this.http.get<CellarRoom>('/api/cellar-room'));
+  }
+
+  saveCellarRoom(widthCm: number, depthCm: number, heightCm: number): Promise<CellarRoom> {
+    return firstValueFrom(this.http.put<CellarRoom>('/api/cellar-room', { widthCm, depthCm, heightCm }));
+  }
+
+  placeRack(id: string, p: RackPlacement): Promise<CellarRoom> {
+    return firstValueFrom(this.http.put<CellarRoom>(`/api/racks/${id}/placement`, { x: p.x, z: p.z, rotation: p.rotation }));
+  }
+
+  removeRackPlacement(id: string): Promise<CellarRoom> {
+    return firstValueFrom(this.http.delete<CellarRoom>(`/api/racks/${id}/placement`));
   }
 
   // ----- Wine racks -----

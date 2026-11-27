@@ -16,6 +16,10 @@
       <app-icon name="rack" />
       <span>Regale</span>
     </a>
+    <a routerLink="/cellar-room" [class.mobile-hidden]="section() !== 'cellar-room'" [attr.aria-current]="section() === 'cellar-room' ? 'page' : null">
+      <app-icon name="cube" />
+      <span>Kellerraum</span>
+    </a>
     <a routerLink="/drafts" [attr.aria-current]="section() === 'drafts' ? 'page' : null"
       [class.mobile-hidden]="captureCounts.counts().total === 0 && section() !== 'drafts'"
       [attr.aria-label]="captureCounts.counts().ready > 0 ? 'Entwürfe, ' + captureCounts.counts().ready + ' fertig' : null">

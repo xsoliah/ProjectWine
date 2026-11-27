@@ -43,9 +43,10 @@ export class App {
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
   }
 
-  protected section(): 'overview' | 'cellar' | 'racks' | 'drafts' | 'archive' | 'settings' {
+  protected section(): 'overview' | 'cellar' | 'racks' | 'cellar-room' | 'drafts' | 'archive' | 'settings' {
     const url = this.url();
     if (url.startsWith('/drafts')) return 'drafts';
+    if (url.startsWith('/cellar-room')) return 'cellar-room';
     if (url.startsWith('/racks')) return 'racks';
     if (url.startsWith('/archive')) return 'archive';
     if (url.startsWith('/settings') || url.startsWith('/origins') || url.startsWith('/grapes')) return 'settings';
