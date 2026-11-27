@@ -1,5 +1,10 @@
-import { WineType } from '../core/models';
+import { RackSlot, WineType } from '../core/models';
 import {
+  focusDistance,
+  focusTarget,
+  frameDistance,
+  neighborSlot,
+  rowPosition,
   CAPSULE_BY_TYPE,
   GLASS_BY_TYPE,
   LabelAtlas,
@@ -117,5 +122,53 @@ describe('slidePose', () => {
     }
     expect(slidePose(-1)).toEqual(slidePose(0));
     expect(slidePose(2)).toEqual(slidePose(1));
+  });
+});
+
+function slot(id: string, row: number, column: number): RackSlot {
+  return { id, row, column, wine: { id: 'w' + id, name: id, producer: null, vintage: null, type: 'Red' } };
+}
+
+describe('zoom onto a bottle', () => {
+  it('frames an object so that it fills the requested share of the view', () => {
+    const distance = frameDistance(35, 2.9, 0.9);
+    const visible = 2 * distance * Math.tan((35 / 2) * (Math.PI / 180));
+    expect(2.9 / visible).toBeCloseTo(0.9, 6);
+  });
+
+  it('moves farther away for a narrower free area, wider view or bigger bottle', () => {
+    expect(focusDistance(35, 1, 0.28)).toBeGreaterThan(focusDistance(35, 1, 0));
+    expect(focusDistance(35, 1.3, 0.28)).toBeGreaterThan(focusDistance(35, 1, 0.28));
+    expect(focusDistance(60, 1, 0.28)).toBeLessThan(focusDistance(35, 1, 0.28));
+  });
+
+  it('aims at the middle of the upright bottle in front of its row', () => {
+    const target = focusTarget(-2, 3, 1.2);
+    expect(target.x).toBe(-2);
+    expect(target.z).toBe(PULL_DISTANCE);
+    expect(target.y).toBeCloseTo(3 + 0.2 * 1.2, 6);
+  });
+});
+
+describe('navigating between bottles of a row', () => {
+  const slots = [slot('a', 2, 5), slot('b', 2, 1), slot('c', 2, 3), slot('d', 1, 2)];
+
+  it('finds the neighbor on the left and right, skipping free slots', () => {
+    expect(neighborSlot(slots, slots[2], 'next')?.id).toBe('a');
+    expect(neighborSlot(slots, slots[2], 'prev')?.id).toBe('b');
+    expect(neighborSlot(slots, slots[1], 'next')?.id).toBe('c');
+    expect(neighborSlot(slots, slots[0], 'prev')?.id).toBe('c');
+  });
+
+  it('returns null at the ends of the row and never leaves the row', () => {
+    expect(neighborSlot(slots, slots[0], 'next')).toBeNull();
+    expect(neighborSlot(slots, slots[1], 'prev')).toBeNull();
+    expect(neighborSlot(slots, slots[3], 'next')).toBeNull();
+    expect(neighborSlot(slots, slots[3], 'prev')).toBeNull();
+  });
+
+  it('reports the rank among the occupied slots of the row', () => {
+    expect(rowPosition(slots, slots[2])).toEqual({ rank: 2, count: 3 });
+    expect(rowPosition(slots, slots[3])).toEqual({ rank: 1, count: 1 });
   });
 });

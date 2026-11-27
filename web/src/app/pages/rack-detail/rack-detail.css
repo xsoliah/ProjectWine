@@ -254,3 +254,113 @@
   display: grid;
   gap: var(--space-2);
 }
+
+/* Zoomed onto one bottle: description sheet and previous/next buttons inside the 3D area */
+
+.canvas-wrap {
+  position: relative;
+}
+
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  /* Keep in step with FOCUS_INSET in rack-3d-look.ts: the camera frames the bottle above this height. */
+  height: 28%;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-lifted);
+}
+
+.sheet-body {
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-3);
+}
+
+.sheet-body h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.sheet-body h2:focus {
+  outline: none;
+}
+
+.sheet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+}
+
+.sheet-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 var(--space-3);
+  margin: var(--space-1) 0 0;
+  font-size: 0.875rem;
+}
+
+.sheet-facts dt {
+  color: var(--ink-soft);
+}
+
+.sheet-facts dd {
+  margin: 0;
+}
+
+.sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.nav-btn {
+  position: absolute;
+  /* Centre of the free area above the sheet. */
+  top: 36%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nav-btn.prev {
+  left: var(--space-2);
+}
+
+.nav-btn.next {
+  right: var(--space-2);
+}
+
+.nav-btn.next app-icon {
+  display: inline-flex;
+  transform: scaleX(-1);
+}
+
+.entry-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}

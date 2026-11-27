@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import {
+  Box3,
   BoxGeometry,
   BufferGeometry,
   CanvasTexture,
@@ -59,11 +60,19 @@ import { hasSparklingModel, sparklingGlassPoints, sparklingParts } from './spark
 import {
   ATLAS_SIZE,
   CAPSULE_BY_TYPE,
+  FOCUS_DURATION_MS,
+  FOCUS_INSET,
   GLASS_BY_TYPE,
   LabelAtlas,
+  NEIGHBOR_DURATION_MS,
   TILE_COUNT,
+  PULL_DISTANCE,
   PULL_DURATION_MS,
   PULL_PITCH,
+  UPRIGHT_LIFT,
+  easeOutCubic,
+  focusDistance,
+  focusTarget,
   slidePose,
 } from './rack-3d-look';
 
@@ -73,8 +82,11 @@ const DEPTH = 3.2;
 const BOARD = 0.06;
 /** Pointer movement (px) up to which a press counts as a tap, not as rotating. */
 const TAP_TOLERANCE = 6;
-/** Height of an upright bottle's middle above its row centre: the label (0.5 below the middle) sits a little below the centre, so the bottle reaches about equally far up and down. */
-const UPRIGHT_LIFT = 0.2;
+/** Horizontal swipe (px, within SWIPE_MAX_MS) that moves to the neighbouring bottle while a bottle is focused. */
+const SWIPE_MIN = 40;
+const SWIPE_MAX_MS = 500;
+/** Width of the hit box of a pulled-out bottle, in rack units (times its scale). */
+const BOTTLE_HIT_WIDTH = 0.8;
 /** How far an upright pulled-out bottle reaches above/below its row. */
 const PULL_OVERHANG = 1.15;
 const MAX_AZIMUTH = (45 * Math.PI) / 180;
@@ -140,6 +152,15 @@ interface Placement {
   scale: number;
 }
 
+/** Camera as the point it looks at, the direction toward the camera and the distance. */
+interface CameraPose {
+  target: Vector3;
+  direction: Vector3;
+  distance: number;
+  /** Share of the view's height at the bottom that is covered (the picture is centred above it). */
+  inset: number;
+}
+
 /** 3D view of one rack (WebGL via three.js). Tapping a bottle or slot selects its row, whose bottles slide out. */
 @Component({
   selector: 'app-rack-3d',
@@ -188,6 +209,16 @@ export class Rack3d {
   readonly rack = input.required<Rack>();
   readonly selectedRow = input<number | null>(null);
   readonly rowSelected = output<number>();
+  /** Id of the slot whose bottle the camera zooms onto (its row must be the selected one); null = row view. */
+  readonly focusedSlot = input<string | null>(null);
+  /** A pulled-out bottle of the selected row was tapped. */
+  readonly bottleTapped = output<RackSlot>();
+  /** Tap on empty space, or on the selected row, while a bottle is focused. */
+  readonly emptyTapped = output<void>();
+  /** Horizontal swipe while a bottle is focused: wants the previous/next bottle. */
+  readonly swipe = output<'prev' | 'next'>();
+  /** "Ansicht zurücksetzen" was used while a bottle is focused. */
+  readonly viewReset = output<void>();
   /** The browser dropped the WebGL context: the page switches to the grid. */
   readonly contextLost = output<void>();
 
@@ -242,7 +273,13 @@ export class Rack3d {
   private readonly axisZ = new Vector3(0, 0, 1);
   private readonly rollRotation = new Quaternion();
   private readonly matrix = new Matrix4();
-  private pointerStart: { x: number; y: number } | null = null;
+  private pointerStart: { x: number; y: number; time: number } | null = null;
+  /** Camera move in progress (to a bottle, to the next bottle, or back to the row view). */
+  private cameraMove: { from: CameraPose; to: CameraPose; start: number; duration: number } | null = null;
+  /** Row-view camera remembered while a bottle is focused. */
+  private savedView: CameraPose | null = null;
+  private focused = false;
+  private minDistance = 1;
   private readonly raycaster = new Raycaster();
   /** True once the user rotated or zoomed; until then the camera follows size changes (e.g. the row panel). */
   private userMoved = false;
@@ -263,17 +300,159 @@ export class Rack3d {
       this.sync(rack, row);
     });
 
+    effect(() => {
+      const rack = this.rack();
+      const id = this.focusedSlot();
+      if (!this.ready()) return;
+      this.applyFocus(rack, id);
+    });
+
     inject(DestroyRef).onDestroy(() => this.dispose());
   }
 
-  /** Back to the start view: the whole rack from the front. */
+  /** Back to the start view: the whole rack from the front. While a bottle is focused the page is asked to leave the focus first. */
   resetView(): void {
     if (!this.camera) return;
+    if (this.focused) {
+      this.savedView = null;
+      this.viewReset.emit();
+      return;
+    }
+    this.cameraMove = null;
     this.controls.target.set(0, 0, 0);
     this.camera.position.set(0, 0, this.startDistance);
     this.controls.update();
     this.userMoved = false;
     this.requestRender();
+  }
+
+  // ----- Zooming onto a bottle -----
+
+  private focusedId: string | null = null;
+
+  private applyFocus(rack: Rack, id: string | null): void {
+    const slot = id ? (rack.slots.find((s) => s.id === id) ?? null) : null;
+    if (!slot) {
+      if (this.focused) this.leaveFocus();
+      return;
+    }
+    if (this.focused && this.focusedId === slot.id) return;
+    const wasFocused = this.focused;
+    if (!wasFocused) this.savedView = this.currentPose();
+    this.focused = true;
+    this.focusedId = slot.id;
+    this.controls.enableRotate = false;
+    this.controls.minDistance = 1.5;
+    const { x, y } = this.cellCenter(rack, slot.row, slot.column);
+    const scale = rackBottleScale(slot.wine.bottleSizeMl);
+    const target = focusTarget(x, y, scale);
+    this.moveCamera(
+      {
+        target: new Vector3(target.x, target.y, target.z),
+        direction: new Vector3(0, 0, 1),
+        distance: focusDistance(this.camera.fov, scale, FOCUS_INSET),
+        inset: FOCUS_INSET,
+      },
+      wasFocused ? NEIGHBOR_DURATION_MS : FOCUS_DURATION_MS,
+    );
+  }
+
+  private leaveFocus(): void {
+    this.focused = false;
+    this.focusedId = null;
+    this.controls.enableRotate = true;
+    this.controls.minDistance = this.minDistance;
+    const back = this.savedView ?? {
+      target: new Vector3(0, 0, 0),
+      direction: new Vector3(0, 0, 1),
+      distance: this.startDistance,
+      inset: 0,
+    };
+    this.savedView = null;
+    this.moveCamera(back, FOCUS_DURATION_MS);
+  }
+
+  private currentPose(): CameraPose {
+    const target = this.controls.target.clone();
+    const offset = this.camera.position.clone().sub(target);
+    const distance = offset.length();
+    return { target, direction: distance > 0 ? offset.divideScalar(distance) : new Vector3(0, 0, 1), distance, inset: this.currentInset };
+  }
+
+  private currentInset = 0;
+
+  /** Moves the camera to a pose, smoothly (or at once with reduced motion). */
+  private moveCamera(to: CameraPose, duration: number): void {
+    if (this.reducedMotion || duration <= 0) {
+      this.cameraMove = null;
+      this.applyPose(to);
+      return;
+    }
+    this.cameraMove = { from: this.currentPose(), to, start: performance.now(), duration };
+    this.startAnimation();
+  }
+
+  private applyPose(pose: CameraPose): void {
+    this.camera.position.copy(pose.direction).multiplyScalar(pose.distance).add(pose.target);
+    this.controls.target.copy(pose.target);
+    this.currentInset = pose.inset;
+    this.updateViewOffset();
+    this.controls.update();
+    this.requestRender();
+  }
+
+  /** Shifts the picture up so that its centre lies in the free part of the view above the description sheet. */
+  private updateViewOffset(): void {
+    const { clientWidth: w, clientHeight: h } = this.host.nativeElement;
+    if (this.currentInset > 0.001 && w > 0 && h > 0) {
+      this.camera.setViewOffset(w, h, 0, Math.round((h * this.currentInset) / 2), w, h);
+    } else if (this.camera.view?.enabled) {
+      this.camera.clearViewOffset();
+    }
+  }
+
+  /** Advances the camera move by the time `now`; true while it is still running. */
+  private stepCamera(now: number): boolean {
+    const move = this.cameraMove;
+    if (!move) return false;
+    const t = Math.min(1, (now - move.start) / move.duration);
+    const e = easeOutCubic(t);
+    this.applyPose({
+      target: move.from.target.clone().lerp(move.to.target, e),
+      direction: move.from.direction.clone().lerp(move.to.direction, e).normalize(),
+      distance: move.from.distance + (move.to.distance - move.from.distance) * e,
+      inset: move.from.inset + (move.to.inset - move.from.inset) * e,
+    });
+    if (t >= 1) this.cameraMove = null;
+    return t < 1;
+  }
+
+  /** The pulled-out bottle of the selected row under the pointer ray, if any (boxes around the upright bottles). */
+  private hitBottle(): RackSlot | null {
+    const row = this.pullTarget;
+    if (row === null || (this.pull.get(row) ?? 0) < 1) return null;
+    const rack = this.rack();
+    const box = new Box3();
+    const point = new Vector3();
+    let best: RackSlot | null = null;
+    let bestDistance = Infinity;
+    for (const slot of rack.slots) {
+      if (slot.row !== row) continue;
+      const { x, y } = this.cellCenter(rack, slot.row, slot.column);
+      const scale = rackBottleScale(slot.wine.bottleSizeMl);
+      const halfWidth = (BOTTLE_HIT_WIDTH * scale) / 2;
+      const halfHeight = (BOTTLE_LENGTH * scale) / 2;
+      const centerY = y + UPRIGHT_LIFT * scale;
+      box.min.set(x - halfWidth, centerY - halfHeight, PULL_DISTANCE - halfWidth);
+      box.max.set(x + halfWidth, centerY + halfHeight, PULL_DISTANCE + halfWidth);
+      if (!this.raycaster.ray.intersectBox(box, point)) continue;
+      const distance = point.distanceToSquared(this.raycaster.ray.origin);
+      if (distance < bestDistance) {
+        best = slot;
+        bestDistance = distance;
+      }
+    }
+    return best;
   }
 
   private init(): void {
@@ -332,14 +511,26 @@ export class Rack3d {
   };
 
   private readonly onPointerDown = (event: PointerEvent) => {
-    this.pointerStart = { x: event.clientX, y: event.clientY };
+    if (!event.isPrimary) {
+      this.pointerStart = null; // a second finger (pinch) is no tap and no swipe
+      return;
+    }
+    this.pointerStart = { x: event.clientX, y: event.clientY, time: performance.now() };
   };
 
   private readonly onPointerUp = (event: PointerEvent) => {
     const start = this.pointerStart;
     this.pointerStart = null;
-    if (!start || !this.built) return;
-    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_TOLERANCE) return;
+    if (!start || !this.built || !event.isPrimary) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+
+    // A quick horizontal swipe moves to the neighbouring bottle while one is focused.
+    if (this.focused && Math.abs(dx) >= SWIPE_MIN && Math.abs(dx) > 1.5 * Math.abs(dy) && performance.now() - start.time <= SWIPE_MAX_MS) {
+      this.swipe.emit(dx < 0 ? 'next' : 'prev');
+      return;
+    }
+    if (Math.hypot(dx, dy) > TAP_TOLERANCE) return;
 
     const rect = this.canvas().nativeElement.getBoundingClientRect();
     const pointer = new Vector2(
@@ -347,9 +538,19 @@ export class Rack3d {
       -((event.clientY - rect.top) / rect.height) * 2 + 1,
     );
     this.raycaster.setFromCamera(pointer, this.camera);
+    const bottle = this.hitBottle();
+    if (bottle) {
+      this.bottleTapped.emit(bottle);
+      return;
+    }
     const hit = this.raycaster.intersectObject(this.built.hits, false)[0];
-    if (hit?.instanceId === undefined) return;
-    this.rowSelected.emit(cellFromIndex(hit.instanceId, this.rack().width).row);
+    if (hit?.instanceId === undefined) {
+      if (this.focused) this.emptyTapped.emit();
+      return;
+    }
+    const row = cellFromIndex(hit.instanceId, this.rack().width).row;
+    if (this.focused && row === this.pullTarget) this.emptyTapped.emit();
+    else this.rowSelected.emit(row);
   };
 
   private resize(): void {
@@ -358,6 +559,7 @@ export class Rack3d {
     this.renderer.setSize(clientWidth, clientHeight, false);
     this.camera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
+    this.updateViewOffset();
     if (this.built) this.fitCamera(this.rack(), !this.userMoved);
     this.requestRender();
   }
@@ -371,9 +573,10 @@ export class Rack3d {
     const byHeight = height / 2 / Math.tan(halfFov);
     const byWidth = width / 2 / (Math.tan(halfFov) * this.camera.aspect);
     this.startDistance = Math.max(byHeight, byWidth) * 1.1 + DEPTH / 2;
-    this.controls.minDistance = Math.max(DEPTH, this.startDistance * 0.2);
+    this.minDistance = Math.max(DEPTH, this.startDistance * 0.2);
+    this.controls.minDistance = this.focused ? 1.5 : this.minDistance;
     this.controls.maxDistance = this.startDistance * 1.6;
-    if (moveCamera) this.resetView();
+    if (moveCamera && !this.focused) this.resetView();
   }
 
   /** Rebuilds the frame when the size changed, then places bottles, labels and the row highlight. */
@@ -455,9 +658,9 @@ export class Rack3d {
 
   /** Runs only while a row is moving; the scene is otherwise rendered on demand. */
   private startAnimation(): void {
-    if (this.disposed || this.pull.size === 0) return;
+    if (this.disposed) return;
     if (!this.needsAnimation()) {
-      this.applyPull();
+      if (this.pull.size > 0) this.applyPull();
       return;
     }
     if (this.animFrame) return;
@@ -466,6 +669,7 @@ export class Rack3d {
   }
 
   private needsAnimation(): boolean {
+    if (this.cameraMove) return true;
     for (const [row, value] of this.pull) {
       if (value !== (row === this.pullTarget ? 1 : 0)) return true;
     }
@@ -482,6 +686,7 @@ export class Rack3d {
       this.pull.set(row, value < target ? Math.min(target, value + step) : Math.max(target, value - step));
     }
     this.applyPull();
+    this.stepCamera(now);
     if (this.needsAnimation()) this.animFrame = requestAnimationFrame(this.tick);
   };
 
