@@ -30,7 +30,7 @@
         <img class="back-image" [appAuthImage]="w.backImageId" [alt]="'Rückseite von ' + w.name" />
       } @else if (show3d()) {
         <app-bottle-3d class="bottle-view" [shape]="w.bottleShape" [type]="w.type" [form]="w.bottleForm" [sizeMl]="w.bottleSizeMl"
-          [labelImageId]="w.labelImageId" [name]="w.name" (unavailable)="onWebglUnavailable()" />
+          [labelImageId]="w.labelImageId" [backImageId]="w.backImageId" [name]="w.name" (unavailable)="onWebglUnavailable()" />
       } @else if (view() === 'bottle' && w.bottleImageId) {
         <img class="bottle-image" [appAuthImage]="w.bottleImageId" [alt]="'Flasche ' + w.name" />
       } @else if (w.labelImageId) {

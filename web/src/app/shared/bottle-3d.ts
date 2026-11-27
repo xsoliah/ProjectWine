@@ -34,6 +34,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import {
   BOTTLE_LENGTH,
   MAX_AZIMUTH,
+  backLabelFrame,
   MAX_TILT,
   bottleScale,
   capsuleDimensions,
@@ -54,6 +55,7 @@ import { CAPSULE_BY_TYPE, GLASS_BY_TYPE } from './rack-3d-look';
 /** The label floats slightly above the glass so the two surfaces do not flicker. */
 const LABEL_LIFT = 0.004;
 const START_DISTANCE_FACTOR = 1.35;
+const TURN_MS = 450;
 
 /**
  * Label as a curved patch that follows the bottle wall between its lower and upper edge: it keeps its size and its
@@ -61,7 +63,23 @@ const START_DISTANCE_FACTOR = 1.35;
  */
 export function labelGeometry(shape: BottleShape, length: number): BufferGeometry {
   const frame = labelFrame(shape, length);
-  const crop = labelUvCrop(frame.aspect);
+  return patchGeometry(shape, length, shape.label.bottom, shape.label.top, frame.startAngle, frame.arc, labelUvCrop(frame.aspect));
+}
+
+/**
+ * Curved patch on the bottle wall between two heights (0..1) and from a start angle over an arc; the texture
+ * section `crop` is stretched over it.
+ */
+export function patchGeometry(
+  shape: BottleShape,
+  length: number,
+  bottom: number,
+  top: number,
+  startAngle: number,
+  arc: number,
+  crop: { u0: number; v0: number; du: number; dv: number },
+): BufferGeometry {
+  const frame = { startAngle, arc };
   const columns = Math.max(4, Math.ceil(frame.arc / 0.1));
   const rows = 16;
   const lift = LABEL_LIFT * (length / BOTTLE_LENGTH);
@@ -70,7 +88,7 @@ export function labelGeometry(shape: BottleShape, length: number): BufferGeometr
   const indices: number[] = [];
   for (let j = 0; j <= rows; j++) {
     const t = j / rows;
-    const height = shape.label.bottom + t * (shape.label.top - shape.label.bottom);
+    const height = bottom + t * (top - bottom);
     const radius = radiusAt(shape, height) * length + lift;
     for (let i = 0; i <= columns; i++) {
       const s = i / columns;
@@ -113,10 +131,19 @@ export function labelGeometry(shape: BottleShape, length: number): BufferGeometr
   },
   template: `
     <canvas #canvas aria-hidden="true"></canvas>
-    <button type="button" class="btn btn-small reset" (click)="resetView()">
-      <app-icon name="reset" /> Ansicht zurücksetzen
-    </button>
-    <p class="help muted" aria-hidden="true">Ziehen oder Pfeiltasten zum Drehen, Mausrad zum Zoomen.</p>
+    <div class="actions">
+      @if (backImageId()) {
+        <button type="button" class="btn btn-small" (click)="toggleSide()">
+          <app-icon name="reset" /> {{ showingBack() ? 'Vorderseite zeigen' : 'Rückseite zeigen' }}
+        </button>
+      }
+      <button type="button" class="btn btn-small" (click)="resetView()">
+        <app-icon name="reset" /> Ansicht zurücksetzen
+      </button>
+    </div>
+    <p class="help muted" aria-hidden="true">
+      Ziehen oder Pfeiltasten zum Drehen{{ backImageId() ? ' (rundum)' : '' }}, Mausrad zum Zoomen.
+    </p>
   `,
   styles: `
     :host {
@@ -139,10 +166,14 @@ export function labelGeometry(shape: BottleShape, length: number): BufferGeometr
       height: 100%;
       cursor: grab;
     }
-    .reset {
+    .actions {
       position: absolute;
       top: var(--space-2);
       right: var(--space-2);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--space-2);
     }
     .help {
       position: absolute;
@@ -163,6 +194,8 @@ export class Bottle3d {
   readonly sizeMl = input<number | null | undefined>(750);
   /** Label image of the wine (load via ImageCache); without it the bottle has no label. */
   readonly labelImageId = input<string | null | undefined>(null);
+  /** Photo of the back label; with it the bottle shows the label on its back and can be turned all the way round. */
+  readonly backImageId = input<string | null | undefined>(null);
   readonly name = input.required<string>();
   /** WebGL cannot be used (not supported, or the context was lost): the page shows the flat label instead. */
   readonly unavailable = output<void>();
@@ -191,6 +224,16 @@ export class Bottle3d {
   private labelTexture: Texture | null = null;
   private labelRequest = 0;
 
+  private readonly backMaterial = new MeshStandardMaterial({ roughness: 0.85, metalness: 0 });
+  private backTexture: Texture | null = null;
+  private backRequest = 0;
+  /** The back photo that is loaded (and its width over height), so a rebuild does not load it again. */
+  private backLoaded: { id: string; aspect: number } | null = null;
+  private current: { shape: BottleShape; length: number } | null = null;
+  private animation = 0;
+  /** Whether the bottle is turned to its back (nearer to 180° than to 0°). */
+  protected readonly showingBack = signal(false);
+
   constructor() {
     afterNextRender(() => this.init());
 
@@ -200,8 +243,9 @@ export class Bottle3d {
       const type = this.type();
       const scale = bottleScale(this.sizeMl());
       const labelId = this.labelImageId();
+      const backId = this.backImageId();
       if (!this.ready()) return;
-      this.build(shape, type, form, scale, labelId);
+      this.build(shape, type, form, scale, labelId, backId);
     });
 
     inject(DestroyRef).onDestroy(() => this.dispose());
@@ -209,11 +253,59 @@ export class Bottle3d {
 
   resetView(): void {
     if (!this.camera) return;
+    this.stopAnimation();
     this.controls.target.set(0, 0, 0);
     this.camera.position.set(0, 0, this.startDistance);
     this.controls.update();
     this.userMoved = false;
+    this.showingBack.set(false);
     this.requestRender();
+  }
+
+  /** Turns the bottle to its back, or to the front when it already shows the back. */
+  protected toggleSide(): void {
+    if (!this.camera) return;
+    const toBack = !this.showingBack();
+    const current = this.controls.getAzimuthalAngle();
+    // The nearest full-turn equivalent of the target, so the bottle takes the short way.
+    const base = toBack ? Math.PI : 0;
+    const target = base + Math.round((current - base) / (2 * Math.PI)) * 2 * Math.PI;
+    this.turnTo(target);
+    this.userMoved = true;
+    this.showingBack.set(toBack);
+  }
+
+  private turnTo(azimuth: number): void {
+    this.stopAnimation();
+    const distance = this.camera.position.distanceTo(this.controls.target);
+    const tilt = Math.PI / 2 - this.controls.getPolarAngle();
+    const from = this.controls.getAzimuthalAngle();
+    const place = (value: number) => {
+      const phi = Math.PI / 2 - tilt;
+      this.camera.position
+        .set(Math.sin(phi) * Math.sin(value), Math.cos(phi), Math.sin(phi) * Math.cos(value))
+        .multiplyScalar(distance)
+        .add(this.controls.target);
+      this.controls.update();
+      this.requestRender();
+    };
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      place(azimuth);
+      return;
+    }
+    const started = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - started) / TURN_MS);
+      const eased = t * t * (3 - 2 * t);
+      place(from + (azimuth - from) * eased);
+      this.animation = t < 1 ? requestAnimationFrame(step) : 0;
+    };
+    this.animation = requestAnimationFrame(step);
+  }
+
+  private stopAnimation(): void {
+    cancelAnimationFrame(this.animation);
+    this.animation = 0;
   }
 
   protected onKey(event: KeyboardEvent): void {
@@ -222,9 +314,11 @@ export class Bottle3d {
       { azimuth: this.controls.getAzimuthalAngle(), tilt: Math.PI / 2 - this.controls.getPolarAngle() },
       event.key,
       event.shiftKey,
+      this.backImageId() ? Infinity : MAX_AZIMUTH,
     );
     if (!next) return;
     event.preventDefault();
+    this.stopAnimation();
     const distance = this.camera.position.distanceTo(this.controls.target);
     const phi = Math.PI / 2 - next.tilt;
     this.camera.position
@@ -233,7 +327,19 @@ export class Bottle3d {
       .add(this.controls.target);
     this.controls.update();
     this.userMoved = true;
+    this.updateSide();
     this.requestRender();
+  }
+
+  private updateSide(): void {
+    this.showingBack.set(Math.abs(this.controls.getAzimuthalAngle()) > Math.PI / 2);
+  }
+
+  /** Free horizontal turning only with a back label; otherwise as limited as in the rack. */
+  private applyLimits(hasBack: boolean): void {
+    this.controls.minAzimuthAngle = hasBack ? -Infinity : -MAX_AZIMUTH;
+    this.controls.maxAzimuthAngle = hasBack ? Infinity : MAX_AZIMUTH;
+    if (!hasBack && Math.abs(this.controls.getAzimuthalAngle()) > MAX_AZIMUTH) this.resetView();
   }
 
   private init(): void {
@@ -273,7 +379,11 @@ export class Bottle3d {
     this.controls.addEventListener('start', () => (interacting = true));
     this.controls.addEventListener('end', () => (interacting = false));
     this.controls.addEventListener('change', () => {
-      if (interacting) this.userMoved = true;
+      if (interacting) {
+        this.userMoved = true;
+        this.stopAnimation();
+        this.updateSide();
+      }
     });
     canvas.addEventListener('webglcontextlost', this.onContextLost);
 
@@ -314,9 +424,18 @@ export class Bottle3d {
   }
 
   /** Builds glass, capsule and label for the shape; replaces the previous meshes. */
-  private build(shape: BottleShape, type: WineType, form: BottleForm, scale: number, labelId: string | null | undefined): void {
+  private build(
+    shape: BottleShape,
+    type: WineType,
+    form: BottleForm,
+    scale: number,
+    labelId: string | null | undefined,
+    backId: string | null | undefined,
+  ): void {
     this.clearMeshes();
     const length = BOTTLE_LENGTH * scale;
+    this.current = { shape, length };
+    this.applyLimits(!!backId);
 
     this.glass.color.set(GLASS_BY_TYPE[type] ?? GLASS_BY_TYPE.Other);
     this.foil.color.set(CAPSULE_BY_TYPE[type] ?? CAPSULE_BY_TYPE.Other);
@@ -341,8 +460,54 @@ export class Bottle3d {
     } else {
       this.labelMaterial.map = null;
     }
+    if (backId) {
+      if (this.backLoaded?.id === backId) this.addBackLabel();
+      else void this.loadBack(backId);
+    } else {
+      this.backRequest++;
+      this.backLoaded = null;
+      this.backTexture?.dispose();
+      this.backTexture = null;
+      this.backMaterial.map = null;
+    }
     this.fitCamera(!this.userMoved);
     this.requestRender();
+  }
+
+  /** Adds the back label to the current bottle (needs the loaded photo for its proportions). */
+  private addBackLabel(): void {
+    if (!this.current || !this.backLoaded) return;
+    const { shape, length } = this.current;
+    const frame = backLabelFrame(shape, length, this.backLoaded.aspect);
+    if (!frame) return;
+    const geometry = patchGeometry(
+      shape, length, frame.bottom / length, frame.top / length, frame.startAngle, frame.arc, { u0: 0, v0: 0, du: 1, dv: 1 });
+    this.geometries.push(geometry);
+    this.group.add(new Mesh(geometry, this.backMaterial));
+  }
+
+  private async loadBack(imageId: string): Promise<void> {
+    const request = ++this.backRequest;
+    try {
+      const url = await this.images.url(imageId);
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      if (this.disposed || request !== this.backRequest) return;
+      this.backTexture?.dispose();
+      const texture = new Texture(image);
+      texture.colorSpace = SRGBColorSpace;
+      texture.anisotropy = 8;
+      texture.needsUpdate = true;
+      this.backTexture = texture;
+      this.backMaterial.map = texture;
+      this.backMaterial.needsUpdate = true;
+      this.backLoaded = { id: imageId, aspect: image.naturalWidth / Math.max(1, image.naturalHeight) };
+      this.addBackLabel();
+      this.requestRender();
+    } catch {
+      // Without the photo the back stays plain glass.
+    }
   }
 
   private async loadLabel(imageId: string): Promise<void> {
@@ -391,7 +556,9 @@ export class Bottle3d {
     this.controls.dispose();
     this.clearMeshes();
     this.labelTexture?.dispose();
-    for (const item of [this.glass, this.foil, this.labelMaterial]) item.dispose();
+    this.backTexture?.dispose();
+    this.stopAnimation();
+    for (const item of [this.glass, this.foil, this.labelMaterial, this.backMaterial]) item.dispose();
     this.environment?.dispose();
     this.renderer.dispose();
   }

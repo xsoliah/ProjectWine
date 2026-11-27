@@ -121,6 +121,12 @@ describe('view rotation', () => {
     expect(view.tilt).toBe(MAX_TILT);
   });
 
+  it('turns past the front limits when the azimuth range is unlimited', () => {
+    let view = { azimuth: 0, tilt: 0 };
+    for (let i = 0; i < 40; i++) view = stepView(view, 'ArrowRight', false, Infinity)!;
+    expect(view.azimuth).toBeGreaterThan(Math.PI);
+  });
+
   it('ignores other keys', () => {
     expect(stepView({ azimuth: 0, tilt: 0 }, 'a')).toBeNull();
   });

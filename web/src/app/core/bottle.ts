@@ -150,6 +150,46 @@ export function labelFrame(shape: BottleShape, length: number): LabelFrame {
   };
 }
 
+export interface BackLabelFrame {
+  bottom: number;
+  top: number;
+  startAngle: number;
+  endAngle: number;
+  arc: number;
+}
+
+/** Free space (radians) kept between the front and the back label. */
+export const BACK_LABEL_GAP = 0.1;
+const MIN_BACK_ARC = 0.15;
+
+/**
+ * Where the back label sits: opposite the front label, centred on the front label's height, with the photo's own
+ * proportions. A wide photo is shrunk to the free space between the labels. Null when there is no room left.
+ */
+export function backLabelFrame(shape: BottleShape, length: number, photoAspect: number): BackLabelFrame | null {
+  if (!(photoAspect > 0)) return null;
+  const front = labelFrame(shape, length);
+  const room = 2 * Math.PI - front.arc - 2 * BACK_LABEL_GAP;
+  if (room < MIN_BACK_ARC) return null;
+  const radius = radiusAt(shape, (shape.label.top + shape.label.bottom) / 2) * length;
+  if (radius <= 0 || front.height <= 0) return null;
+  let height = front.height;
+  let arc = (photoAspect * height) / radius;
+  if (arc > room) {
+    arc = room;
+    height = (arc * radius) / photoAspect;
+  }
+  const middle = (front.bottom + front.top) / 2;
+  const center = shape.label.centerAngle + Math.PI;
+  return {
+    bottom: middle - height / 2,
+    top: middle + height / 2,
+    startAngle: center - arc / 2,
+    endAngle: center + arc / 2,
+    arc,
+  };
+}
+
 /** The label image is stored at 3:4 with paper-coloured bars when the label has another shape. */
 export const LABEL_IMAGE_ASPECT = 900 / 1200;
 export const LABEL_FILL_TOLERANCE = 0.03;
@@ -202,14 +242,14 @@ export interface ViewAngles {
 }
 
 /** Arrow keys turn the bottle in steps, within the allowed range; other keys return null. */
-export function stepView(view: ViewAngles, key: string, big = false): ViewAngles | null {
+export function stepView(view: ViewAngles, key: string, big = false, maxAzimuth = MAX_AZIMUTH): ViewAngles | null {
   const step = big ? KEY_STEP * 2 : KEY_STEP;
   const clamp = (v: number, max: number) => Math.min(max, Math.max(-max, v));
   switch (key) {
     case 'ArrowLeft':
-      return { ...view, azimuth: clamp(view.azimuth - step, MAX_AZIMUTH) };
+      return { ...view, azimuth: clamp(view.azimuth - step, maxAzimuth) };
     case 'ArrowRight':
-      return { ...view, azimuth: clamp(view.azimuth + step, MAX_AZIMUTH) };
+      return { ...view, azimuth: clamp(view.azimuth + step, maxAzimuth) };
     case 'ArrowUp':
       return { ...view, tilt: clamp(view.tilt + step / 2, MAX_TILT) };
     case 'ArrowDown':
