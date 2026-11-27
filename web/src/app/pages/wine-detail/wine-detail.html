@@ -19,18 +19,16 @@
 
     <section class="panel label-panel" aria-labelledby="label-title">
       <h2 id="label-title" class="sr-only">Etikett</h2>
-      @if (webglOk() || w.bottleImageId) {
+      @if (viewOptions().length > 1) {
         <div class="view-switch" role="group" aria-label="Ansicht">
-          <button type="button" class="btn btn-small" [attr.aria-pressed]="view() === 'label'" (click)="view.set('label')">Etikett</button>
-          @if (w.bottleImageId) {
-            <button type="button" class="btn btn-small" [attr.aria-pressed]="view() === 'bottle'" (click)="view.set('bottle')">Flasche</button>
-          }
-          @if (webglOk()) {
-            <button type="button" class="btn btn-small" [attr.aria-pressed]="view() === '3d'" (click)="view.set('3d')">3D-Ansicht</button>
+          @for (option of viewOptions(); track option.id) {
+            <button type="button" class="btn btn-small" [attr.aria-pressed]="shown() === option.id" (click)="view.set(option.id)">{{ option.label }}</button>
           }
         </div>
       }
-      @if (show3d()) {
+      @if (shown() === 'back' && w.backImageId) {
+        <img class="back-image" [appAuthImage]="w.backImageId" [alt]="'Rückseite von ' + w.name" />
+      } @else if (show3d()) {
         <app-bottle-3d class="bottle-view" [shape]="w.bottleShape" [type]="w.type" [sizeMl]="w.bottleSizeMl"
           [labelImageId]="w.labelImageId" [name]="w.name" (unavailable)="onWebglUnavailable()" />
       } @else if (view() === 'bottle' && w.bottleImageId) {
@@ -70,6 +68,13 @@
           <button type="button" class="btn btn-small" [disabled]="labelBusy()" (click)="removeLabel()">Entfernen</button>
         }
         <input #labelInput type="file" accept="image/*" capture="environment" hidden (change)="pickLabel($event)" />
+        <button type="button" class="btn btn-small" [disabled]="backBusy()" (click)="backInput.click()">
+          <app-icon name="camera" /> {{ w.backImageId ? 'Neue Rückseite' : 'Rückseite hinzufügen' }}
+        </button>
+        @if (w.backImageId) {
+          <button type="button" class="btn btn-small" [disabled]="backBusy()" (click)="removeBack()">Rückseite entfernen</button>
+        }
+        <input #backInput type="file" accept="image/*" capture="environment" hidden (change)="pickBack($event)" />
       </div>
     </section>
 

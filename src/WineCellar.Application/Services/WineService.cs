@@ -68,11 +68,11 @@ public class WineService(
         return wine.ToDto();
     }
 
-    /// <summary>Deletes the wine and, via cascade, its archive entries; also its label image and original photo.</summary>
+    /// <summary>Deletes the wine and, via cascade, its archive entries; also its label image, original photo and back image.</summary>
     public async Task DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var wine = await FindOwnedAsync(id, track: true, ct);
-        var imageIds = new[] { wine.LabelImageId, wine.LabelSourceImageId, wine.BottleImageId }.OfType<Guid>().ToList();
+        var imageIds = new[] { wine.LabelImageId, wine.LabelSourceImageId, wine.BottleImageId, wine.BackImageId }.OfType<Guid>().ToList();
         db.StoredImages.RemoveRange(await db.StoredImages.Where(i => imageIds.Contains(i.Id)).ToListAsync(ct));
         db.Wines.Remove(wine);
         await db.SaveChangesAsync(ct);

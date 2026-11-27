@@ -269,6 +269,17 @@ export class ApiService {
     return firstValueFrom(this.http.delete<Wine>(`/api/wines/${wineId}/label-image`));
   }
 
+  /** Sets or replaces the back label photo (stored whole; no research, no quota). */
+  setBackImage(wineId: string, photo: Blob): Promise<Wine> {
+    const form = new FormData();
+    form.append('image', photo, 'back.jpg');
+    return firstValueFrom(this.http.put<Wine>(`/api/wines/${wineId}/back-image`, form));
+  }
+
+  removeBackImage(wineId: string): Promise<Wine> {
+    return firstValueFrom(this.http.delete<Wine>(`/api/wines/${wineId}/back-image`));
+  }
+
   /** Adjusts outline and/or label placement of a wine's bottle (no research, no quota). */
   setBottleShape(wineId: string, request: SetBottleShapeRequest): Promise<Wine> {
     return firstValueFrom(this.http.put<Wine>(`/api/wines/${wineId}/bottle-shape`, request));

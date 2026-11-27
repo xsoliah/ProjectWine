@@ -30,13 +30,15 @@ export interface Wine {
   bottleImageId?: string | null;
   /** Measured bottle: profile and label placement; null shows the standard bottle. */
   bottleShape?: BottleShape | null;
+  /** Whole photo of the back label (unedited); load with appAuthImage. */
+  backImageId?: string | null;
   drinkFrom: number | null;
   drinkUntil: number | null;
   purchasePrice: number | null;
   notes: string | null;
 }
 
-export type SaveWineRequest = Omit<Wine, 'id' | 'country' | 'region' | 'grapes' | 'isCuvee' | 'slots' | 'unplacedCount' | 'labelImageId' | 'labelSourceImageId' | 'labelCorners' | 'bottleImageId' | 'bottleShape'> & {
+export type SaveWineRequest = Omit<Wine, 'id' | 'country' | 'region' | 'grapes' | 'isCuvee' | 'slots' | 'unplacedCount' | 'labelImageId' | 'labelSourceImageId' | 'labelCorners' | 'bottleImageId' | 'bottleShape' | 'backImageId'> & {
   countryId: string | null;
   regionId: string | null;
   grapes: WineGrapeRequest[];

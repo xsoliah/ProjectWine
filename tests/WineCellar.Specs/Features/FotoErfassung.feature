@@ -390,6 +390,52 @@ Funktionalität: Foto-Erfassung und Etikettenbild
     Und es gibt keinen Entwurf
     Und ich habe heute 0 Recherchen verbraucht
 
+  # ----- Rückenetikett bleibt erhalten -----
+
+  Szenario: Wein aus Entwurf mit Rückseite
+    Angenommen der Agent erkennt:
+      | Feld | Wert      | Herkunft |
+      | Name | Sassicaia | Etikett  |
+    Und ich habe ein Foto des Etiketts und ein Foto des Rückenetiketts aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich den Entwurf als neuen Wein speichere
+    Dann hat der Wein "Sassicaia" ein Rückseitenbild
+    Und das Rückseitenbild von "Sassicaia" ist das Rückenfoto des Entwurfs
+
+  Szenario: Entwurf ohne Rückseite
+    Angenommen der Agent erkennt:
+      | Feld | Wert      | Herkunft |
+      | Name | Sassicaia | Etikett  |
+    Und ich habe ein Foto des Etiketts aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich den Entwurf als neuen Wein speichere
+    Dann hat der Wein "Sassicaia" kein Rückseitenbild
+
+  Szenario: Flaschen zu vorhandenem Wein ohne Rückseite
+    Angenommen mein Keller enthält 1 Flasche "Sassicaia"
+    Und der Agent erkennt:
+      | Feld | Wert      | Herkunft |
+      | Name | Sassicaia | Etikett  |
+    Und ich habe ein Foto des Etiketts und ein Foto des Rückenetiketts aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich den Entwurf öffne
+    Und ich die Flaschen zum vorhandenen Wein hinzufüge
+    Dann hat der Wein "Sassicaia" ein Rückseitenbild
+    Und das Rückseitenbild von "Sassicaia" ist das Rückenfoto des Entwurfs
+
+  Szenario: Flaschen zu vorhandenem Wein mit Rückseite
+    Angenommen mein Keller enthält 1 Flasche "Sassicaia"
+    Und "Sassicaia" hat ein Rückseitenbild
+    Und der Agent erkennt:
+      | Feld | Wert      | Herkunft |
+      | Name | Sassicaia | Etikett  |
+    Und ich habe ein Foto des Etiketts und ein Foto des Rückenetiketts aufgenommen
+    Und der Agent hat die Recherche abgeschlossen
+    Wenn ich den Entwurf öffne
+    Und ich die Flaschen zum vorhandenen Wein hinzufüge
+    Dann bleibt das bisherige Rückseitenbild von "Sassicaia" erhalten
+    Und das Rückenfoto des Entwurfs ist gelöscht
+
   Szenario: Angegebener Code hat Vorrang
     Angenommen der Agent erkennt:
       | Feld    | Wert          | Herkunft |

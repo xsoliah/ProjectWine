@@ -125,6 +125,15 @@ dd {
   width: min(100%, 22rem);
 }
 
+/* The back label is shown whole and unedited: never cropped, never stretched. */
+.back-image {
+  max-width: min(100%, 24rem);
+  max-height: 32rem;
+  object-fit: contain;
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+}
+
 .bottle-image {
   max-width: min(100%, 16rem);
   max-height: 26rem;
