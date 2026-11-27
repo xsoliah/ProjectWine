@@ -24,6 +24,7 @@
     <div class="page-head">
       <h1>{{ r.name }}</h1>
       <span class="muted">{{ r.height }} × {{ r.width }} · {{ r.occupied }} belegt · {{ r.free }} frei</span>
+      <a class="btn btn-small" routerLink="/cellar-room" [queryParams]="{ rack: r.id }"><app-icon name="cube" /> Im Kellerraum</a>
     </div>
 
     <div class="toolbar">

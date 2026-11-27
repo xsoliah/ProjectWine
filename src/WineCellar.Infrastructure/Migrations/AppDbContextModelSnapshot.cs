@@ -254,6 +254,26 @@ namespace WineCellar.Infrastructure.Migrations
                     b.ToTable("capture_usage", (string)null);
                 });
 
+            modelBuilder.Entity("WineCellar.Domain.CellarRoom", b =>
+                {
+                    b.Property<string>("OwnerId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("DepthCm")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HeightCm")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WidthCm")
+                        .HasColumnType("int");
+
+                    b.HasKey("OwnerId");
+
+                    b.ToTable("cellar_rooms", (string)null);
+                });
+
             modelBuilder.Entity("WineCellar.Domain.ConsumptionRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -386,6 +406,15 @@ namespace WineCellar.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("PosX")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PosZ")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Rotation")
+                        .HasColumnType("int");
 
                     b.Property<int>("Width")
                         .HasColumnType("int");
@@ -753,6 +782,15 @@ namespace WineCellar.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("WineCellar.Domain.CaptureUsage", b =>
+                {
+                    b.HasOne("WineCellar.Infrastructure.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("WineCellar.Domain.CellarRoom", b =>
                 {
                     b.HasOne("WineCellar.Infrastructure.AppUser", null)
                         .WithMany()

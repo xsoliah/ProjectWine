@@ -54,6 +54,7 @@ public class RackService(IAppDbContext db, ICurrentUser user, TimeProvider time)
         }
 
         await EnsureNameFreeAsync(rack, exceptId: id, ct);
+        await CellarRoomService.EnsureStillFitsAsync(db, user.UserId, rack, ct);
         await SaveAsync(ct);
         return ToDto(rack);
     }

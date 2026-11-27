@@ -288,3 +288,26 @@ public record SetBottleShapeRequest(IReadOnlyList<LabelPointDto>? Outline, Bottl
 
 /// <summary>Either <c>WineId</c> (the wine just created from the form) or <c>AddToWineId</c> (+ optional count).</summary>
 public record AcceptCaptureRequest(Guid? WineId = null, Guid? AddToWineId = null, int? Count = null);
+
+// ----- Cellar room -----
+
+public record RackPlacementDto(int X, int Z, int Rotation);
+
+/// <summary>Compact occupancy of one slot for the room view (no wine details).</summary>
+public record RoomSlotDto(int Row, int Column, WineType Type);
+
+public record RoomRackDto(
+    Guid Id,
+    string Name,
+    int Height,
+    int Width,
+    int Occupied,
+    int Free,
+    RackPlacementDto? Placement,
+    IReadOnlyList<RoomSlotDto> Slots);
+
+public record CellarRoomDto(int WidthCm, int DepthCm, int HeightCm, IReadOnlyList<RoomRackDto> Racks);
+
+public record SaveCellarRoomRequest(int WidthCm, int DepthCm, int HeightCm);
+
+public record PlaceRackRequest(int X, int Z, int Rotation);

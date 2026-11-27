@@ -19,6 +19,7 @@ public interface IAppDbContext
     DbSet<WineGrape> WineGrapes { get; }
     DbSet<Rack> Racks { get; }
     DbSet<RackSlot> RackSlots { get; }
+    DbSet<CellarRoom> CellarRooms { get; }
     DbSet<StoredImage> StoredImages { get; }
     DbSet<CaptureDraft> CaptureDrafts { get; }
     DbSet<CaptureUsage> CaptureUsages { get; }

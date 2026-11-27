@@ -35,6 +35,7 @@ const MAX_SIZE = 50;
     <div class="page stack">
       <div class="page-head">
         <h1>Regale</h1>
+        <a class="btn" routerLink="/cellar-room"><app-icon name="cube" /> Kellerraum</a>
         <button type="button" class="btn btn-primary" (click)="startCreate()"><app-icon name="plus" /> Regal anlegen</button>
       </div>
 

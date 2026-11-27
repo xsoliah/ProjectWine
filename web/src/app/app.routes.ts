@@ -64,6 +64,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/draft-review/draft-review').then((m) => m.DraftReview),
       },
       {
+        path: 'cellar-room',
+        title: 'Kellerraum – Weinkeller',
+        loadComponent: () => import('./pages/cellar-room/cellar-room').then((m) => m.CellarRoomPage),
+      },
+      {
         path: 'racks',
         title: 'Regale – Weinkeller',
         loadComponent: () => import('./pages/racks/racks').then((m) => m.Racks),

@@ -76,6 +76,7 @@ app.MapOriginEndpoints();
 app.MapGrapeEndpoints();
 app.MapStatisticsEndpoints();
 app.MapRackEndpoints();
+app.MapCellarRoomEndpoints();
 app.MapCaptureEndpoints();
 
 // Angular client-side routing: everything that is not an API call falls back to index.html.

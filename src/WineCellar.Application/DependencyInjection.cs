@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddScoped<GrapeService>();
         services.AddScoped<StatisticsService>();
         services.AddScoped<RackService>();
+        services.AddScoped<CellarRoomService>();
         services.AddScoped<PlacementSuggestionService>();
         services.AddScoped<ImageService>();
         services.AddScoped<LabelImageService>();

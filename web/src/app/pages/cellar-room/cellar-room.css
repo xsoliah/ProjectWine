@@ -1,0 +1,114 @@
+.layout {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 960px) {
+  .layout:has(.stage) {
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    align-items: start;
+  }
+}
+
+.stage {
+  min-width: 0;
+}
+
+.stage:focus-visible {
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 2px;
+}
+
+.loading {
+  padding: var(--space-4);
+}
+
+.size-form summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.size-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+}
+
+.size-fields label {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 0.875rem;
+}
+
+.size-fields input {
+  width: 7rem;
+}
+
+.status {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.rack-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rack-list li {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+}
+
+.rack-list li.selected {
+  border-color: var(--accent, currentColor);
+}
+
+.pick {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pick.static {
+  cursor: default;
+}
+
+.pick .name {
+  font-weight: 600;
+}
+
+.edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-2);
+}
+
+.edit label {
+  display: grid;
+  gap: 2px;
+  font-size: 0.8125rem;
+}
+
+.edit input {
+  width: 5.5rem;
+}
+
+.info h2 {
+  margin: 0 0 var(--space-1);
+}
