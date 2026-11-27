@@ -7,7 +7,12 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "cap:sync": "ng build && cap sync"
+    "cap:sync": "npm run dx:license && ng build && cap sync",
+    "dx:license": "devextreme-license --out src/.devextreme/license-key.ts",
+    "prestart": "npm run dx:license",
+    "prebuild": "npm run dx:license",
+    "pretest": "npm run dx:license",
+    "prewatch": "npm run dx:license"
   },
   "private": true,
   "packageManager": "npm@10.9.9",
@@ -23,6 +28,8 @@
     "@capacitor/preferences": "^8.0.1",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
+    "devextreme": "26.1.6",
+    "devextreme-angular": "26.1.6",
     "rxjs": "~7.8.0",
     "three": "^0.181.2",
     "tslib": "^2.3.0"

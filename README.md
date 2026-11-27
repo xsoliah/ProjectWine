@@ -129,12 +129,38 @@ npx cap open android
 ## Ansichten: Kacheln, Tabelle, Pivot
 
 Keller, Archiv und Regale lassen sich über den Umschalter „Ansicht“ als **Kacheln** (Standard), **Tabelle** oder **Pivot**
-anzeigen; die Wahl wird je Liste im Gerät gemerkt. Die Tabelle hat sortierbare Spalten (Antippen des Spaltenkopfs),
-wählbare Spalten und führt per Zeile zur Einzelansicht. Filter (Suche, Weinart, Land, Region, Rebsorte, Jahrgang,
-Trinkfenster, Zeitraum, Bewertung, Belegung …) wirken in allen drei Ansichten und stehen in der Adresse. Das Pivot
-wertet die gefilterten Einträge als Kreuztabelle aus (z. B. Flaschen je Land und Weinart); ein Antippen einer Zelle
-zeigt die zugehörigen Einträge als Tabelle. Tabelle und Pivot lassen sich als CSV exportieren (UTF-8 mit BOM,
-Semikolon). Sortieren, Filtern und Pivotieren laufen im Frontend, das Backend ist unverändert.
+anzeigen; die Wahl wird je Liste im Gerät gemerkt. Tabelle und Pivot sind [DevExtreme](https://js.devexpress.com/)-Komponenten
+(`DataGrid`, `PivotGrid`, `FilterBuilder`); sie und das Theme werden erst beim Wechsel in die Ansicht bzw. beim Öffnen des
+Filter-Editors geladen, die Kachelansicht und der App-Start laden sie nicht.
+
+- **Spaltenfilter**: Filterzeile unter den Spaltenköpfen (auf dem Handy über „Filterzeile“ ein-/ausblendbar) und Werteliste
+  mit Häufigkeit im Spaltenkopf. Spaltenwahl, Sortierung und Spaltenbreiten werden je Liste im Gerät gemerkt
+  („Spalten zurücksetzen“).
+- **Verschachtelte Filter**: „Filter erstellen/Bearbeiten“ öffnet den Filter-Editor mit beliebig tief geschachtelten
+  Gruppen („Und“, „Oder“, „Nicht“). Der aktive Filter steht als Text über der Liste und lässt sich aus-/einschalten,
+  bearbeiten und löschen. Er gilt für Kacheln, Tabelle und Pivot gleichermaßen und steht als JSON im Adressparameter `f`
+  (alte Parameter wie `?type=Red` werden übersetzt, die Suche steht in `q`). Mehrwertige Felder (Rebsorte, Regal) werden mit
+  „enthält“ gefiltert.
+- **Pivot**: mehrere Felder in Zeilen und Spalten, Zwischensummen, Auf-/Zuklappen, Feldauswahl (Felder per Drag-and-drop
+  zwischen den Bereichen), mehrere Kennzahlen; das Datum im Archiv ist nach Jahr → Quartal → Monat gruppiert. Die Anordnung
+  wird je Liste im Gerät gemerkt („Zurücksetzen“ stellt die Vorgabe wieder her). Ein Antippen einer Zelle oder Summe zeigt die
+  zugehörigen Einträge als Tabelle (alle Ebenen als Filter, „Zurück zum Pivot“). Wird die Rebsorte als Feld verwendet,
+  zählen Flaschen mit mehreren Rebsorten bei jeder mit; die Summen können dann über der Flaschenzahl liegen (ein Hinweis
+  erklärt das).
+- Tabelle und Pivot lassen sich als CSV exportieren (UTF-8 mit BOM, Semikolon). Sortieren, Filtern und Pivotieren laufen im
+  Frontend, das Backend ist unverändert.
+- Größe (Produktions-Build, unkomprimiert): Start der App unverändert klein (Initial 339 kB); die Tabelle lädt beim ersten Aufruf
+  ca. 1,7 MB (DataGrid) plus Theme-CSS (ca. 0,6 MB), das Pivot zusätzlich ca. 0,2 MB, der Filter-Editor ca. 20 kB.
+
+### DevExtreme-Lizenzschlüssel
+
+`devextreme` ist kommerzielle Software. Ohne Lizenzschlüssel läuft alles, DevExtreme zeigt aber einen Testhinweis und
+Warnungen in der Konsole. Der Schlüssel wird **nicht** eingecheckt: `npm run dx:license` (läuft automatisch vor `npm start`,
+`build`, `test`, also auch über `dev.ps1` und `publish.ps1`) erzeugt daraus die ignorierte Datei
+`web/src/.devextreme/license-key.ts`. Das Werkzeug liest den Schlüssel aus der Umgebungsvariable `DevExpress_License`, aus
+der Datei, auf die `DevExpress_LicensePath` zeigt, oder aus `DevExpress_License.txt` im Benutzerprofil (Windows:
+`%AppData%\DevExpress\`; siehe die [DevExpress-Anleitung](https://docs.devexpress.com/GeneralInformation/405646)). Auf dem
+Rechner, der `publish.ps1` ausführt, muss der Schlüssel entsprechend hinterlegt sein.
 
 ## Barcode-Erfassung
 

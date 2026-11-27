@@ -41,6 +41,8 @@ export class RackDetail {
   readonly from = input<string | undefined>();
   readonly q = input<string | undefined>();
   readonly type = input<string | undefined>();
+  /** Serialized filter of the cellar list (`?f=`), passed back on "Zurück zur Liste". */
+  readonly f = input<string | undefined>();
   /** `?place=<wineId>`: choose a free slot for a bottle of this wine. */
   readonly place = input<string | undefined>();
 
@@ -132,7 +134,7 @@ export class RackDetail {
 
   protected backToCellar(): void {
     void this.router.navigate(['/cellar'], {
-      queryParams: { q: this.q() || null, type: this.type() || null },
+      queryParams: { q: this.q() || null, type: this.type() || null, f: this.f() || null },
     });
   }
 

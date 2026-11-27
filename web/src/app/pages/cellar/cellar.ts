@@ -3,28 +3,26 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { drinkWindow } from '../../core/drink-window';
-import { downloadText } from '../../core/download';
 import { errorMessage } from '../../core/errors';
-import { WINE_TYPES } from '../../core/labels';
+import { serializeFilter } from '../../core/filter-expr';
 import { ListViewState } from '../../core/list-view-state';
-import { multiValues, tableCsv } from '../../core/list-views';
+import { distinctOptions } from '../../core/list-options';
 import { Wine } from '../../core/models';
 import { LAST_RACK_KEY, rackToOpen, webglAvailable } from '../../core/racks';
 import { StorageService } from '../../core/storage.service';
 import { ToastService } from '../../core/toast.service';
 import { AuthImage } from '../../core/images';
-import { ColumnPicker } from '../../shared/column-picker';
-import { DataTable } from '../../shared/data-table';
-import { FilterBar } from '../../shared/filter-bar';
+import { DxDataGrid } from '../../shared/dx/dx-data-grid';
+import { DxPivotGrid } from '../../shared/dx/dx-pivot-grid';
 import { Icon } from '../../shared/icon';
-import { PivotTable, PivotCellEvent } from '../../shared/pivot-table';
+import { ListFilter } from '../../shared/list-filter';
 import { TypeBadge } from '../../shared/type-badge';
 import { ViewSwitch } from '../../shared/view-switch';
-import { CELLAR_PIVOT, cellarColumns, cellarDimensions, cellarFilters, cellarMeasures } from './cellar.views';
+import { CELLAR_LEGACY, CELLAR_PIVOT, CELLAR_SEARCH_KEYS, cellarFields, cellarMeasures } from './cellar.views';
 
 @Component({
   selector: 'app-cellar',
-  imports: [FormsModule, RouterLink, Icon, TypeBadge, AuthImage, ViewSwitch, ColumnPicker, DataTable, FilterBar, PivotTable],
+  imports: [FormsModule, RouterLink, Icon, TypeBadge, AuthImage, ViewSwitch, ListFilter, DxDataGrid, DxPivotGrid],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cellar.html',
   styleUrl: './cellar.css',
@@ -37,14 +35,16 @@ export class Cellar {
 
   private readonly year = new Date().getFullYear();
 
-  /** Ansicht, Filter, Sortierung und Pivot stehen in der URL (?view=, ?q=, ?type= …), damit sie eine Einzelansicht überleben. */
+  protected readonly fields = cellarFields(this.year);
+  protected readonly measures = cellarMeasures();
+  protected readonly pivotLayout = CELLAR_PIVOT;
+
+  /** Ansicht, Suche und Filter stehen in der URL (?view=, ?q=, ?f=), damit sie eine Einzelansicht überleben. */
   protected readonly view = new ListViewState<Wine>({
     id: 'cellar',
-    filters: cellarFilters(this.year),
-    columns: cellarColumns(),
-    dimensions: cellarDimensions(this.year),
-    measures: cellarMeasures(),
-    pivot: CELLAR_PIVOT,
+    fields: this.fields,
+    legacy: CELLAR_LEGACY,
+    searchKeys: CELLAR_SEARCH_KEYS,
   });
 
   protected readonly webgl = webglAvailable();
@@ -52,48 +52,22 @@ export class Cellar {
   protected readonly noRack = signal(false);
   protected readonly opening3d = signal(false);
 
-  protected readonly types = WINE_TYPES;
-  protected readonly filterDefs = this.view.config.filters;
-  protected readonly dimensions = this.view.config.dimensions;
-  protected readonly measures = this.view.config.measures;
-  protected readonly allColumns = this.view.config.columns;
-
   private readonly list = resource({ loader: () => this.api.listWines({ search: '', type: null }) });
 
-  /** Alle Weine im Keller; Filter wirken lokal auf Kacheln, Tabelle und Pivot. */
+  /** Alle Weine im Keller; Suche und Filter wirken lokal auf Kacheln, Tabelle und Pivot. */
   protected readonly allWines = computed(() => (this.list.hasValue() ? this.list.value() : []));
   protected readonly wines = computed(() => this.view.apply(this.allWines()));
-  protected readonly tableRows = computed(() => this.view.sorted(this.wines()));
-  protected readonly visibleColumns = this.view.columns;
-  protected readonly visibleKeys = computed(() => this.visibleColumns().map((c) => c.key));
+  /** Nur nach Suche gefiltert: die Tabelle wendet den Filter selbst an. */
+  protected readonly searched = computed(() => this.view.applySearch(this.allWines()));
+  protected readonly options = computed(() => distinctOptions(this.fields, this.allWines()));
   protected readonly bottleCount = computed(() => this.wines().reduce((sum, w) => sum + w.quantity, 0));
-  protected readonly filtered = computed(() => Object.keys(this.view.filters()).length > 0 || this.view.drilled());
   protected readonly loading = computed(() => this.list.isLoading() && !this.list.hasValue());
   protected readonly error = computed(() => {
     const error = this.list.error();
     return error ? errorMessage(error) : null;
   });
 
-  /** Einzige gewählte Weinart (für die Chips) oder `null`. */
-  protected readonly singleType = computed(() => {
-    const selected = multiValues(this.view.filters(), 'type');
-    return selected.length === 1 ? selected[0] : null;
-  });
-  protected readonly typeActive = computed(() => multiValues(this.view.filters(), 'type').length > 0);
-
-  protected setType(label: string | null): void {
-    this.view.setFilter('type', label ?? '');
-  }
-
   protected link = (wine: Wine): unknown[] => ['/wines', wine.id];
-
-  protected exportTable(): void {
-    downloadText('keller.csv', tableCsv(this.tableRows(), this.visibleColumns()));
-  }
-
-  protected onCell(event: PivotCellEvent): void {
-    this.view.drill(event.row, event.col);
-  }
 
   /** Opens the rack used last (or the first by name) in 3D; "Zurück zur Liste" brings back search and filter. */
   protected async open3d(): Promise<void> {
@@ -106,9 +80,13 @@ export class Cellar {
         this.noRack.set(true);
         return;
       }
-      const filters = this.view.filters();
       await this.router.navigate(['/racks', rack.id], {
-        queryParams: { view: '3d', from: 'cellar', q: filters['q'] || null, type: filters['type'] || null },
+        queryParams: {
+          view: '3d',
+          from: 'cellar',
+          q: this.view.search() || null,
+          f: serializeFilter(this.view.activeFilter(), this.fields),
+        },
       });
     } catch (error) {
       this.toast.error(errorMessage(error));
@@ -133,5 +111,4 @@ export class Cellar {
       this.toast.error(errorMessage(error));
     }
   }
-
 }

@@ -1,7 +1,8 @@
 import { drinkWindow } from '../../core/drink-window';
-import { formatPrice } from '../../core/format';
+import { LegacyParam } from '../../core/filter-expr';
 import { WINE_TYPES, wineTypeLabel } from '../../core/labels';
-import { Column, Dimension, FilterDef, Measure, NO_VALUE, PivotConfig } from '../../core/list-views';
+import { ListField, ListMeasure } from '../../core/list-model';
+import { PivotLayout } from '../../core/list-view-state';
 import { Wine } from '../../core/models';
 
 /** Trinkfenster-Status eines Weins als Anzeigetext; `null` ohne Angabe. */
@@ -18,12 +19,18 @@ export function windowState(wine: Pick<Wine, 'drinkFrom' | 'drinkUntil'>, year: 
   }
 }
 
-export const WINDOW_OPTIONS = ['Trinkreif', 'Noch warten', 'Überschritten', NO_VALUE] as const;
+export const WINDOW_STATES = ['Trinkreif', 'Noch warten', 'Überschritten'] as const;
 export const PLACEMENT_IN_RACK = 'In Regal';
+export const PLACEMENT_PARTLY = 'Teilweise im Regal';
 export const PLACEMENT_UNPLACED = 'Ohne Fach';
 
-const text = (value: string | null | undefined): string[] => (value ? [value] : []);
 const rackNames = (wine: Wine): string[] => [...new Set(wine.slots.map((s) => s.rackName))];
+
+/** Ob alle, einige oder keine Flaschen des Weins ein Regalfach haben. */
+export function placement(wine: Wine): string {
+  if (wine.slots.length === 0) return PLACEMENT_UNPLACED;
+  return wine.unplacedCount > 0 ? PLACEMENT_PARTLY : PLACEMENT_IN_RACK;
+}
 
 function windowText(wine: Wine): string {
   const { drinkFrom: from, drinkUntil: until } = wine;
@@ -33,104 +40,96 @@ function windowText(wine: Wine): string {
   return '';
 }
 
-/** Spalten der Kellertabelle; die erste (Name) ist immer sichtbar. */
-export function cellarColumns(): Column<Wine>[] {
+/** Felder des Kellers: Tabellenspalten, Filterfelder und Pivot-Dimensionen. Die erste (Name) ist immer sichtbar. */
+export function cellarFields(year: number): ListField<Wine>[] {
   return [
-    { key: 'name', title: 'Name', type: 'text', value: (w) => w.name, defaultVisible: true },
-    { key: 'producer', title: 'Winzer', type: 'text', value: (w) => w.producer, defaultVisible: true },
-    { key: 'vintage', title: 'Jahrgang', type: 'number', value: (w) => w.vintage, defaultVisible: true },
-    { key: 'type', title: 'Art', type: 'text', value: (w) => wineTypeLabel(w.type), defaultVisible: true },
-    { key: 'country', title: 'Land', type: 'text', value: (w) => w.country?.name ?? null, defaultVisible: true },
-    { key: 'region', title: 'Region', type: 'text', value: (w) => w.region?.name ?? null, defaultVisible: true },
+    { key: 'name', title: 'Name', type: 'string', value: (w) => w.name, column: 'default' },
+    { key: 'producer', title: 'Winzer', type: 'string', value: (w) => w.producer, column: 'default', pivot: true },
+    { key: 'vintage', title: 'Jahrgang', type: 'number', value: (w) => w.vintage, column: 'default', pivot: true },
     {
-      key: 'grapes',
-      title: 'Rebsorten',
-      type: 'text',
-      value: (w) => (w.grapes.length > 0 ? w.grapes.map((g) => g.name).join(', ') : null),
-      defaultVisible: false,
+      key: 'type',
+      title: 'Weinart',
+      type: 'string',
+      value: (w) => wineTypeLabel(w.type),
+      order: WINE_TYPES.map((t) => t.label),
+      column: 'default',
+      pivot: true,
     },
-    { key: 'quantity', title: 'Flaschen', type: 'number', value: (w) => w.quantity, defaultVisible: true },
+    { key: 'country', title: 'Land', type: 'string', value: (w) => w.country?.name ?? null, column: 'default', pivot: true },
+    { key: 'region', title: 'Region', type: 'string', value: (w) => w.region?.name ?? null, column: 'default', pivot: true },
+    {
+      key: 'grape',
+      title: 'Rebsorte',
+      type: 'string',
+      value: () => null,
+      values: (w) => w.grapes.map((g) => g.name),
+      column: 'optional',
+      pivot: true,
+      drill: { key: 'grape', op: 'contains' },
+    },
+    { key: 'quantity', title: 'Flaschen', type: 'number', value: (w) => w.quantity, column: 'default' },
     {
       key: 'window',
       title: 'Trinkfenster',
-      type: 'number',
-      value: (w) => w.drinkFrom ?? w.drinkUntil,
+      type: 'string',
+      value: (w) => windowState(w, year),
       display: windowText,
-      defaultVisible: true,
+      order: WINDOW_STATES,
+      column: 'default',
+      pivot: true,
+    },
+    { key: 'price', title: 'Preis', type: 'number', value: (w) => w.purchasePrice, format: 'currency', column: 'default' },
+    {
+      key: 'rack',
+      title: 'Regal',
+      type: 'string',
+      value: () => null,
+      values: rackNames,
+      pivot: true,
+      drill: { key: 'rack', op: 'contains' },
     },
     {
-      key: 'price',
-      title: 'Preis',
-      type: 'number',
-      value: (w) => w.purchasePrice,
-      display: (w) => formatPrice(w.purchasePrice),
-      defaultVisible: true,
-    },
-  ];
-}
-
-export function cellarFilters(year: number): FilterDef<Wine>[] {
-  return [
-    {
-      kind: 'text',
-      key: 'q',
-      title: 'Suche',
-      texts: (w) => [w.name, w.producer, w.region?.name, ...w.grapes.map((g) => g.name)],
-    },
-    { kind: 'multi', key: 'type', title: 'Weinart', values: (w) => [wineTypeLabel(w.type)], options: WINE_TYPES.map((t) => t.label) },
-    { kind: 'multi', key: 'country', title: 'Land', values: (w) => text(w.country?.name) },
-    { kind: 'multi', key: 'region', title: 'Region', values: (w) => text(w.region?.name) },
-    { kind: 'multi', key: 'grape', title: 'Rebsorte', values: (w) => w.grapes.map((g) => g.name) },
-    { kind: 'range', key: 'vintage', title: 'Jahrgang', input: 'number', value: (w) => w.vintage },
-    {
-      kind: 'multi',
-      key: 'window',
-      title: 'Trinkfenster',
-      values: (w) => text(windowState(w, year)),
-      options: WINDOW_OPTIONS,
-    },
-    {
-      kind: 'multi',
       key: 'placement',
       title: 'Regal-Platzierung',
-      values: (w) => [...(w.slots.length > 0 ? [PLACEMENT_IN_RACK] : []), ...(w.unplacedCount > 0 ? [PLACEMENT_UNPLACED] : [])],
-      options: [PLACEMENT_IN_RACK, PLACEMENT_UNPLACED],
+      type: 'string',
+      value: placement,
+      order: [PLACEMENT_IN_RACK, PLACEMENT_PARTLY, PLACEMENT_UNPLACED],
     },
   ];
 }
 
-export function cellarDimensions(year: number): Dimension<Wine>[] {
-  return [
-    { key: 'type', title: 'Weinart', values: (w) => [wineTypeLabel(w.type)], order: WINE_TYPES.map((t) => t.label) },
-    { key: 'country', title: 'Land', values: (w) => text(w.country?.name) },
-    { key: 'region', title: 'Region', values: (w) => text(w.region?.name) },
-    { key: 'grape', title: 'Rebsorte', values: (w) => w.grapes.map((g) => g.name) },
-    { key: 'producer', title: 'Winzer', values: (w) => text(w.producer) },
-    { key: 'vintage', title: 'Jahrgang', values: (w) => (w.vintage === null ? [] : [String(w.vintage)]) },
-    {
-      key: 'window',
-      title: 'Trinkfenster',
-      values: (w) => text(windowState(w, year)),
-      order: ['Trinkreif', 'Noch warten', 'Überschritten'],
-    },
-    { key: 'rack', title: 'Regal', values: rackNames },
-  ];
-}
+/** Durchsuchte Felder der Suche. */
+export const CELLAR_SEARCH_KEYS = ['name', 'producer', 'region', 'grape'];
 
-const integer = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+/** Frühere Adressparameter (`?type=Rot`, `?vintageFrom=2015` …). */
+export const CELLAR_LEGACY: LegacyParam[] = [
+  {
+    param: 'type',
+    key: 'type',
+    kind: 'multi',
+    map: (v) => WINE_TYPES.find((t) => t.value.toLowerCase() === v.toLowerCase())?.label ?? v,
+  },
+  { param: 'country', key: 'country', kind: 'multi' },
+  { param: 'region', key: 'region', kind: 'multi' },
+  { param: 'grape', key: 'grape', kind: 'multi' },
+  { param: 'window', key: 'window', kind: 'multi' },
+  { param: 'placement', key: 'placement', kind: 'multi' },
+  { param: 'vintageFrom', key: 'vintage', kind: 'from' },
+  { param: 'vintageTo', key: 'vintage', kind: 'to' },
+];
 
-export function cellarMeasures(): Measure<Wine>[] {
+export function cellarMeasures(): ListMeasure<Wine>[] {
   return [
-    { key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: (w) => w.quantity, format: (v) => integer.format(v) },
-    { key: 'wines', title: 'Anzahl Weine', kind: 'sum', value: () => 1, format: (v) => integer.format(v) },
+    { key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: (w) => w.quantity, format: 'integer' },
+    { key: 'wines', title: 'Anzahl Weine', kind: 'sum', value: () => 1, format: 'integer' },
     {
       key: 'price',
       title: 'Summe Kaufpreis',
       kind: 'sum',
       value: (w) => (w.purchasePrice === null ? null : w.purchasePrice * w.quantity),
-      format: (v) => formatPrice(v),
+      format: 'currency',
     },
   ];
 }
 
-export const CELLAR_PIVOT: PivotConfig = { row: 'type', col: 'country', measure: 'bottles' };
+export const CELLAR_PIVOT: PivotLayout = { rows: ['type'], cols: ['country'], data: ['bottles'] };

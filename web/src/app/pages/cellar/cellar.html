@@ -24,34 +24,19 @@
   <div class="field">
     <label for="search" class="sr-only">Weine durchsuchen</label>
     <input id="search" type="search" placeholder="Name, Weingut, Region oder Rebsorte suchen" autocomplete="off"
-      [ngModel]="view.filters()['q'] ?? ''" (ngModelChange)="view.setFilter('q', $event)" />
-  </div>
-
-  <div class="chips" role="group" aria-label="Nach Weinart filtern">
-    <button type="button" class="chip" [attr.aria-pressed]="!typeActive()" (click)="setType(null)">Alle</button>
-    @for (t of types; track t.value) {
-      <button type="button" class="chip" [attr.aria-pressed]="singleType() === t.label" (click)="setType(t.label)">
-        {{ t.label }}
-      </button>
-    }
+      [ngModel]="view.search()" (ngModelChange)="view.setSearch($event)" />
   </div>
 
   <div class="view-tools">
     <app-view-switch [view]="view.view()" (changed)="view.setView($event)" />
-    @if (view.view() === 'table') {
-      <app-column-picker [columns]="allColumns" [visible]="visibleKeys()" (changed)="view.setColumns($event)" />
-      <button type="button" class="btn btn-small" [disabled]="tableRows().length === 0" (click)="exportTable()">
-        Als CSV exportieren
-      </button>
-    }
   </div>
 
-  <app-filter-bar [defs]="filterDefs" [rows]="allWines()" [state]="view.filters()" [hidden]="['q', 'type']"
-    (stateChange)="view.setFilters($event)" (reset)="view.resetFilters()" />
+  <app-list-filter [fields]="fields" [filter]="view.filter()" [on]="view.filterOn()" [options]="options()"
+    (filterChange)="view.setFilter($event)" (toggle)="view.toggleFilter()" />
 
   @if (view.drilled() && view.view() !== 'pivot') {
     <div class="banner" role="status">
-      Aufgeschlüsselt: {{ view.drillLabel() }}
+      Aufgeschlüsselt: Einträge der angetippten Pivotzelle
       <button type="button" class="btn-link" (click)="view.endDrill()">Zurück zum Pivot</button>
     </div>
   }
@@ -65,14 +50,18 @@
   @if (loading()) {
     <p class="muted" role="status">Keller wird geladen …</p>
   } @else if (view.view() === 'pivot') {
-    <app-pivot-table [rows]="wines()" [dimensions]="dimensions" [measures]="measures" [config]="view.pivotConfig()"
-      fileName="keller-pivot.csv" (configChange)="view.setPivot($event)" (cell)="onCell($event)" />
-  } @else if (wines().length === 0 && !error()) {
-    @if (filtered()) {
+    @defer {
+      <app-dx-pivot-grid [rows]="wines()" [fields]="fields" [measures]="measures" [layout]="pivotLayout" storageId="cellar"
+        label="Pivot der Weine im Keller" fileName="keller-pivot.csv" (drill)="view.drill($event)" />
+    } @placeholder {
+      <p class="muted" role="status">Pivot wird geladen …</p>
+    }
+  } @else if (wines().length === 0 && !error() && view.view() === 'tiles') {
+    @if (view.filtered()) {
       <div class="empty">
         <h2>Keine passenden Einträge</h2>
         <p>Ändere die Suche oder die Filter.</p>
-        <button type="button" class="btn" (click)="view.resetFilters()">Filter zurücksetzen</button>
+        <button type="button" class="btn" (click)="view.reset()">Filter zurücksetzen</button>
       </div>
     } @else {
       <div class="empty">
@@ -83,8 +72,12 @@
       </div>
     }
   } @else if (view.view() === 'table') {
-    <app-data-table [rows]="tableRows()" [columns]="visibleColumns()" [sortKey]="view.sortKey()"
-      [sortDir]="view.sortDir()" [link]="link" label="Weine im Keller" (sortChange)="view.toggleSort($event)" />
+    @defer {
+      <app-dx-data-grid [rows]="searched()" [fields]="fields" [filter]="view.activeFilter()" [link]="link" storageId="cellar"
+        label="Weine im Keller" fileName="keller.csv" (filterChange)="view.setFilter($event)" />
+    } @placeholder {
+      <p class="muted" role="status">Tabelle wird geladen …</p>
+    }
   } @else {
     <ul class="wines">
       @for (wine of wines(); track wine.id) {

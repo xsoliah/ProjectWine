@@ -23,6 +23,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "{dx.light.css,dx.dark.css,icons/**,fonts/**}",
+                "input": "node_modules/devextreme/dist/css",
+                "output": "dx"
               }
             ],
             "styles": [

@@ -1,59 +1,66 @@
-import { formatDate, formatPrice } from '../../core/format';
+import { LegacyParam } from '../../core/filter-expr';
+import { formatDate } from '../../core/format';
 import { CONSUMPTION_KINDS, WINE_TYPES, kindLabel, wineTypeLabel } from '../../core/labels';
-import { Column, Dimension, FilterDef, Measure, PivotConfig } from '../../core/list-views';
+import { ListField, ListMeasure, parseIsoDate } from '../../core/list-model';
+import { PivotLayout } from '../../core/list-view-state';
 import { ArchiveEntry } from '../../core/models';
 
-const text = (value: string | null | undefined): string[] => (value ? [value] : []);
-const year = (e: ArchiveEntry): string => e.date.slice(0, 4);
-const month = (e: ArchiveEntry): string => e.date.slice(0, 7);
-
-export const ARCHIVE_PIVOT: PivotConfig = { row: 'year', col: 'kind', measure: 'bottles' };
-
-/** Spalten der Archivtabelle; die erste (Wein) ist immer sichtbar. */
-export function archiveColumns(): Column<ArchiveEntry>[] {
+/** Felder des Archivs; die erste (Wein) ist immer sichtbar. Das Datum ist im Pivot nach Jahr, Quartal und Monat gruppiert. */
+export function archiveFields(): ListField<ArchiveEntry>[] {
   return [
-    { key: 'wine', title: 'Wein', type: 'text', value: (e) => e.wineName, defaultVisible: true },
-    { key: 'date', title: 'Datum', type: 'date', value: (e) => e.date, display: (e) => formatDate(e.date), defaultVisible: true },
-    { key: 'producer', title: 'Winzer', type: 'text', value: (e) => e.producer, defaultVisible: false },
-    { key: 'vintage', title: 'Jahrgang', type: 'number', value: (e) => e.vintage, defaultVisible: false },
-    { key: 'type', title: 'Art', type: 'text', value: (e) => wineTypeLabel(e.wineType), defaultVisible: true },
-    { key: 'kind', title: 'Abgangsart', type: 'text', value: (e) => kindLabel(e.kind), defaultVisible: true },
-    { key: 'quantity', title: 'Anzahl', type: 'number', value: (e) => e.quantity, defaultVisible: true },
-    { key: 'rating', title: 'Bewertung', type: 'number', value: (e) => e.rating, defaultVisible: true },
-    { key: 'price', title: 'Preis', type: 'number', value: (e) => e.price, display: (e) => formatPrice(e.price), defaultVisible: true },
-    { key: 'counterparty', title: 'Gegenpartei', type: 'text', value: (e) => e.counterparty, defaultVisible: false },
+    { key: 'wine', title: 'Wein', type: 'string', value: (e) => e.wineName, column: 'default' },
+    {
+      key: 'date',
+      title: 'Datum',
+      type: 'date',
+      value: (e) => parseIsoDate(e.date),
+      display: (e) => formatDate(e.date),
+      column: 'default',
+      pivot: true,
+    },
+    { key: 'producer', title: 'Winzer', type: 'string', value: (e) => e.producer, column: 'optional', pivot: true },
+    { key: 'vintage', title: 'Jahrgang', type: 'number', value: (e) => e.vintage, column: 'optional', pivot: true },
+    {
+      key: 'type',
+      title: 'Weinart',
+      type: 'string',
+      value: (e) => wineTypeLabel(e.wineType),
+      order: WINE_TYPES.map((t) => t.label),
+      column: 'default',
+      pivot: true,
+    },
+    {
+      key: 'kind',
+      title: 'Abgangsart',
+      type: 'string',
+      value: (e) => kindLabel(e.kind),
+      order: CONSUMPTION_KINDS.map((k) => k.label),
+      column: 'default',
+      pivot: true,
+    },
+    { key: 'quantity', title: 'Anzahl', type: 'number', value: (e) => e.quantity, column: 'default' },
+    { key: 'rating', title: 'Bewertung', type: 'number', value: (e) => e.rating, column: 'default', pivot: true },
+    { key: 'price', title: 'Preis', type: 'number', value: (e) => e.price, format: 'currency', column: 'default' },
+    { key: 'counterparty', title: 'Gegenpartei', type: 'string', value: (e) => e.counterparty, column: 'optional' },
   ];
 }
 
-export function archiveFilters(): FilterDef<ArchiveEntry>[] {
+export const ARCHIVE_LEGACY: LegacyParam[] = [
+  { param: 'kind', key: 'kind', kind: 'multi' },
+  { param: 'type', key: 'type', kind: 'multi' },
+  { param: 'periodFrom', key: 'date', kind: 'from' },
+  { param: 'periodTo', key: 'date', kind: 'to' },
+  { param: 'ratingMin', key: 'rating', kind: 'min' },
+];
+
+export function archiveMeasures(): ListMeasure<ArchiveEntry>[] {
   return [
-    { kind: 'multi', key: 'kind', title: 'Abgangsart', values: (e) => [kindLabel(e.kind)], options: CONSUMPTION_KINDS.map((k) => k.label) },
-    { kind: 'multi', key: 'type', title: 'Weinart', values: (e) => [wineTypeLabel(e.wineType)], options: WINE_TYPES.map((t) => t.label) },
-    { kind: 'range', key: 'period', title: 'Zeitraum', input: 'date', value: (e) => e.date },
-    { kind: 'min', key: 'rating', title: 'Bewertung', value: (e) => e.rating, steps: [1, 2, 3, 4, 5] },
+    { key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: (e) => e.quantity, format: 'integer' },
+    { key: 'entries', title: 'Anzahl Einträge', kind: 'sum', value: () => 1, format: 'integer' },
+    { key: 'price', title: 'Summe Preis', kind: 'sum', value: (e) => e.price, format: 'currency' },
+    { key: 'rating', title: 'Durchschnittsbewertung', kind: 'avg', value: (e) => e.rating, format: 'decimal1' },
   ];
 }
 
-export function archiveDimensions(): Dimension<ArchiveEntry>[] {
-  return [
-    { key: 'type', title: 'Weinart', values: (e) => [wineTypeLabel(e.wineType)], order: WINE_TYPES.map((t) => t.label) },
-    { key: 'kind', title: 'Abgangsart', values: (e) => [kindLabel(e.kind)], order: CONSUMPTION_KINDS.map((k) => k.label) },
-    { key: 'producer', title: 'Winzer', values: (e) => text(e.producer) },
-    { key: 'vintage', title: 'Jahrgang', values: (e) => (e.vintage === null ? [] : [String(e.vintage)]) },
-    { key: 'year', title: 'Jahr', values: (e) => [year(e)] },
-    { key: 'month', title: 'Monat', values: (e) => [month(e)] },
-    { key: 'rating', title: 'Bewertung', values: (e) => (e.rating === null ? [] : [String(e.rating)]) },
-  ];
-}
-
-const integer = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
-const oneDecimal = new Intl.NumberFormat('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-export function archiveMeasures(): Measure<ArchiveEntry>[] {
-  return [
-    { key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: (e) => e.quantity, format: (v) => integer.format(v) },
-    { key: 'entries', title: 'Anzahl Einträge', kind: 'sum', value: () => 1, format: (v) => integer.format(v) },
-    { key: 'price', title: 'Summe Preis', kind: 'sum', value: (e) => e.price, format: (v) => formatPrice(v) },
-    { key: 'rating', title: 'Durchschnittsbewertung', kind: 'avg', value: (e) => e.rating, format: (v) => oneDecimal.format(v) },
-  ];
-}
+/** Vorgabe: Datum (Jahr → Quartal → Monat, zunächst nur Jahre) × Abgangsart mit Flaschen. */
+export const ARCHIVE_PIVOT: PivotLayout = { rows: ['date'], cols: ['kind'], data: ['bottles'] };
