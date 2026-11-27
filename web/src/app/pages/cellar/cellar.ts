@@ -18,7 +18,7 @@ import { Icon } from '../../shared/icon';
 import { ListFilter } from '../../shared/list-filter';
 import { TypeBadge } from '../../shared/type-badge';
 import { ViewSwitch } from '../../shared/view-switch';
-import { CELLAR_LEGACY, CELLAR_PIVOT, CELLAR_SEARCH_KEYS, cellarFields, cellarMeasures } from './cellar.views';
+import { CELLAR_LEGACY, CELLAR_PIVOT, CELLAR_PRESETS, CELLAR_SEARCH_KEYS, cellarFields, cellarKpis, cellarMeasures } from './cellar.views';
 
 @Component({
   selector: 'app-cellar',
@@ -38,6 +38,8 @@ export class Cellar {
   protected readonly fields = cellarFields(this.year);
   protected readonly measures = cellarMeasures();
   protected readonly pivotLayout = CELLAR_PIVOT;
+  protected readonly presets = CELLAR_PRESETS;
+  protected readonly kpis = cellarKpis();
 
   /** Ansicht, Suche und Filter stehen in der URL (?view=, ?q=, ?f=), damit sie eine Einzelansicht überleben. */
   protected readonly view = new ListViewState<Wine>({

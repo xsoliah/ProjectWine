@@ -2,6 +2,7 @@ import { wineTitle } from '../../core/format';
 import { WINE_TYPES, wineTypeLabel } from '../../core/labels';
 import { ListField, ListMeasure } from '../../core/list-model';
 import { PivotLayout } from '../../core/list-view-state';
+import { ListKpi, PivotPreset } from '../../core/pivot-insights';
 import { Rack, RackSummary } from '../../core/models';
 
 export const FILL_EMPTY = 'Leer';
@@ -87,7 +88,22 @@ export function factFields(): ListField<RackFact>[] {
 }
 
 export function factMeasures(): ListMeasure<RackFact>[] {
-  return [{ key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: () => 1, format: 'integer' }];
+  return [
+    { key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: () => 1, format: 'integer' },
+    { key: 'share', title: 'Anteil Flaschen', kind: 'sum', value: () => 1, format: 'integer' },
+  ];
 }
 
-export const RACKS_PIVOT: PivotLayout = { rows: ['rack'], cols: ['type'], data: ['bottles'] };
+/** Vorlage des Regale-Pivots (zugleich Vorgabe): Flaschen und deren Anteil je Regal und Weinart. */
+export const RACKS_PRESETS: PivotPreset[] = [
+  { id: 'rack', title: 'Regal × Weinart', layout: { rows: ['rack'], cols: ['type'], data: ['bottles', 'share'], percent: ['share'] } },
+];
+
+export const RACKS_PIVOT: PivotLayout = RACKS_PRESETS[0].layout;
+
+export function factKpis(): ListKpi<RackFact>[] {
+  return [
+    { key: 'bottles', title: 'Flaschen', format: 'integer', value: (rows) => rows.length },
+    { key: 'racks', title: 'Regale', format: 'integer', value: (rows) => new Set(rows.map((r) => r.rack)).size },
+  ];
+}

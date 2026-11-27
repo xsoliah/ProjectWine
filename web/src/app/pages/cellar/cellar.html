@@ -51,7 +51,7 @@
     <p class="muted" role="status">Keller wird geladen …</p>
   } @else if (view.view() === 'pivot') {
     @defer {
-      <app-dx-pivot-grid [rows]="wines()" [fields]="fields" [measures]="measures" [layout]="pivotLayout" storageId="cellar"
+      <app-dx-pivot-grid [rows]="wines()" [fields]="fields" [measures]="measures" [layout]="pivotLayout" [presets]="presets" [kpis]="kpis" storageId="cellar"
         label="Pivot der Weine im Keller" fileName="keller-pivot.csv" (drill)="view.drill($event)" />
     } @placeholder {
       <p class="muted" role="status">Pivot wird geladen …</p>

@@ -3,6 +3,7 @@ import { LegacyParam } from '../../core/filter-expr';
 import { WINE_TYPES, wineTypeLabel } from '../../core/labels';
 import { ListField, ListMeasure } from '../../core/list-model';
 import { PivotLayout } from '../../core/list-view-state';
+import { ListKpi, PivotPreset, sumOf } from '../../core/pivot-insights';
 import { Wine } from '../../core/models';
 
 /** Trinkfenster-Status eines Weins als Anzeigetext; `null` ohne Angabe. */
@@ -132,4 +133,39 @@ export function cellarMeasures(): ListMeasure<Wine>[] {
   ];
 }
 
-export const CELLAR_PIVOT: PivotLayout = { rows: ['type'], cols: ['country'], data: ['bottles'] };
+/** Vorlagen des Keller-Pivots; die erste ist die Vorgabe (Länder zugeklappt, größte zuerst). */
+export const CELLAR_PRESETS: PivotPreset[] = [
+  {
+    id: 'country',
+    title: 'Land × Weinart',
+    layout: { rows: ['country', 'region'], cols: ['type'], data: ['bottles', 'price'], sort: { measure: 'bottles', dir: 'desc' } },
+  },
+  { id: 'window', title: 'Trinkfenster × Weinart', layout: { rows: ['window'], cols: ['type'], data: ['bottles'] } },
+  { id: 'vintage', title: 'Jahrgang × Weinart', layout: { rows: ['vintage'], cols: ['type'], data: ['bottles'] } },
+  {
+    id: 'producer',
+    title: 'Winzer (Top 10)',
+    layout: {
+      rows: ['producer'],
+      cols: [],
+      data: ['bottles', 'price'],
+      sort: { measure: 'bottles', dir: 'desc' },
+      top: { field: 'producer', measure: 'bottles', n: 10 },
+    },
+  },
+];
+
+export const CELLAR_PIVOT: PivotLayout = CELLAR_PRESETS[0].layout;
+
+export function cellarKpis(): ListKpi<Wine>[] {
+  return [
+    { key: 'bottles', title: 'Flaschen', format: 'integer', value: (rows) => sumOf(rows, (w) => w.quantity) },
+    { key: 'wines', title: 'Weine', format: 'integer', value: (rows) => rows.length },
+    {
+      key: 'value',
+      title: 'Wert',
+      format: 'currency',
+      value: (rows) => sumOf(rows, (w) => (w.purchasePrice === null ? null : w.purchasePrice * w.quantity)),
+    },
+  ];
+}

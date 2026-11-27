@@ -14,7 +14,7 @@ import { Icon } from '../../shared/icon';
 import { ListFilter } from '../../shared/list-filter';
 import { Modal } from '../../shared/modal';
 import { ViewSwitch } from '../../shared/view-switch';
-import { RACKS_PIVOT, RackRow, bottleFacts, factFields, factMeasures, rackFields, rackRows } from './racks.views';
+import { RACKS_PIVOT, RACKS_PRESETS, RackRow, factKpis, bottleFacts, factFields, factMeasures, rackFields, rackRows } from './racks.views';
 
 interface RackDraft {
   id: string | null;
@@ -69,7 +69,7 @@ const MAX_SIZE = 50;
           <p class="muted" role="status">Belegung der Regale wird geladen …</p>
         } @else {
           @defer {
-            <app-dx-pivot-grid [rows]="facts()" [fields]="factFields" [measures]="factMeasures" [layout]="pivotLayout"
+            <app-dx-pivot-grid [rows]="facts()" [fields]="factFields" [measures]="factMeasures" [layout]="pivotLayout" [presets]="presets" [kpis]="kpis"
               storageId="racks" label="Pivot der Regale" fileName="regale-pivot.csv" (drill)="view.drill($event)" />
           } @placeholder {
             <p class="muted" role="status">Pivot wird geladen …</p>
@@ -160,6 +160,8 @@ export class Racks {
   protected readonly factFields = factFields();
   protected readonly factMeasures = factMeasures();
   protected readonly pivotLayout = RACKS_PIVOT;
+  protected readonly presets = RACKS_PRESETS;
+  protected readonly kpis = factKpis();
   protected readonly view = new ListViewState<RackRow>({ id: 'racks', fields: this.fields });
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);

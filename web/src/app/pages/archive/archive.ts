@@ -9,7 +9,7 @@ import { DxDataGrid } from '../../shared/dx/dx-data-grid';
 import { DxPivotGrid } from '../../shared/dx/dx-pivot-grid';
 import { ListFilter } from '../../shared/list-filter';
 import { ViewSwitch } from '../../shared/view-switch';
-import { ARCHIVE_LEGACY, ARCHIVE_PIVOT, archiveFields, archiveMeasures } from './archive.views';
+import { ARCHIVE_LEGACY, ARCHIVE_PIVOT, ARCHIVE_PRESETS, archiveFields, archiveKpis, archiveMeasures } from './archive.views';
 
 @Component({
   selector: 'app-archive',
@@ -43,7 +43,7 @@ import { ARCHIVE_LEGACY, ARCHIVE_PIVOT, archiveFields, archiveMeasures } from '.
         <p class="muted" role="status">Archiv wird geladen …</p>
       } @else if (view.view() === 'pivot') {
         @defer {
-          <app-dx-pivot-grid [rows]="entries()" [fields]="fields" [measures]="measures" [layout]="pivotLayout"
+          <app-dx-pivot-grid [rows]="entries()" [fields]="fields" [measures]="measures" [layout]="pivotLayout" [presets]="presets" [kpis]="kpis"
             storageId="archive" label="Pivot des Archivs" fileName="archiv-pivot.csv" (drill)="view.drill($event)" />
         } @placeholder {
           <p class="muted" role="status">Pivot wird geladen …</p>
@@ -84,6 +84,8 @@ export class Archive {
   protected readonly fields = archiveFields();
   protected readonly measures = archiveMeasures();
   protected readonly pivotLayout = ARCHIVE_PIVOT;
+  protected readonly presets = ARCHIVE_PRESETS;
+  protected readonly kpis = archiveKpis();
 
   protected readonly view = new ListViewState<ArchiveEntry>({
     id: 'archive',

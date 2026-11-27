@@ -147,6 +147,10 @@ Filter-Editors geladen, die Kachelansicht und der App-Start laden sie nicht.
   zugehörigen Einträge als Tabelle (alle Ebenen als Filter, „Zurück zum Pivot“). Wird die Rebsorte als Feld verwendet,
   zählen Flaschen mit mehreren Rebsorten bei jeder mit; die Summen können dann über der Flaschenzahl liegen (ein Hinweis
   erklärt das).
+  Das Pivot öffnet mit einer aussagekräftigen Vorgabe (Keller: Land › Region × Weinart mit Flaschen und Kaufpreis, größte
+  Länder zuerst) und zeigt darüber Kennzahlkacheln der gefilterten Einträge. Die Auswahl „Ansicht“ bietet Vorlagen (z. B.
+  Trinkfenster × Weinart, Winzer Top 10); dazu kommen eine abschaltbare **Heatmap**, „Anteil %“ je Kennzahl und ein
+  **Diagramm**, das dem Pivot folgt (auf dem Handy zunächst ausgeblendet). Die Schalter werden je Liste im Gerät gemerkt.
 - Tabelle und Pivot lassen sich als CSV exportieren (UTF-8 mit BOM, Semikolon). Sortieren, Filtern und Pivotieren laufen im
   Frontend, das Backend ist unverändert.
 - Größe (Produktions-Build, unkomprimiert): Start der App unverändert klein (Initial 339 kB); die Tabelle lädt beim ersten Aufruf
