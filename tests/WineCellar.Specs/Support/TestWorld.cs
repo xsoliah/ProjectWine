@@ -81,7 +81,7 @@ public sealed class TestWorld : IDisposable
         Suggestions = new PlacementSuggestionService(Db, User);
         Images = new ImageService(Db, User);
         LabelImages = new LabelImageService(Db, User, Images, Extractor);
-        BackImages = new BackImageService(Db, User, Images);
+        BackImages = new BackImageService(Db, User, Images, Extractor);
         var captureOptions = Options.Create(CaptureOptions);
         Bottles = new BottleAnalyzer(new SkiaBottleImageExtractor());
         Captures = new CaptureService(Db, User, Images, Extractor, Bottles, Availability, Queue, captureOptions, TimeProvider.System);

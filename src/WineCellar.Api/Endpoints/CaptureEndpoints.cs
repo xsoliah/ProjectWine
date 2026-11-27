@@ -103,17 +103,21 @@ public static class CaptureEndpoints
 
         var back = app.MapGroup("/api/wines/{id:guid}/back-image").RequireAuthorization().WithTags("Wines");
 
-        // Multipart: image (the whole back label photo, stored unedited).
+        // Multipart: image (photo) + corners (JSON array of four {x, y}, normalized 0..1). The server cuts the back label.
         back.MapPut("", async (Guid id, HttpRequest request, BackImageService service, CancellationToken ct) =>
             {
                 if (!request.HasFormContentType) throw new DomainException("Bitte das Foto als multipart/form-data senden.");
                 var form = await request.ReadFormAsync(ct);
                 var photo = await ReadAsync(form.Files.GetFile("image"), ct)
                             ?? throw new DomainException("Bitte ein Foto auswählen.");
-                return TypedResults.Ok(await service.SetAsync(id, photo, ct));
+                return TypedResults.Ok(await service.SetAsync(id, photo, ParseCorners(form["corners"]), ct));
             })
             .WithMetadata(new RequestSizeLimitAttribute(MaxUploadBytes))
             .DisableAntiforgery();
+
+        // Cut the back label again from the stored original (or the unedited back photo).
+        back.MapPut("corners", async (Guid id, SetLabelCornersRequest request, BackImageService service, CancellationToken ct) =>
+            TypedResults.Ok(await service.SetCornersAsync(id, request.Corners, ct)));
 
         back.MapDelete("", async (Guid id, BackImageService service, CancellationToken ct) =>
             TypedResults.Ok(await service.RemoveAsync(id, ct)));

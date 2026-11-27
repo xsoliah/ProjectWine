@@ -283,11 +283,17 @@ export class ApiService {
     return firstValueFrom(this.http.delete<Wine>(`/api/wines/${wineId}/label-image`));
   }
 
-  /** Sets or replaces the back label photo (stored whole; no research, no quota). */
-  setBackImage(wineId: string, photo: Blob): Promise<Wine> {
+  /** Sets or replaces the back label: the server cuts it out of the photo with the corners (no research, no quota). */
+  setBackImage(wineId: string, photo: Blob, corners: LabelPoint[]): Promise<Wine> {
     const form = new FormData();
     form.append('image', photo, 'back.jpg');
+    form.append('corners', JSON.stringify(corners));
     return firstValueFrom(this.http.put<Wine>(`/api/wines/${wineId}/back-image`, form));
+  }
+
+  /** Cuts the back label again from the original (or the unedited back photo). */
+  setBackCorners(wineId: string, corners: LabelPoint[]): Promise<Wine> {
+    return firstValueFrom(this.http.put<Wine>(`/api/wines/${wineId}/back-image/corners`, { corners }));
   }
 
   removeBackImage(wineId: string): Promise<Wine> {

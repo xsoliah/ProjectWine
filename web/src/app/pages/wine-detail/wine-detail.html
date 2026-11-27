@@ -72,6 +72,7 @@
           <app-icon name="camera" /> {{ w.backImageId ? 'Neue Rückseite' : 'Rückseite hinzufügen' }}
         </button>
         @if (w.backImageId) {
+          <button type="button" class="btn btn-small" [disabled]="backBusy()" (click)="adjustBack()">Zuschnitt der Rückseite anpassen</button>
           <button type="button" class="btn btn-small" [disabled]="backBusy()" (click)="removeBack()">Rückseite entfernen</button>
         }
         <input #backInput type="file" accept="image/*" capture="environment" hidden (change)="pickBack($event)" />
@@ -197,6 +198,11 @@
     @if (labelEditor(); as e) {
       <app-label-corner-editor [src]="e.url" [corners]="e.corners" [busy]="labelBusy()"
         (confirmed)="saveLabel($event)" (cancelled)="closeLabelEditor()" />
+    }
+
+    @if (backEditor(); as e) {
+      <app-label-corner-editor [src]="e.url" [corners]="e.corners" [busy]="backBusy()"
+        (confirmed)="saveBack($event)" (cancelled)="closeBackEditor()" />
     }
 
     @if (bottleEditor(); as e) {

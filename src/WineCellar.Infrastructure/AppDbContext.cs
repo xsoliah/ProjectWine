@@ -41,6 +41,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             // cascade path from the user (user -> image and user -> wine); the services delete the images themselves.
             e.HasIndex(x => x.LabelImageId);
             e.Property(x => x.LabelCornersJson).HasMaxLength(1000);
+            e.Property(x => x.BackCornersJson).HasMaxLength(1000);
             e.Property(x => x.BottleShapeJson).HasMaxLength(BottleShapeJsonMaxLength);
             e.Property(x => x.Quantity);
             e.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);

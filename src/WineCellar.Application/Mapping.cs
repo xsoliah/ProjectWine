@@ -13,7 +13,7 @@ internal static class Mapping
         w.DrinkFrom, w.DrinkUntil, w.PurchasePrice, w.Notes,
         w.LabelImageId, w.LabelSourceImageId, Capture.LabelCornersJson.ToDto(w.LabelCornersJson),
         w.BottleImageId, Capture.BottleShapeJson.Deserialize(w.BottleShapeJson),
-        w.BackImageId, w.BottleForm);
+        w.BackImageId, w.BottleForm, w.BackSourceImageId, Capture.LabelCornersJson.ToDto(w.BackCornersJson));
 
     /// <summary>Sorted by rack name, row, column (the order in which bottles are taken out automatically).</summary>
     public static IReadOnlyList<SlotLocationDto> ToLocations(this IEnumerable<RackSlot> slots) => slots
