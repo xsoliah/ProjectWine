@@ -40,7 +40,17 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { BOTTLE_LENGTH, BOTTLE_RADIUS, STANDARD_WALL, lathePoints } from '../core/bottle';
+import {
+  BOTTLE_FORM_SPECS,
+  BOTTLE_LENGTH,
+  capsuleDimensions,
+  formBodyRadius,
+  lathePoints,
+  rackBottleScale,
+  resolveForm,
+  standardShape,
+} from '../core/bottle';
+import { BottleForm } from '../core/models';
 import { ImageCache } from '../core/images';
 import { Rack, RackSlot } from '../core/models';
 import { cellFromIndex, cellIndex } from '../core/racks';
@@ -69,32 +79,52 @@ const PULL_OVERHANG = 1.15;
 const MAX_AZIMUTH = (45 * Math.PI) / 180;
 const MAX_TILT = (25 * Math.PI) / 180;
 
+const FORMS = Object.keys(BOTTLE_FORM_SPECS) as BottleForm[];
+
 /**
- * Bordeaux bottle as a surface of revolution: straight body, high pronounced shoulders, short neck, lip.
+ * A bottle as a surface of revolution (straight body, shoulders, neck, lip) of the given form.
  * Built along +Y with the base at 0, then turned so the neck points to the viewer (+Z) and centred.
  */
-function bordeauxBottle(): BufferGeometry {
-  const geometry = new LatheGeometry(lathePoints(STANDARD_WALL).map(([r, y]) => new Vector2(r, y)), 20);
+function bottleBody(form: BottleForm): BufferGeometry {
+  const geometry = new LatheGeometry(lathePoints(BOTTLE_FORM_SPECS[form].wall).map(([r, y]) => new Vector2(r, y)), 20);
   geometry.translate(0, -BOTTLE_LENGTH / 2, 0);
   geometry.rotateX(Math.PI / 2);
   return geometry;
 }
 
-/** Foil capsule over the neck. */
-function capsule(): BufferGeometry {
-  const geometry = new CylinderGeometry(0.128, 0.128, 0.5, 16);
-  geometry.translate(0, 2.66 - BOTTLE_LENGTH / 2, 0);
+/** Foil capsule over the neck (a slightly tapering cylinder; long on sparkling wine bottles). */
+function capsule(form: BottleForm): BufferGeometry {
+  const foil = capsuleDimensions(standardShape('Red', form), form);
+  const length = (foil.top - foil.start) * BOTTLE_LENGTH;
+  const geometry = new CylinderGeometry(foil.topRadius * BOTTLE_LENGTH, foil.bottomRadius * BOTTLE_LENGTH, length, 16);
+  geometry.translate(0, ((foil.top + foil.start) / 2) * BOTTLE_LENGTH - BOTTLE_LENGTH / 2, 0);
   geometry.rotateX(Math.PI / 2);
   return geometry;
 }
 
 /** Slightly curved label on top of the bottle body (the side that faces the viewer once the rolled bottle stands upright). */
-function labelPatch(): BufferGeometry {
+function labelPatch(form: BottleForm): BufferGeometry {
   const arc = (110 * Math.PI) / 180;
-  const geometry = new CylinderGeometry(BOTTLE_RADIUS + 0.004, BOTTLE_RADIUS + 0.004, 1.0, 16, 1, true, Math.PI - arc / 2, arc);
+  const radius = formBodyRadius(form) + 0.004;
+  const geometry = new CylinderGeometry(radius, radius, 1.0, 16, 1, true, Math.PI - arc / 2, arc);
   geometry.translate(0, 0.95 - BOTTLE_LENGTH / 2, 0);
   geometry.rotateX(Math.PI / 2);
   return geometry;
+}
+
+/** Instanced meshes of one bottle form; the instances are the slots whose wine has this form. */
+interface FormMeshes {
+  bottles: InstancedMesh;
+  capsules: InstancedMesh;
+  labels: InstancedMesh;
+  labelRects: InstancedBufferAttribute;
+}
+
+/** Which form mesh, which instance and which size a slot's bottle has. */
+interface Placement {
+  form: BottleForm;
+  index: number;
+  scale: number;
 }
 
 /** 3D view of one rack (WebGL via three.js). Tapping a bottle or slot selects its row, whose bottles slide out. */
@@ -160,10 +190,11 @@ export class Rack3d {
   private frame = 0;
   private startDistance = 10;
 
-  private readonly bottleGeometry = bordeauxBottle();
-  private readonly capsuleGeometry = capsule();
+  private readonly formGeometries = new Map<BottleForm, { bottle: BufferGeometry; capsule: BufferGeometry; label: BufferGeometry }>(
+    FORMS.map((form) => [form, { bottle: bottleBody(form), capsule: capsule(form), label: labelPatch(form) }]),
+  );
+  private placements: Placement[] = [];
   private readonly images = inject(ImageCache);
-  private readonly labelGeometry = labelPatch();
   private readonly glass = new MeshStandardMaterial({ roughness: 0.12, metalness: 0, envMapIntensity: 1.3 });
   private readonly foil = new MeshStandardMaterial({ roughness: 0.4, metalness: 0.6 });
   private readonly atlasCanvas = document.createElement('canvas');
@@ -176,7 +207,7 @@ export class Rack3d {
   private readonly highlightMaterial = new MeshBasicMaterial({ color: '#e8c255' });
 
   /** Meshes of the current rack size; rebuilt when height or width change. */
-  private built: { key: string; bottles: InstancedMesh; capsules: InstancedMesh; labels: InstancedMesh; labelRects: InstancedBufferAttribute; hits: InstancedMesh; highlight: Mesh; disposables: (BufferGeometry | Material)[]; objects: Mesh[] } | null = null;
+  private built: { key: string; forms: Map<BottleForm, FormMeshes>; hits: InstancedMesh; highlight: Mesh; disposables: (BufferGeometry | Material)[]; objects: Mesh[] } | null = null;
   private environment?: Texture;
   /** Pull-out progress (0 = in the shelf, 1 = fully out) of every row that is not at rest. */
   private readonly pull = new Map<number, number>();
@@ -346,24 +377,34 @@ export class Rack3d {
     }
 
     const color = new Color();
-    const rects = built.labelRects.array as Float32Array;
+    const counts = new Map<BottleForm, number>(FORMS.map((form) => [form, 0]));
+    this.placements = rack.slots.map((slot) => {
+      const form = resolveForm(slot.wine.bottleForm, slot.wine.type);
+      const index = counts.get(form)!;
+      counts.set(form, index + 1);
+      return { form, index, scale: rackBottleScale(slot.wine.bottleSizeMl) };
+    });
     rack.slots.forEach((slot, i) => {
+      const { form, index } = this.placements[i];
+      const meshes = built.forms.get(form)!;
       color.set(GLASS_BY_TYPE[slot.wine.type] ?? GLASS_BY_TYPE.Other);
-      built.bottles.setColorAt(i, color);
+      meshes.bottles.setColorAt(index, color);
       color.set(CAPSULE_BY_TYPE[slot.wine.type] ?? CAPSULE_BY_TYPE.Other);
-      built.capsules.setColorAt(i, color);
+      meshes.capsules.setColorAt(index, color);
       const { tile, isNew } = this.atlas.assign(slot.wine.labelImageId);
-      rects.set(LabelAtlas.uvRect(tile), i * 4);
+      (meshes.labelRects.array as Float32Array).set(LabelAtlas.uvRect(tile), index * 4);
       if (isNew) void this.loadLabel(slot.wine.labelImageId!, tile);
       this.placeSlot(rack, built, i, slot, this.pull.get(slot.row) ?? 0);
     });
-    for (const mesh of [built.bottles, built.capsules, built.labels]) {
-      mesh.count = rack.slots.length;
-      mesh.instanceMatrix.needsUpdate = true;
+    for (const [form, meshes] of built.forms) {
+      for (const mesh of [meshes.bottles, meshes.capsules, meshes.labels]) {
+        mesh.count = counts.get(form)!;
+        mesh.instanceMatrix.needsUpdate = true;
+      }
+      meshes.labelRects.needsUpdate = true;
+      if (meshes.bottles.instanceColor) meshes.bottles.instanceColor.needsUpdate = true;
+      if (meshes.capsules.instanceColor) meshes.capsules.instanceColor.needsUpdate = true;
     }
-    built.labelRects.needsUpdate = true;
-    if (built.bottles.instanceColor) built.bottles.instanceColor.needsUpdate = true;
-    if (built.capsules.instanceColor) built.capsules.instanceColor.needsUpdate = true;
 
     built.highlight.visible = selectedRow !== null;
     if (selectedRow !== null) {
@@ -377,17 +418,20 @@ export class Rack3d {
   private placeSlot(rack: Rack, built: NonNullable<Rack3d['built']>, i: number, slot: RackSlot, progress: number): void {
     const { x, y } = this.cellCenter(rack, slot.row, slot.column);
     const pose = slidePose(progress);
-    const lyingY = y - CELL / 2 + BOARD / 2 + BOTTLE_RADIUS;
-    const standingY = y + UPRIGHT_LIFT;
+    const { form, index, scale } = this.placements[i];
+    // The bottle is scaled around its middle: it rests on the board with its own (scaled) radius.
+    const lyingY = y - CELL / 2 + BOARD / 2 + formBodyRadius(form) * scale;
+    const standingY = y + UPRIGHT_LIFT * scale;
     const stood = pose.pitch / PULL_PITCH;
     this.position.set(x, lyingY + (standingY - lyingY) * stood, pose.z);
     // First roll around the long axis (label from top to bottom), then stand up: Rx(-pitch) · Rz(roll).
     this.rollRotation.setFromAxisAngle(this.axisZ, pose.roll);
     this.rotation.setFromAxisAngle(this.axisX, -pose.pitch).multiply(this.rollRotation);
-    this.matrix.compose(this.position, this.rotation, this.unit);
-    built.bottles.setMatrixAt(i, this.matrix);
-    built.capsules.setMatrixAt(i, this.matrix);
-    built.labels.setMatrixAt(i, this.matrix);
+    this.matrix.compose(this.position, this.rotation, this.unit.setScalar(scale));
+    const meshes = built.forms.get(form)!;
+    meshes.bottles.setMatrixAt(index, this.matrix);
+    meshes.capsules.setMatrixAt(index, this.matrix);
+    meshes.labels.setMatrixAt(index, this.matrix);
   }
 
   /** Runs only while a row is moving; the scene is otherwise rendered on demand. */
@@ -431,7 +475,9 @@ export class Rack3d {
       const progress = this.pull.get(slot.row);
       if (progress !== undefined) this.placeSlot(rack, built, i, slot, progress);
     });
-    for (const mesh of [built.bottles, built.capsules, built.labels]) mesh.instanceMatrix.needsUpdate = true;
+    for (const meshes of built.forms.values()) {
+      for (const mesh of [meshes.bottles, meshes.capsules, meshes.labels]) mesh.instanceMatrix.needsUpdate = true;
+    }
     for (const [row, value] of this.pull) {
       if (value === 0 && row !== this.pullTarget) this.pull.delete(row);
     }
@@ -526,15 +572,26 @@ export class Rack3d {
     }
     hits.computeBoundingSphere();
 
-    const bottles = new InstancedMesh(this.bottleGeometry, this.glass, capacity);
-    bottles.setColorAt(0, new Color('#ffffff'));
-    const capsules = new InstancedMesh(this.capsuleGeometry, this.foil, capacity);
-    capsules.setColorAt(0, new Color('#ffffff'));
-    const labels = new InstancedMesh(this.labelGeometry, this.labelMaterial, capacity);
-    const labelRects = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
-    this.labelGeometry.setAttribute('labelRect', labelRects);
-    // Instances move when a row is pulled out, so the bounding spheres computed from the first pose would be wrong.
-    for (const mesh of [bottles, capsules, labels]) mesh.frustumCulled = false;
+    // One set of meshes per bottle form, each with room for every slot (a rack may hold only one form).
+    const forms = new Map<BottleForm, FormMeshes>();
+    const bottleMeshes: Mesh[] = [];
+    for (const form of FORMS) {
+      const geometries = this.formGeometries.get(form)!;
+      const bottles = new InstancedMesh(geometries.bottle, this.glass, capacity);
+      bottles.setColorAt(0, new Color('#ffffff'));
+      const capsules = new InstancedMesh(geometries.capsule, this.foil, capacity);
+      capsules.setColorAt(0, new Color('#ffffff'));
+      const labels = new InstancedMesh(geometries.label, this.labelMaterial, capacity);
+      const labelRects = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
+      geometries.label.setAttribute('labelRect', labelRects);
+      // Instances move when a row is pulled out, so the bounding spheres computed from the first pose would be wrong.
+      for (const mesh of [bottles, capsules, labels]) {
+        mesh.frustumCulled = false;
+        mesh.count = 0;
+      }
+      forms.set(form, { bottles, capsules, labels, labelRects });
+      bottleMeshes.push(bottles, labels, capsules);
+    }
 
     // Row highlight: a gold frame around the front of the row (does not tint the bottles).
     const bar = 0.07;
@@ -551,12 +608,12 @@ export class Rack3d {
     );
     highlight.visible = false;
 
-    for (const object of [shelves, dividers, back, hits, bottles, labels, capsules, highlight]) {
+    for (const object of [shelves, dividers, back, hits, ...bottleMeshes, highlight]) {
       this.scene.add(object);
       objects.push(object);
     }
     disposables.push(shelfGeometry, dividerGeometry, backGeometry, hitGeometry, highlightGeometry);
-    this.built = { key, bottles, capsules, labels, labelRects, hits, highlight, disposables, objects };
+    this.built = { key, forms, hits, highlight, disposables, objects };
   }
 
   private clearBuilt(): void {
@@ -590,7 +647,12 @@ export class Rack3d {
     canvas.removeEventListener('webglcontextlost', this.onContextLost);
     this.controls.dispose();
     this.clearBuilt();
-    for (const item of [this.bottleGeometry, this.capsuleGeometry, this.labelGeometry, this.glass, this.foil, this.labelMaterial, this.atlasTexture, this.wood, this.backWood, this.hitMaterial, this.highlightMaterial]) {
+    for (const geometries of this.formGeometries.values()) {
+      geometries.bottle.dispose();
+      geometries.capsule.dispose();
+      geometries.label.dispose();
+    }
+    for (const item of [this.glass, this.foil, this.labelMaterial, this.atlasTexture, this.wood, this.backWood, this.hitMaterial, this.highlightMaterial]) {
       item.dispose();
     }
     this.environment?.dispose();

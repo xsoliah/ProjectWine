@@ -164,6 +164,7 @@ public class WineService(
         wine.Vintage = r.Vintage;
         wine.Type = r.Type;
         wine.BottleSizeMl = r.BottleSizeMl;
+        wine.BottleForm = r.BottleForm;
         wine.DrinkFrom = r.DrinkFrom;
         wine.DrinkUntil = r.DrinkUntil;
         wine.PurchasePrice = r.PurchasePrice;

@@ -13,8 +13,8 @@ import { FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } 
 import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
 import { errorMessage } from '../../core/errors';
-import { WINE_TYPES } from '../../core/labels';
-import { Country, GrapeEntry, GrapeVariety, SaveWineRequest, WineFormInitial, WineType } from '../../core/models';
+import { BOTTLE_FORM_OPTIONS, WINE_TYPES } from '../../core/labels';
+import { BottleForm, Country, GrapeEntry, GrapeVariety, SaveWineRequest, WineFormInitial, WineType } from '../../core/models';
 import { findCountry, findRegion } from '../../core/origins';
 import { ToastService } from '../../core/toast.service';
 import { GrapePicker } from '../../shared/grape-picker';
@@ -45,6 +45,7 @@ export class WineForm implements OnInit {
   private readonly confirm = inject(ConfirmService);
 
   protected readonly types = WINE_TYPES;
+  protected readonly bottleForms = BOTTLE_FORM_OPTIONS;
   protected readonly form = inject(NonNullableFormBuilder).group({
     barcode: '',
     name: ['', Validators.required],
@@ -54,6 +55,7 @@ export class WineForm implements OnInit {
     country: '',
     region: '',
     bottleSizeMl: [750, [Validators.required, Validators.min(1)]],
+    bottleForm: new FormControl<BottleForm | null>(null),
     quantity: [1, [Validators.required, Validators.min(1)]],
     drinkFrom: new FormControl<number | null>(null),
     drinkUntil: new FormControl<number | null>(null),
@@ -210,6 +212,7 @@ export class WineForm implements OnInit {
       regionId: this.selectedRegion()?.id ?? null,
       grapes: toRequests(this.grapes(), this.varieties()),
       bottleSizeMl: v.bottleSizeMl,
+      bottleForm: v.bottleForm,
       quantity: v.quantity,
       drinkFrom: v.drinkFrom,
       drinkUntil: v.drinkUntil,

@@ -36,7 +36,9 @@ import {
   MAX_AZIMUTH,
   MAX_TILT,
   bottleScale,
+  capsuleDimensions,
   effectiveShape,
+  resolveForm,
   labelFrame,
   labelUvCrop,
   lathePoints,
@@ -45,7 +47,7 @@ import {
   wallPoints,
 } from '../core/bottle';
 import { ImageCache } from '../core/images';
-import { BottleShape, WineType } from '../core/models';
+import { BottleForm, BottleShape, WineType } from '../core/models';
 import { Icon } from './icon';
 import { CAPSULE_BY_TYPE, GLASS_BY_TYPE } from './rack-3d-look';
 
@@ -156,6 +158,8 @@ export class Bottle3d {
   /** Measured bottle; null shows the standard bottle of the wine type. */
   readonly shape = input<BottleShape | null | undefined>(null);
   readonly type = input<WineType>('Red');
+  /** Chosen bottle form; null = automatic (follows the wine type). */
+  readonly form = input<BottleForm | null | undefined>(null);
   readonly sizeMl = input<number | null | undefined>(750);
   /** Label image of the wine (load via ImageCache); without it the bottle has no label. */
   readonly labelImageId = input<string | null | undefined>(null);
@@ -191,12 +195,13 @@ export class Bottle3d {
     afterNextRender(() => this.init());
 
     effect(() => {
-      const shape = effectiveShape(this.shape(), this.type());
+      const form = resolveForm(this.form(), this.type());
+      const shape = effectiveShape(this.shape(), this.type(), form);
       const type = this.type();
       const scale = bottleScale(this.sizeMl());
       const labelId = this.labelImageId();
       if (!this.ready()) return;
-      this.build(shape, type, scale, labelId);
+      this.build(shape, type, form, scale, labelId);
     });
 
     inject(DestroyRef).onDestroy(() => this.dispose());
@@ -293,9 +298,12 @@ export class Bottle3d {
     this.requestRender();
   }
 
-  /** Distance at which the whole bottle fits into the view. */
+  /**
+   * Distance at which the whole bottle fits into the view. The reference is the standard 750 ml bottle: smaller bottles
+   * (half bottles) stay smaller in the picture, larger ones (magnums) move the camera back so they remain fully visible.
+   */
   private fitCamera(moveCamera: boolean): void {
-    const length = BOTTLE_LENGTH * bottleScale(this.sizeMl());
+    const length = BOTTLE_LENGTH * Math.max(1, bottleScale(this.sizeMl()));
     const halfFov = ((this.camera.fov / 2) * Math.PI) / 180;
     const byHeight = (length / 2) / Math.tan(halfFov);
     const byWidth = (length * 0.2) / (Math.tan(halfFov) * this.camera.aspect);
@@ -306,7 +314,7 @@ export class Bottle3d {
   }
 
   /** Builds glass, capsule and label for the shape; replaces the previous meshes. */
-  private build(shape: BottleShape, type: WineType, scale: number, labelId: string | null | undefined): void {
+  private build(shape: BottleShape, type: WineType, form: BottleForm, scale: number, labelId: string | null | undefined): void {
     this.clearMeshes();
     const length = BOTTLE_LENGTH * scale;
 
@@ -316,9 +324,11 @@ export class Bottle3d {
     const body = new LatheGeometry(lathePoints(wallPoints(shape, length)).map(([r, y]) => new Vector2(r, y)), 48);
     body.translate(0, -length / 2, 0);
 
-    const neckRadius = radiusAt(shape, 0.9) * length * 1.06 + LABEL_LIFT * scale;
-    const capsule = new CylinderGeometry(neckRadius, neckRadius, 0.155 * length, 24);
-    capsule.translate(0, 0.9125 * length - length / 2, 0);
+    const foil = capsuleDimensions(shape, form);
+    const lift = LABEL_LIFT * scale;
+    const capsule = new CylinderGeometry(
+      foil.topRadius * length + lift, foil.bottomRadius * length + lift, (foil.top - foil.start) * length, 24);
+    capsule.translate(0, ((foil.top + foil.start) / 2) * length - length / 2, 0);
 
     this.geometries = [body, capsule];
     this.group.add(new Mesh(body, this.glass), new Mesh(capsule, this.foil));

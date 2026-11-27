@@ -1,17 +1,69 @@
-import { BottleLabelPlacement, BottleShape, LabelPoint, WineType } from './models';
+import { BottleForm, BottleLabelPlacement, BottleShape, LabelPoint, WineType } from './models';
 
 /** One rack slot is 1 unit wide; a Bordeaux bottle is about 4 times as long as it is wide. */
 export const BOTTLE_LENGTH = 2.9;
 export const BOTTLE_RADIUS = 0.36;
 
+type Wall = readonly (readonly [number, number])[];
+
 /**
  * Outer wall of a Bordeaux bottle as [radius, height] pairs in rack units (from the edge of the base to the lip):
  * straight body, high pronounced shoulders, short neck. The same bottle the server uses as "Standardflasche".
  */
-export const STANDARD_WALL: readonly (readonly [number, number])[] = [
+export const STANDARD_WALL: Wall = [
   [0.33, 0], [0.36, 0.03], [0.36, 1.85], [0.345, 1.98], [0.29, 2.1], [0.2, 2.19], [0.14, 2.26],
   [0.12, 2.36], [0.12, 2.78], [0.135, 2.8], [0.135, 2.88], [0.1, 2.9],
 ];
+
+export interface FormSpec {
+  /** Wall as [radius, height] pairs in rack units (same numbers as the server). */
+  wall: Wall;
+  /** Height (0..1) from which the foil capsule covers the neck. */
+  capsuleStart: number;
+}
+
+/** The bottle forms: own wall and foil. Sparkling wine has a long foil over a conical neck. */
+export const BOTTLE_FORM_SPECS: Record<BottleForm, FormSpec> = {
+  Bordeaux: { wall: STANDARD_WALL, capsuleStart: 0.835 },
+  Burgundy: {
+    wall: [
+      [0.34, 0], [0.37, 0.03], [0.37, 1.5], [0.355, 1.66], [0.31, 1.85], [0.23, 2.05], [0.165, 2.2],
+      [0.135, 2.32], [0.125, 2.5], [0.12, 2.78], [0.135, 2.8], [0.135, 2.88], [0.1, 2.9],
+    ],
+    capsuleStart: 0.82,
+  },
+  Champagne: {
+    wall: [
+      [0.38, 0], [0.42, 0.04], [0.42, 1.45], [0.4, 1.6], [0.34, 1.85], [0.25, 2.1], [0.18, 2.3],
+      [0.14, 2.45], [0.13, 2.7], [0.148, 2.74], [0.148, 2.86], [0.115, 2.9],
+    ],
+    capsuleStart: 0.76,
+  },
+  Flute: {
+    wall: [
+      [0.28, 0], [0.31, 0.03], [0.31, 1.65], [0.295, 1.8], [0.23, 2.0], [0.15, 2.2], [0.11, 2.35],
+      [0.1, 2.5], [0.1, 2.76], [0.115, 2.78], [0.115, 2.88], [0.085, 2.9],
+    ],
+    capsuleStart: 0.83,
+  },
+};
+
+/** The chosen form; without one sparkling wine uses Champagne, everything else Bordeaux. */
+export function resolveForm(form: BottleForm | null | undefined, type: WineType | null | undefined): BottleForm {
+  return form ?? (type === 'Sparkling' ? 'Champagne' : 'Bordeaux');
+}
+
+/** Widest radius of a form's wall in rack units. */
+export function formBodyRadius(form: BottleForm): number {
+  return Math.max(...BOTTLE_FORM_SPECS[form].wall.map(([r]) => r));
+}
+
+/** Foil over the neck as a (slightly tapering) cylinder: heights as a share of the bottle length. */
+export function capsuleDimensions(shape: BottleShape, form: BottleForm): { start: number; top: number; bottomRadius: number; topRadius: number } {
+  const start = BOTTLE_FORM_SPECS[form].capsuleStart;
+  const top = 0.99;
+  return { start, top, bottomRadius: radiusAt(shape, start) * 1.06, topRadius: radiusAt(shape, top - 0.03) * 1.06 };
+}
 
 /** Closes a wall profile on the axis (bottom and mouth) so a lathe makes a solid bottle. */
 export function lathePoints(wall: readonly (readonly [number, number])[]): [number, number][] {
@@ -20,13 +72,12 @@ export function lathePoints(wall: readonly (readonly [number, number])[]): [numb
   return [[0, first[1]], ...wall.map(([r, y]) => [r, y] as [number, number]), [0, last[1]]];
 }
 
-/** The standard bottle for a wine type (same numbers as the server): sparkling wine is a little stockier. */
-export function standardShape(type: WineType | null | undefined): BottleShape {
-  const scale = type === 'Sparkling' ? 1.12 : 1;
+/** The standard bottle for a wine type and bottle form (same numbers as the server); automatic when the form is null. */
+export function standardShape(type: WineType | null | undefined, form?: BottleForm | null): BottleShape {
   return {
-    profile: STANDARD_WALL.map(([r, y]) => ({
+    profile: BOTTLE_FORM_SPECS[resolveForm(form, type)].wall.map(([r, y]) => ({
       height: round(y / BOTTLE_LENGTH),
-      radius: round((r / BOTTLE_LENGTH) * scale),
+      radius: round(r / BOTTLE_LENGTH),
     })),
     label: { top: 0.5, bottom: 0.155, widthFraction: 0.96, centerAngle: 0 },
     outline: null,
@@ -35,8 +86,12 @@ export function standardShape(type: WineType | null | undefined): BottleShape {
 }
 
 /** The shape to draw: the measured bottle, otherwise the standard bottle of the wine type. */
-export function effectiveShape(shape: BottleShape | null | undefined, type: WineType | null | undefined): BottleShape {
-  return shape && shape.profile.length >= 2 ? shape : standardShape(type);
+export function effectiveShape(
+  shape: BottleShape | null | undefined,
+  type: WineType | null | undefined,
+  form?: BottleForm | null,
+): BottleShape {
+  return shape && shape.profile.length >= 2 ? shape : standardShape(type, form);
 }
 
 /** Wall of a shape as [radius, height] pairs for a bottle of the given length. */
@@ -123,6 +178,14 @@ export function labelUvCrop(aspect: number): UvCrop {
 export function bottleScale(sizeMl: number | null | undefined): number {
   const ml = sizeMl && sizeMl > 0 ? sizeMl : 750;
   return Math.min(1.6, Math.max(0.6, Math.cbrt(ml / 750)));
+}
+
+/** In a rack slot a bottle may be at most this much larger than a 750 ml bottle: the slot is only 3.2 deep. */
+export const MAX_RACK_SCALE = 1.1;
+
+/** Size factor of a bottle lying in a rack slot: as in the single view, but within the slot. */
+export function rackBottleScale(sizeMl: number | null | undefined): number {
+  return Math.min(MAX_RACK_SCALE, bottleScale(sizeMl));
 }
 
 // ----- View rotation -----

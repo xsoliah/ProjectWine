@@ -504,6 +504,10 @@ namespace WineCellar.Infrastructure.Migrations
                         .HasMaxLength(14)
                         .HasColumnType("nvarchar(14)");
 
+                    b.Property<string>("BottleForm")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<Guid?>("BottleImageId")
                         .HasColumnType("uniqueidentifier");
 

@@ -11,6 +11,15 @@ public enum WineType
     Other
 }
 
+/// <summary>Shape of the bottle in the 3D views. A wine without a form ("automatic") follows its type.</summary>
+public enum BottleForm
+{
+    Bordeaux,
+    Burgundy,
+    Champagne,
+    Flute
+}
+
 /// <summary>Why bottles left the cellar. Every kind ends up in the archive.</summary>
 public enum ConsumptionKind
 {

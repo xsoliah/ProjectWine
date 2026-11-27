@@ -36,25 +36,53 @@ public sealed record BottleShape(
     /// <summary>A label cannot be wider than the whole circumference (2 pi radians = 2 pi / 2 body diameters).</summary>
     public const double MaxLabelWidth = Math.PI;
 
-    /// <summary>Wall profile of a Bordeaux bottle as measured in the rack view (length 2.9, radius 0.36).</summary>
-    private static readonly (double R, double Y)[] StandardWall =
+    /// <summary>Wall profiles of the bottle forms as (radius, height) pairs in rack units (length 2.9, as in the web app).</summary>
+    private static readonly (double R, double Y)[] BordeauxWall =
     [
         (0.33, 0), (0.36, 0.03), (0.36, 1.85), (0.345, 1.98), (0.29, 2.1), (0.2, 2.19), (0.14, 2.26),
         (0.12, 2.36), (0.12, 2.78), (0.135, 2.8), (0.135, 2.88), (0.1, 2.9),
     ];
 
+    private static readonly (double R, double Y)[] BurgundyWall =
+    [
+        (0.34, 0), (0.37, 0.03), (0.37, 1.5), (0.355, 1.66), (0.31, 1.85), (0.23, 2.05), (0.165, 2.2),
+        (0.135, 2.32), (0.125, 2.5), (0.12, 2.78), (0.135, 2.8), (0.135, 2.88), (0.1, 2.9),
+    ];
+
+    private static readonly (double R, double Y)[] ChampagneWall =
+    [
+        (0.38, 0), (0.42, 0.04), (0.42, 1.45), (0.4, 1.6), (0.34, 1.85), (0.25, 2.1), (0.18, 2.3),
+        (0.14, 2.45), (0.13, 2.7), (0.148, 2.74), (0.148, 2.86), (0.115, 2.9),
+    ];
+
+    private static readonly (double R, double Y)[] FluteWall =
+    [
+        (0.28, 0), (0.31, 0.03), (0.31, 1.65), (0.295, 1.8), (0.23, 2.0), (0.15, 2.2), (0.11, 2.35),
+        (0.1, 2.5), (0.1, 2.76), (0.115, 2.78), (0.115, 2.88), (0.085, 2.9),
+    ];
+
     /// <summary>The label of a standard bottle sits in the lower third, centred.</summary>
     public static BottleLabelPlacement StandardLabel { get; } = new(0.5, 0.155, 0.96, 0);
 
+    /// <summary>The chosen form; without one sparkling wine uses Champagne, everything else Bordeaux.</summary>
+    public static BottleForm ResolveForm(WineType type, BottleForm? form) =>
+        form ?? (type == WineType.Sparkling ? BottleForm.Champagne : BottleForm.Bordeaux);
+
     /// <summary>
-    /// Standard bottle for a wine type: Bordeaux shape, sparkling wine a little stockier. The size in ml only scales the
-    /// absolute height in the 3D view, not these relative measures.
+    /// Standard bottle for a wine type and bottle form (automatic when null). The size in ml only scales the absolute
+    /// height in the 3D view, not these relative measures.
     /// </summary>
-    public static BottleShape Standard(WineType type = WineType.Red)
+    public static BottleShape Standard(WineType type = WineType.Red, BottleForm? form = null)
     {
-        var scale = type == WineType.Sparkling ? 1.12 : 1.0;
-        var profile = StandardWall
-            .Select(p => new BottleProfilePoint(Math.Round(p.Y / 2.9, 4), Math.Round(p.R / 2.9 * scale, 4)))
+        var wall = ResolveForm(type, form) switch
+        {
+            BottleForm.Burgundy => BurgundyWall,
+            BottleForm.Champagne => ChampagneWall,
+            BottleForm.Flute => FluteWall,
+            _ => BordeauxWall,
+        };
+        var profile = wall
+            .Select(p => new BottleProfilePoint(Math.Round(p.Y / 2.9, 4), Math.Round(p.R / 2.9, 4)))
             .ToList();
         return new BottleShape(profile, StandardLabel);
     }

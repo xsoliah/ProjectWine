@@ -93,6 +93,15 @@
       }
     </div>
     <div class="field">
+      <label for="f-form">Flaschenform</label>
+      <select id="f-form" formControlName="bottleForm">
+        <option [ngValue]="null">Automatisch (nach Art)</option>
+        @for (f of bottleForms; track f.value) {
+          <option [ngValue]="f.value">{{ f.label }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
       <label for="f-quantity">Anzahl Flaschen</label>
       <input id="f-quantity" type="number" inputmode="numeric" formControlName="quantity"
         [attr.aria-invalid]="invalid('quantity')" />

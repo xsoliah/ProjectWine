@@ -4,6 +4,7 @@ import { ApiService } from '../../core/api.service';
 import { ConfirmService } from '../../core/confirm.service';
 import { drinkWindow } from '../../core/drink-window';
 import { errorMessage } from '../../core/errors';
+import { bottleFormLabel } from '../../core/labels';
 import { formatPrice, wineTitle } from '../../core/format';
 import { LabelPoint, RackSummary, SetBottleShapeRequest, SlotLocation } from '../../core/models';
 import { hasWebGl } from '../../core/webgl';
@@ -83,6 +84,7 @@ export class WineDetail {
   private readonly webglFailed = signal(!hasWebGl());
   protected readonly webglOk = computed(() => !this.webglFailed());
   protected readonly show3d = computed(() => this.shown() === '3d');
+  protected readonly formLabel = bottleFormLabel;
   /** Views on offer for this wine; the switch appears only when there is more than the front. */
   protected readonly viewOptions = computed(() => {
     const wine = this.wine();

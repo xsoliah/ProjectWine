@@ -29,7 +29,7 @@
       @if (shown() === 'back' && w.backImageId) {
         <img class="back-image" [appAuthImage]="w.backImageId" [alt]="'Rückseite von ' + w.name" />
       } @else if (show3d()) {
-        <app-bottle-3d class="bottle-view" [shape]="w.bottleShape" [type]="w.type" [sizeMl]="w.bottleSizeMl"
+        <app-bottle-3d class="bottle-view" [shape]="w.bottleShape" [type]="w.type" [form]="w.bottleForm" [sizeMl]="w.bottleSizeMl"
           [labelImageId]="w.labelImageId" [name]="w.name" (unavailable)="onWebglUnavailable()" />
       } @else if (view() === 'bottle' && w.bottleImageId) {
         <img class="bottle-image" [appAuthImage]="w.bottleImageId" [alt]="'Flasche ' + w.name" />
@@ -139,6 +139,7 @@
           </dd>
         }
         <dt>Flaschengröße</dt><dd>{{ w.bottleSizeMl }} ml</dd>
+        @if (w.bottleForm) { <dt>Flaschenform</dt><dd>{{ formLabel(w.bottleForm) }}</dd> }
         @if (w.drinkFrom !== null) { <dt>Trinkreif ab</dt><dd>{{ w.drinkFrom }}</dd> }
         @if (w.drinkUntil !== null) { <dt>Trinkreif bis</dt><dd>{{ w.drinkUntil }}</dd> }
         @if (w.purchasePrice !== null) { <dt>Kaufpreis</dt><dd>{{ price() }}</dd> }
@@ -199,7 +200,7 @@
     }
 
     @if (bottleEditor(); as e) {
-      <app-bottle-shape-editor [src]="e.url" [shape]="w.bottleShape" [type]="w.type" [sizeMl]="w.bottleSizeMl"
+      <app-bottle-shape-editor [src]="e.url" [shape]="w.bottleShape" [type]="w.type" [form]="w.bottleForm" [sizeMl]="w.bottleSizeMl"
         [labelImageId]="w.labelImageId" [name]="w.name" [busy]="bottleBusy()"
         (confirmed)="saveBottle($event)" (cancelled)="bottleEditor.set(null)" />
     }

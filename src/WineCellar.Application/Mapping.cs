@@ -13,7 +13,7 @@ internal static class Mapping
         w.DrinkFrom, w.DrinkUntil, w.PurchasePrice, w.Notes,
         w.LabelImageId, w.LabelSourceImageId, Capture.LabelCornersJson.ToDto(w.LabelCornersJson),
         w.BottleImageId, Capture.BottleShapeJson.Deserialize(w.BottleShapeJson),
-        w.BackImageId);
+        w.BackImageId, w.BottleForm);
 
     /// <summary>Sorted by rack name, row, column (the order in which bottles are taken out automatically).</summary>
     public static IReadOnlyList<SlotLocationDto> ToLocations(this IEnumerable<RackSlot> slots) => slots
@@ -21,7 +21,7 @@ internal static class Mapping
         .Select(s => new SlotLocationDto(s.Id, s.RackId, s.Rack.Name, s.Row, s.Column))
         .ToList();
 
-    public static RackWineDto ToRackWine(this Wine w) => new(w.Id, w.Name, w.Producer, w.Vintage, w.Type, w.LabelImageId);
+    public static RackWineDto ToRackWine(this Wine w) => new(w.Id, w.Name, w.Producer, w.Vintage, w.Type, w.LabelImageId, w.BottleSizeMl, w.BottleForm);
 
     public static OriginRefDto ToRef(this Country c) => new(c.Id, c.Name);
 
