@@ -75,28 +75,72 @@ public class RackService(IAppDbContext db, ICurrentUser user, TimeProvider time)
                        .FirstOrDefaultAsync(w => w.Id == request.WineId && w.OwnerId == user.UserId, ct)
                    ?? throw new NotFoundException("Wein nicht gefunden.");
 
-        rack.EnsureContains(request.Row, request.Column);
-        EnsureSlotFree(rack, request.Row, request.Column, exceptSlotId: null);
-        if (wine.Slots.Count >= wine.Quantity)
-        {
-            throw new DomainException(wine.Quantity == 0
-                ? $"Von „{wine.Name}“ ist keine Flasche mehr im Keller."
-                : $"Alle {wine.Quantity} Flasche(n) von „{wine.Name}“ sind bereits eingelagert.");
-        }
+        EnsureCanPlace(rack, request.Row, request.Column);
+        EnsureBottlesLeft(wine, 1);
+        AddSlot(rack, wine, request.Row, request.Column);
+        await SaveAsync(ct);
+        return ToDto(rack);
+    }
 
+    /// <summary>
+    /// Puts several bottles of one wine into free slots (possibly in several racks) with a single save:
+    /// all of them or none. Checks are the same as for <see cref="PlaceAsync"/>.
+    /// </summary>
+    public async Task<IReadOnlyList<SlotLocationDto>> PlaceManyAsync(PlaceBottlesRequest request, CancellationToken ct = default)
+    {
+        var targets = request.Slots ?? [];
+        if (targets.Count == 0) throw new DomainException("Es wurde kein Fach angegeben.");
+
+        var wine = await db.Wines.Include(w => w.Slots)
+                       .FirstOrDefaultAsync(w => w.Id == request.WineId && w.OwnerId == user.UserId, ct)
+                   ?? throw new NotFoundException("Wein nicht gefunden.");
+
+        if (targets.GroupBy(t => (t.RackId, t.Row, t.Column)).Any(g => g.Count() > 1))
+            throw new DomainException("Ein Fach wurde mehrfach angegeben.");
+
+        var racks = new Dictionary<Guid, Rack>();
+        foreach (var id in targets.Select(t => t.RackId).Distinct())
+            racks[id] = await FindRackAsync(id, track: true, ct);
+
+        foreach (var t in targets) EnsureCanPlace(racks[t.RackId], t.Row, t.Column);
+        EnsureBottlesLeft(wine, targets.Count);
+
+        var added = targets.Select(t => AddSlot(racks[t.RackId], wine, t.Row, t.Column)).ToList();
+        await SaveAsync(ct);
+        return added.Select(s => new SlotLocationDto(s.Id, s.RackId, s.Rack.Name, s.Row, s.Column)).ToList();
+    }
+
+    private static void EnsureCanPlace(Rack rack, int row, int column)
+    {
+        rack.EnsureContains(row, column);
+        EnsureSlotFree(rack, row, column, exceptSlotId: null);
+    }
+
+    private static void EnsureBottlesLeft(Wine wine, int additional)
+    {
+        if (wine.Slots.Count + additional <= wine.Quantity) return;
+        var unplaced = Math.Max(0, wine.Quantity - wine.Slots.Count);
+        throw new DomainException(wine.Quantity == 0
+            ? $"Von „{wine.Name}“ ist keine Flasche mehr im Keller."
+            : unplaced == 0
+                ? $"Alle {wine.Quantity} Flasche(n) von „{wine.Name}“ sind bereits eingelagert."
+                : $"Von „{wine.Name}“ sind nur noch {unplaced} Flasche(n) nicht eingelagert, nicht {additional}.");
+    }
+
+    private RackSlot AddSlot(Rack rack, Wine wine, int row, int column)
+    {
         var slot = new RackSlot
         {
             RackId = rack.Id,
             Rack = rack,
-            Row = request.Row,
-            Column = request.Column,
+            Row = row,
+            Column = column,
             WineId = wine.Id,
             Wine = wine,
             OwnerId = user.UserId
         };
         db.RackSlots.Add(slot);
-        await SaveAsync(ct);
-        return ToDto(rack);
+        return slot;
     }
 
     /// <summary>Moves a placed bottle to a free slot of the same or another own rack.</summary>

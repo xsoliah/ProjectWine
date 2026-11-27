@@ -28,6 +28,7 @@ public sealed class TestWorld : IDisposable
     public GrapeService Grapes { get; }
     public StatisticsService Statistics { get; }
     public RackService Racks { get; }
+    public PlacementSuggestionService Suggestions { get; }
     public ImageService Images { get; }
     public LabelImageService LabelImages { get; }
     public BackImageService BackImages { get; }
@@ -77,6 +78,7 @@ public sealed class TestWorld : IDisposable
         Grapes = new GrapeService(Db, User);
         Statistics = new StatisticsService(Db, User);
         Racks = new RackService(Db, User, TimeProvider.System);
+        Suggestions = new PlacementSuggestionService(Db, User);
         Images = new ImageService(Db, User);
         LabelImages = new LabelImageService(Db, User, Images, Extractor);
         BackImages = new BackImageService(Db, User, Images);

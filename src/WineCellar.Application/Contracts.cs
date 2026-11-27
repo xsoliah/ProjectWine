@@ -198,6 +198,24 @@ public record PlaceBottleRequest(Guid WineId, int Row, int Column);
 
 public record MoveBottleRequest(Guid RackId, int Row, int Column);
 
+// ----- Placement suggestion -----
+
+/// <summary>A free slot proposed for one bottle.</summary>
+public record SuggestedSlotDto(Guid RackId, string RackName, int Row, int Column);
+
+/// <summary>Proposed slots for the requested bottles; <c>Unplaceable</c> bottles find no room.</summary>
+public record PlacementSuggestionDto(
+    Guid WineId,
+    int Requested,
+    IReadOnlyList<SuggestedSlotDto> Slots,
+    int Unplaceable,
+    string Reason);
+
+public record PlaceBottleTarget(Guid RackId, int Row, int Column);
+
+/// <summary>Places several bottles of one wine in one go (all or nothing).</summary>
+public record PlaceBottlesRequest(Guid WineId, IReadOnlyList<PlaceBottleTarget> Slots);
+
 // ----- Photo capture and label images -----
 
 public record LabelPointDto(double X, double Y);

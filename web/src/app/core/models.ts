@@ -240,6 +240,28 @@ export interface Rack extends RackSummary {
   slots: RackSlot[];
 }
 
+export interface SuggestedSlot {
+  rackId: string;
+  rackName: string;
+  row: number;
+  column: number;
+}
+
+/** Proposed free slots for the requested bottles; `unplaceable` bottles find no room. */
+export interface PlacementSuggestion {
+  wineId: string;
+  requested: number;
+  slots: SuggestedSlot[];
+  unplaceable: number;
+  reason: string;
+}
+
+export interface PlaceBottleTarget {
+  rackId: string;
+  row: number;
+  column: number;
+}
+
 export interface SaveRackRequest {
   name: string;
   height: number;

@@ -38,6 +38,10 @@ public static class WineEndpoints
         group.MapPost("{id:guid}/bottles", async (Guid id, AddBottlesRequest request, WineService wines, CancellationToken ct) =>
             TypedResults.Ok(await wines.AddBottlesAsync(id, request.Count, ct)));
 
+        // Where to put the not yet placed bottles (rule based; changes nothing).
+        group.MapGet("{id:guid}/placement-suggestion", async (Guid id, int? count, PlacementSuggestionService suggestions, CancellationToken ct) =>
+            TypedResults.Ok(await suggestions.SuggestAsync(id, count, ct)));
+
         // Drink, sell or gift bottles: removes them from the cellar and creates an archive entry.
         group.MapPost("{id:guid}/consume", async (Guid id, ConsumeRequest request, WineService wines, CancellationToken ct) =>
         {

@@ -62,4 +62,9 @@
       }
     </div>
   }
+
+  @if (placing(); as p) {
+    <app-placement-step [wineId]="p.wineId" [wineName]="p.wineName" [count]="p.count"
+      (placed)="placingDone()" (later)="placingDone()" (manual)="placingManual($event)" />
+  }
 </div>

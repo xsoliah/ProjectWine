@@ -36,6 +36,10 @@ public static class RackEndpoints
         group.MapPost("{id:guid}/slots", async (Guid id, PlaceBottleRequest request, RackService racks, CancellationToken ct) =>
             TypedResults.Ok(await racks.PlaceAsync(id, request, ct)));
 
+        // Put several bottles of one wine into free slots, all or nothing (see the placement suggestion).
+        group.MapPost("placements", async (PlaceBottlesRequest request, RackService racks, CancellationToken ct) =>
+            TypedResults.Ok(await racks.PlaceManyAsync(request, ct)));
+
         // Move a bottle (same or other rack).
         group.MapPut("slots/{slotId:guid}", async (Guid slotId, MoveBottleRequest request, RackService racks, CancellationToken ct) =>
             TypedResults.Ok(await racks.MoveAsync(slotId, request, ct)));

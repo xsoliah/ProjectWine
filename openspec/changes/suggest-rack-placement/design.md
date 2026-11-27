@@ -25,7 +25,7 @@ Für jedes freie Fach (alle Regale) wird die Ähnlichkeit zu belegten Fächern d
 | derselbe Wein (gleiche Id) | 100 |
 | gleicher Erzeuger (normalisiert, nur wenn vorhanden) | 40 |
 | gleiche Region | 25 |
-| gleiches Land | 10 |
+| gleiches Land | 20 |
 | gleicher Typ | 15 |
 | Jahrgang höchstens 2 Jahre auseinander (nur wenn beide vorhanden) | 5 |
 | Trinkfenster überlappt oder liegt höchstens 3 Jahre auseinander | 5 |

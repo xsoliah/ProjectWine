@@ -19,12 +19,13 @@ import { AuthImage, ImageCache } from '../../core/images';
 import { preparePhoto } from '../../core/photo';
 import { Icon } from '../../shared/icon';
 import { Modal } from '../../shared/modal';
+import { PlacementStep } from '../../shared/placement-step';
 import { Stepper } from '../../shared/stepper';
 import { TypeBadge } from '../../shared/type-badge';
 
 @Component({
   selector: 'app-wine-detail',
-  imports: [RouterLink, Icon, Modal, Stepper, TypeBadge, ArchiveEntryItem, ConsumeDialog, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor],
+  imports: [RouterLink, Icon, Modal, PlacementStep, Stepper, TypeBadge, ArchiveEntryItem, ConsumeDialog, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './wine-detail.html',
   styleUrl: './wine-detail.css',
@@ -262,6 +263,20 @@ export class WineDetail {
     } catch (error) {
       this.toast.error(errorMessage(error));
     }
+  }
+
+  /** "Einlagerung vorschlagen": the placing step for all not placed bottles. */
+  protected readonly suggesting = signal(false);
+
+  protected suggestionClosed(): void {
+    this.suggesting.set(false);
+    this.wineResource.reload();
+  }
+
+  protected suggestionManual(rackId: string | null): void {
+    this.suggesting.set(false);
+    if (rackId) void this.router.navigate(['/racks', rackId], { queryParams: { place: this.id() } });
+    else void this.startPlacing();
   }
 
   protected placeIn(rackId: string): void {
