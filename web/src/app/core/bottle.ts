@@ -85,13 +85,19 @@ export function standardShape(type: WineType | null | undefined, form?: BottleFo
   };
 }
 
-/** The shape to draw: the measured bottle, otherwise the standard bottle of the wine type. */
+/**
+ * The shape to draw: the measured bottle, otherwise the standard bottle of the wine type and form.
+ * A stored shape without an outline was never measured (the server saved the standard bottle of that time as a
+ * fallback, e.g. a Bordeaux profile for a sparkling wine): its profile is replaced by today's standard, its label kept.
+ */
 export function effectiveShape(
   shape: BottleShape | null | undefined,
   type: WineType | null | undefined,
   form?: BottleForm | null,
 ): BottleShape {
-  return shape && shape.profile.length >= 2 ? shape : standardShape(type, form);
+  if (!shape || shape.profile.length < 2) return standardShape(type, form);
+  if (!shape.outline) return { ...standardShape(type, form), label: shape.label, needsReview: shape.needsReview };
+  return shape;
 }
 
 /** Wall of a shape as [radius, height] pairs for a bottle of the given length. */

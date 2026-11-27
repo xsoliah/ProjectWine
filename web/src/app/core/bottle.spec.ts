@@ -42,7 +42,11 @@ describe('standard bottle', () => {
 
   it('is used when a wine has no measured shape', () => {
     expect(effectiveShape(null, 'White').profile.length).toBeGreaterThan(8);
-    const own: BottleShape = { ...standardShape('Red'), label: { top: 0.6, bottom: 0.3, widthFraction: 0.5, centerAngle: 0.2 } };
+    const own: BottleShape = {
+      ...standardShape('Red'),
+      outline: [{ x: 0.4, y: 0.1 }, { x: 0.6, y: 0.1 }, { x: 0.6, y: 0.9 }, { x: 0.4, y: 0.9 }, { x: 0.4, y: 0.5 }, { x: 0.45, y: 0.3 }],
+      label: { top: 0.6, bottom: 0.3, widthFraction: 0.5, centerAngle: 0.2 },
+    };
     expect(effectiveShape(own, 'White')).toBe(own);
   });
 });
@@ -210,8 +214,25 @@ describe('bottle forms', () => {
   });
 
   it('keeps a measured shape and only uses the form for the fallback', () => {
-    const own: BottleShape = { ...standardShape('Red'), label: { top: 0.6, bottom: 0.3, widthFraction: 0.5, centerAngle: 0.2 } };
+    const own: BottleShape = {
+      ...standardShape('Red'),
+      outline: [{ x: 0.4, y: 0.1 }, { x: 0.6, y: 0.1 }, { x: 0.6, y: 0.9 }, { x: 0.4, y: 0.9 }, { x: 0.4, y: 0.5 }, { x: 0.45, y: 0.3 }],
+      label: { top: 0.6, bottom: 0.3, widthFraction: 0.5, centerAngle: 0.2 },
+    };
     expect(effectiveShape(own, 'Sparkling', 'Champagne')).toBe(own);
+    expect(effectiveShape(null, 'Red', 'Flute').profile).toEqual(standardShape('Red', 'Flute').profile);
+  });
+
+  it('replaces a stored standard bottle (no outline) by the standard of the wine, keeping its label', () => {
+    const label = { top: 0.6, bottom: 0.3, widthFraction: 0.5, centerAngle: 0.2 };
+    const stored: BottleShape = { ...standardShape('Red', 'Bordeaux'), label, needsReview: true };
+    const shown = effectiveShape(stored, 'Sparkling', null);
+    expect(shown.profile).toEqual(standardShape('Sparkling').profile);
+    expect(shown.label).toEqual(label);
+    expect(shown.needsReview).toBe(true);
+  });
+
+  it('keeps nothing of the old shape when it is missing', () => {
     expect(effectiveShape(null, 'Red', 'Flute').profile).toEqual(standardShape('Red', 'Flute').profile);
   });
 });
