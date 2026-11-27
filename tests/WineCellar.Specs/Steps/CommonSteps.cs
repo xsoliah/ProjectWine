@@ -18,8 +18,12 @@ public class CommonSteps(TestWorld world)
         Assert.Contains(fragment, world.LastError!.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static double ParseStars(string text) =>
-        double.Parse(text.Replace(',', '.'), CultureInfo.InvariantCulture);
+    public static double ParseStars(string text) => text switch
+    {
+        "Top" => 6,
+        "Hammer" => 7,
+        _ => double.Parse(text.Replace(',', '.'), CultureInfo.InvariantCulture),
+    };
 
     public static decimal ParseMoney(string text) =>
         decimal.Parse(text.Replace(',', '.'), CultureInfo.InvariantCulture);

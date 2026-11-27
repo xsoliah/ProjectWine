@@ -28,6 +28,10 @@ export interface ListField<T> {
   display?: (row: T) => string;
   /** Tabellenspalte: `default` = standardmäßig sichtbar, `optional` = wählbar; fehlt = keine Spalte. */
   column?: 'default' | 'optional';
+  /** Anzeigetext eines Zahlenwerts in Tabelle, CSV und Pivot, falls vom Wert abweichend (z. B. „Top“ für 6). */
+  valueText?: (value: number) => string;
+  /** Wählbare Zahlenwerte im Filter-Editor (mit `valueText` beschriftet), z. B. die Bewertungsstufen. */
+  levels?: readonly number[];
   /** Zahlenformat der Spalte. */
   format?: NumberFormat;
   /** Feste Reihenfolge der Werte (übrige danach, „Ohne Angabe“ zuletzt). */
@@ -136,6 +140,7 @@ export function cellText<T>(field: ListField<T>, row: T): string {
   const value = field.value(row);
   if (value === null || value === '') return '';
   if (value instanceof Date) return formatDateValue(value);
+  if (typeof value === 'number' && field.valueText) return field.valueText(value);
   if (typeof value === 'number' && field.format) return formatNumber(field.format, value);
   return String(value);
 }

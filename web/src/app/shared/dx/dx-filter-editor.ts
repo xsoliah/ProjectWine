@@ -35,7 +35,18 @@ export class DxFilterEditor<T> {
       .filter((f) => !f.noFilter)
       .map((f) => {
         const base: Record<string, unknown> = { dataField: f.key, caption: f.title };
-        if (f.type === 'number') base['dataType'] = 'number';
+        if (f.type === 'number') {
+          base['dataType'] = 'number';
+          if (f.levels && f.valueText) {
+            const text = f.valueText;
+            base['lookup'] = {
+              dataSource: f.levels.map((id) => ({ id, text: text(id) })),
+              valueExpr: 'id',
+              displayExpr: 'text',
+            };
+            base['filterOperations'] = ['=', '<>', '<', '>', '<=', '>=', 'isblank', 'isnotblank'];
+          }
+        }
         else if (f.type === 'date') {
           base['dataType'] = 'date';
           base['format'] = { type: 'shortDate' };

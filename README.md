@@ -253,7 +253,7 @@ API-Schlüssel gemessen.
 | GET | `/api/wines/{id}/placement-suggestion?count=` | Einlagerungsvorschlag für die nicht eingelagerten Flaschen (ändert nichts) |
 | POST | `/api/racks/placements` | Mehrere Flaschen eines Weins in einer Aktion einlagern (alles oder nichts) |
 | GET | `/api/archive?kind=` | Archiv |
-| PUT | `/api/archive/{id}` | Bewertung, Notiz, Käufer/Beschenkte/r, Preis ändern |
+| PUT | `/api/archive/{id}` | Bewertung, Notiz, Käufer/Beschenkte/r, Preis ändern. Bewertung (`rating`): 0,5–5 Sterne in Halbschritten, darüber `6` = Top und `7` = Hammer |
 | DELETE | `/api/archive/{id}` | Rückgängig (Flaschen kommen zurück in den Keller) |
 | GET | `/api/captures/quota`, `/api/captures/counts` | Tageslimit und Verfügbarkeit; Anzahl fertiger/aller Entwürfe |
 | POST | `/api/captures` | Foto-Erfassung starten (Multipart: `front`, optional `back`, `bottleCount`, `note`, `barcode`) → 202 |

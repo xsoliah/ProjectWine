@@ -287,6 +287,187 @@ namespace WineCellar.Specs.Features
             await this.ScenarioCleanupAsync();
         }
         
+        [Xunit.SkippableFactAttribute(DisplayName="Mit Hammer bewerten")]
+        [Xunit.TraitAttribute("FeatureTitle", "Getrunkene Weine bewerten")]
+        [Xunit.TraitAttribute("Description", "Mit Hammer bewerten")]
+        public async global::System.Threading.Tasks.Task MitHammerBewerten()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Mit Hammer bewerten", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 33
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 34
+    await testRunner.GivenAsync("mein Keller enthält 2 Flaschen \"Barolo\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 35
+    await testRunner.WhenAsync("ich 1 Flasche \"Barolo\" trinke und mit \"Hammer\" bewerte", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 36
+    await testRunner.ThenAsync("hat der Archiveintrag für \"Barolo\" die Bewertung \"Hammer\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Nachträglich mit Top bewerten")]
+        [Xunit.TraitAttribute("FeatureTitle", "Getrunkene Weine bewerten")]
+        [Xunit.TraitAttribute("Description", "Nachträglich mit Top bewerten")]
+        public async global::System.Threading.Tasks.Task NachtraglichMitTopBewerten()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Nachträglich mit Top bewerten", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 38
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 39
+    await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Riesling\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 40
+    await testRunner.WhenAsync("ich 1 Flasche \"Riesling\" trinke", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 41
+    await testRunner.AndAsync("ich den Archiveintrag für \"Riesling\" nachträglich mit \"Top\" bewerte", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 42
+    await testRunner.ThenAsync("hat der Archiveintrag für \"Riesling\" die Bewertung \"Top\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Bestehende Bewertung bleibt gültig")]
+        [Xunit.TraitAttribute("FeatureTitle", "Getrunkene Weine bewerten")]
+        [Xunit.TraitAttribute("Description", "Bestehende Bewertung bleibt gültig")]
+        public async global::System.Threading.Tasks.Task BestehendeBewertungBleibtGultig()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Bestehende Bewertung bleibt gültig", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 44
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 45
+    await testRunner.GivenAsync("mein Keller enthält 1 Flasche \"Zweigelt\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 46
+    await testRunner.WhenAsync("ich 1 Flasche \"Zweigelt\" trinke", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 47
+    await testRunner.AndAsync("ich den Archiveintrag für \"Zweigelt\" nachträglich mit 4,5 Sternen bewerte", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+#line 48
+    await testRunner.ThenAsync("hat der Archiveintrag für \"Zweigelt\" die Bewertung 4,5", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Werte zwischen 5 Sternen und Top sind ungültig")]
+        [Xunit.TraitAttribute("FeatureTitle", "Getrunkene Weine bewerten")]
+        [Xunit.TraitAttribute("Description", "Werte zwischen 5 Sternen und Top sind ungültig")]
+        public async global::System.Threading.Tasks.Task WerteZwischen5SternenUndTopSindUngultig()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Werte zwischen 5 Sternen und Top sind ungültig", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 50
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 51
+    await testRunner.GivenAsync("mein Keller enthält 2 Flaschen \"Grüner Veltliner\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 52
+    await testRunner.WhenAsync("ich 1 Flasche \"Grüner Veltliner\" trinke und mit 6,5 Sternen bewerte und anmerke \"" +
+                        "dazwischen\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 53
+    await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"Bewertung\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+#line 54
+    await testRunner.AndAsync("enthält mein Keller 2 Flaschen \"Grüner Veltliner\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Und ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [Xunit.SkippableFactAttribute(DisplayName="Werte über Hammer sind ungültig")]
+        [Xunit.TraitAttribute("FeatureTitle", "Getrunkene Weine bewerten")]
+        [Xunit.TraitAttribute("Description", "Werte über Hammer sind ungültig")]
+        public async global::System.Threading.Tasks.Task WerteUberHammerSindUngultig()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Werte über Hammer sind ungültig", null, tagsOfScenario, argumentsOfScenario, featureTags);
+#line 56
+  this.ScenarioInitialize(scenarioInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                testRunner.SkipScenario();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 6
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 57
+    await testRunner.GivenAsync("mein Keller enthält 2 Flaschen \"Blaufränkisch\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Angenommen ");
+#line hidden
+#line 58
+    await testRunner.WhenAsync("ich 1 Flasche \"Blaufränkisch\" trinke und mit 8 Sternen bewerte und anmerke \"zu vi" +
+                        "el\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Wenn ");
+#line hidden
+#line 59
+    await testRunner.ThenAsync("wird die Aktion abgelehnt mit \"Bewertung\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dann ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Reqnroll", "2.0.0.0")]
         [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
         public class FixtureData : object, Xunit.IAsyncLifetime

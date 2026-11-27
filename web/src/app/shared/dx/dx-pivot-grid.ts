@@ -432,7 +432,7 @@ export class DxPivotGrid<P> implements OnInit {
       out.push({
         ...base,
         dataType: f.type,
-        customizeText: (cell: { value: unknown; valueText: string }) => (cell.value === null || cell.value === undefined ? NO_VALUE : cell.valueText),
+        customizeText: (cell: { value: unknown; valueText: string }) => (cell.value === null || cell.value === undefined ? NO_VALUE : f.valueText && typeof cell.value === 'number' ? f.valueText(cell.value) : cell.valueText),
         ...bySummary,
       });
     }

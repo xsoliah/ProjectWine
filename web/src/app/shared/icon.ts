@@ -20,6 +20,8 @@ const PATHS = {
   list: 'M8 6h13 M8 12h13 M8 18h13 M3.5 6h.01 M3.5 12h.01 M3.5 18h.01',
   close: 'M6 6l12 12 M18 6 6 18',
   reset: 'M3 12a9 9 0 1 0 3-6.7 M3 4v5h5',
+  crown: 'M3.5 18.5h17 M4 8l4.5 4.5L12 5l3.5 7.5L20 8l-1.5 10.5h-13L4 8Z',
+  bolt: 'M13.5 2.5 5 13.5h6l-1 8 8.5-11h-6l1-8Z',
 } as const;
 
 export type IconName = keyof typeof PATHS;
