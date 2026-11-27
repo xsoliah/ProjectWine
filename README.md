@@ -166,6 +166,23 @@ der Datei, auf die `DevExpress_LicensePath` zeigt, oder aus `DevExpress_License.
 `%AppData%\DevExpress\`; siehe die [DevExpress-Anleitung](https://docs.devexpress.com/GeneralInformation/405646)). Auf dem
 Rechner, der `publish.ps1` ausführt, muss der Schlüssel entsprechend hinterlegt sein.
 
+## Einlagerungsvorschlag
+
+Nach dem Anlegen eines Weins (Barcode, Foto oder von Hand) und nach „Flaschen hinzufügen“ bietet die App den Schritt
+**Einlagern** an, sobald ein Regal mit freien Fächern existiert (ohne Regal erscheint ein Hinweis). Der Vorschlag nennt
+konkrete Fächer mit kurzer Begründung und Vorschau; „Einlagern“ übernimmt ihn in einer Aktion (alles oder nichts),
+„Selbst wählen“ öffnet die Regalansicht im Einlagern-Modus, „Später“ lässt die Flaschen nicht eingelagert. Auf der
+Weinseite gibt es dafür „Einlagerung vorschlagen“.
+
+Berechnet wird der Vorschlag **regelbasiert auf dem Server** (keine KI, kein Kontingent, deterministisch):
+Ein freies Fach wird nach seinen Nachbarn bewertet (gleiche Reihe näher = mehr Gewicht, angrenzende Reihen weniger).
+Die Ähnlichkeit zweier Weine ergibt sich aus Punkten: derselbe Wein 100, gleicher Erzeuger 40, gleiche Region 25,
+gleiches Land 20, gleicher Typ 15, ähnlicher Jahrgang und ähnliches Trinkfenster je 5. Fremde Nachbarn geben einen
+kleinen Abzug, ein Fach mit lauter leeren Nachbarn einen kleinen Bonus, damit ein „Exot“ in einer freien Ecke landet.
+Mehrere Flaschen kommen als zusammenhängender Abschnitt in eine Reihe, sonst in die angrenzende Reihe bzw. ein anderes
+Regal. Bei Gleichstand gewinnt das Regal mit mehr freien Fächern, dann Name, Reihe, Spalte (leeres Regal: oben links).
+Die Gewichte stehen als Konstanten in `PlacementPlanner`.
+
 ## Barcode-Erfassung
 
 `GET /api/wines/lookup/{barcode}` prüft zuerst deinen Keller (Flasche hinzufügen statt Duplikat), dann Open Food Facts.
@@ -233,6 +250,8 @@ API-Schlüssel gemessen.
 | POST/PUT/DELETE | `/api/wines`, `/api/wines/{id}` | Wein anlegen/ändern/löschen (Löschen entfernt auch das Archiv des Weins) |
 | POST | `/api/wines/{id}/bottles` | Flaschen hinzufügen |
 | POST | `/api/wines/{id}/consume` | Trinken/Verkaufen/Verschenken (Archiveintrag, optional mit Bewertung) |
+| GET | `/api/wines/{id}/placement-suggestion?count=` | Einlagerungsvorschlag für die nicht eingelagerten Flaschen (ändert nichts) |
+| POST | `/api/racks/placements` | Mehrere Flaschen eines Weins in einer Aktion einlagern (alles oder nichts) |
 | GET | `/api/archive?kind=` | Archiv |
 | PUT | `/api/archive/{id}` | Bewertung, Notiz, Käufer/Beschenkte/r, Preis ändern |
 | DELETE | `/api/archive/{id}` | Rückgängig (Flaschen kommen zurück in den Keller) |

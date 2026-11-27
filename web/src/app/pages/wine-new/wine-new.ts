@@ -5,9 +5,11 @@ import { ApiService } from '../../core/api.service';
 import { LookupOutcome, cleanBarcode, decideLookupOutcome } from '../../core/barcode-flow';
 import { BarcodeScannerService, ScannerUnavailableError } from '../../core/barcode-scanner.service';
 import { errorMessage } from '../../core/errors';
-import { CaptureQuota, SaveWineRequest } from '../../core/models';
+import { CaptureQuota, SaveWineRequest, Wine } from '../../core/models';
+import { NO_RACK_HINT, PlacingRequest, decidePlacement } from '../../core/placement-flow';
 import { ToastService } from '../../core/toast.service';
 import { Icon } from '../../shared/icon';
+import { PlacementStep } from '../../shared/placement-step';
 import { Stepper } from '../../shared/stepper';
 import { TypeBadge } from '../../shared/type-badge';
 import { WineForm } from '../wine-form/wine-form';
@@ -15,7 +17,7 @@ import { PhotoCapture } from './photo-capture';
 
 @Component({
   selector: 'app-wine-new',
-  imports: [FormsModule, Icon, Stepper, TypeBadge, WineForm, PhotoCapture],
+  imports: [FormsModule, Icon, Stepper, TypeBadge, WineForm, PhotoCapture, PlacementStep],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './wine-new.html',
   styleUrl: './wine-new.css',
@@ -69,7 +71,7 @@ export class WineNew {
     try {
       const wine = await this.api.createWine(request);
       this.toast.info('Wein zum Keller hinzugefügt.');
-      await this.router.navigate(['/wines', wine.id]);
+      await this.afterSaved(wine, wine.quantity);
     } catch (error) {
       this.toast.error(errorMessage(error));
     } finally {
@@ -80,14 +82,45 @@ export class WineNew {
   protected async addToExisting(id: string): Promise<void> {
     this.busy.set(true);
     try {
-      await this.api.addBottles(id, this.bottles());
+      const added = this.bottles();
+      const wine = await this.api.addBottles(id, added);
       this.toast.info('Flaschen hinzugefügt.');
-      await this.router.navigate(['/wines', id]);
+      await this.afterSaved(wine, added);
     } catch (error) {
       this.toast.error(errorMessage(error));
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** The "Einlagern" step for the bottles just added; null when it is not shown. */
+  protected readonly placing = signal<PlacingRequest | null>(null);
+
+  /** Offers placing the new bottles (only with a free slot), otherwise goes straight to the wine. */
+  private async afterSaved(wine: Wine, added: number): Promise<void> {
+    const decision = await decidePlacement(() => this.api.listRacks(), wine, added);
+    if (decision.request) {
+      this.placing.set(decision.request);
+      return;
+    }
+    if (decision.offer === 'no-rack') this.toast.info(NO_RACK_HINT);
+    await this.router.navigate(['/wines', wine.id]);
+  }
+
+  /** Placed or skipped ("Später"): on to the wine page. */
+  protected async placingDone(): Promise<void> {
+    const request = this.placing();
+    this.placing.set(null);
+    if (request) await this.router.navigate(['/wines', request.wineId]);
+  }
+
+  /** "Selbst wählen": the rack page in placing mode. */
+  protected async placingManual(rackId: string | null): Promise<void> {
+    const request = this.placing();
+    this.placing.set(null);
+    if (!request) return;
+    if (rackId) await this.router.navigate(['/racks', rackId], { queryParams: { place: request.wineId } });
+    else await this.router.navigate(['/wines', request.wineId]);
   }
 
   protected cancel(): void {

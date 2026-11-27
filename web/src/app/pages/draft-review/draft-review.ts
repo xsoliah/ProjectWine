@@ -5,7 +5,9 @@ import { STATUS_LABELS, captureMarks, captureToInitial } from '../../core/captur
 import { CaptureCountsService } from '../../core/capture-counts.service';
 import { errorMessage } from '../../core/errors';
 import { AuthImage, ImageCache } from '../../core/images';
-import { CaptureDetail, LabelPoint, SaveWineRequest, SetBottleShapeRequest } from '../../core/models';
+import { CaptureDetail, LabelPoint, SaveWineRequest, SetBottleShapeRequest, Wine } from '../../core/models';
+import { NO_RACK_HINT, PlacingRequest, decidePlacement } from '../../core/placement-flow';
+import { PlacementStep } from '../../shared/placement-step';
 import { ToastService } from '../../core/toast.service';
 import { hasWebGl } from '../../core/webgl';
 import { Bottle3d } from '../../shared/bottle-3d';
@@ -24,7 +26,7 @@ const NO_CORNERS_HINT = 'Zuschnitt prüfen: Die Ecken des Etiketts wurden nicht 
  */
 @Component({
   selector: 'app-draft-review',
-  imports: [RouterLink, Icon, Stepper, TypeBadge, WineForm, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor],
+  imports: [RouterLink, Icon, Stepper, TypeBadge, WineForm, AuthImage, LabelCornerEditor, Bottle3d, BottleShapeEditor, PlacementStep],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './draft-review.html',
   styleUrl: './draft-review.css',
@@ -111,7 +113,7 @@ export class DraftReview {
       await this.api.acceptCapture(this.id(), { wineId: wine.id });
       void this.counts.refresh();
       this.toast.info('Wein zum Keller hinzugefügt.');
-      await this.router.navigate(['/wines', wine.id]);
+      await this.afterSaved(wine, wine.quantity);
     } catch (error) {
       this.toast.error(errorMessage(error));
     } finally {
@@ -122,15 +124,46 @@ export class DraftReview {
   protected async addToExisting(wineId: string): Promise<void> {
     this.busy.set(true);
     try {
-      await this.api.acceptCapture(this.id(), { addToWineId: wineId, count: this.bottles() });
+      const added = this.bottles();
+      const wine = await this.api.acceptCapture(this.id(), { addToWineId: wineId, count: added });
       void this.counts.refresh();
       this.toast.info('Flaschen hinzugefügt.');
-      await this.router.navigate(['/wines', wineId]);
+      await this.afterSaved(wine, added);
     } catch (error) {
       this.toast.error(errorMessage(error));
     } finally {
       this.busy.set(false);
     }
+  }
+
+  /** The "Einlagern" step for the bottles just added; null when it is not shown. */
+  protected readonly placing = signal<PlacingRequest | null>(null);
+
+  /** Offers placing the new bottles (only with a free slot), otherwise goes straight to the wine. */
+  private async afterSaved(wine: Wine, added: number): Promise<void> {
+    const decision = await decidePlacement(() => this.api.listRacks(), wine, added);
+    if (decision.request) {
+      this.placing.set(decision.request);
+      return;
+    }
+    if (decision.offer === 'no-rack') this.toast.info(NO_RACK_HINT);
+    await this.router.navigate(['/wines', wine.id]);
+  }
+
+  /** Placed or skipped ("Später"): on to the wine page. */
+  protected async placingDone(): Promise<void> {
+    const request = this.placing();
+    this.placing.set(null);
+    if (request) await this.router.navigate(['/wines', request.wineId]);
+  }
+
+  /** "Selbst wählen": the rack page in placing mode. */
+  protected async placingManual(rackId: string | null): Promise<void> {
+    const request = this.placing();
+    this.placing.set(null);
+    if (!request) return;
+    if (rackId) await this.router.navigate(['/racks', rackId], { queryParams: { place: request.wineId } });
+    else await this.router.navigate(['/wines', request.wineId]);
   }
 
   protected back(): void {

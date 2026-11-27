@@ -111,6 +111,11 @@
       @if (w.quantity > 0) {
         <div class="row">
           <span>{{ w.unplacedCount }} {{ w.unplacedCount === 1 ? 'Flasche' : 'Flaschen' }} nicht eingelagert</span>
+          @if (w.unplacedCount > 0) {
+            <button type="button" class="btn btn-primary" (click)="suggesting.set(true)">
+              <app-icon name="rack" /> Einlagerung vorschlagen
+            </button>
+          }
           <button type="button" class="btn" [disabled]="w.unplacedCount === 0" (click)="startPlacing()">
             <app-icon name="rack" /> Einlagern
           </button>
@@ -155,6 +160,11 @@
         <p class="muted">Noch keine Flasche getrunken, verkauft oder verschenkt.</p>
       }
     </section>
+
+    @if (suggesting()) {
+      <app-placement-step [wineId]="w.id" [wineName]="w.name" [count]="w.unplacedCount"
+        (placed)="suggestionClosed()" (later)="suggestionClosed()" (manual)="suggestionManual($event)" />
+    }
 
     @if (choosingRack()) {
       <app-modal label="Regal wählen" (closed)="choosingRack.set(false)">

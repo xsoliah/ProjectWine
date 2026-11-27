@@ -15,9 +15,12 @@ import {
   Country,
   GrapeVariety,
   OriginRef,
+  PlaceBottleTarget,
+  PlacementSuggestion,
   Rack,
   RackSummary,
   SaveRackRequest,
+  SlotLocation,
   SaveWineRequest,
   SetBottleShapeRequest,
   Statistics,
@@ -63,6 +66,17 @@ export class ApiService {
 
   addBottles(id: string, count: number): Promise<Wine> {
     return firstValueFrom(this.http.post<Wine>(`/api/wines/${id}/bottles`, { count }));
+  }
+
+  /** Rule-based proposal for the not placed bottles of a wine (changes nothing). */
+  getPlacementSuggestion(wineId: string, count?: number): Promise<PlacementSuggestion> {
+    const params = count === undefined ? undefined : { count: String(count) };
+    return firstValueFrom(this.http.get<PlacementSuggestion>(`/api/wines/${wineId}/placement-suggestion`, { params }));
+  }
+
+  /** Puts several bottles of one wine into free slots, all or nothing. */
+  placeBottles(wineId: string, slots: PlaceBottleTarget[]): Promise<SlotLocation[]> {
+    return firstValueFrom(this.http.post<SlotLocation[]>('/api/racks/placements', { wineId, slots }));
   }
 
   consume(id: string, request: ConsumeRequest): Promise<ArchiveEntry> {
