@@ -55,6 +55,7 @@ import { ImageCache } from '../core/images';
 import { Rack, RackSlot } from '../core/models';
 import { cellFromIndex, cellIndex } from '../core/racks';
 import { Icon } from './icon';
+import { hasSparklingModel, sparklingGlassPoints, sparklingParts } from './sparkling-bottle';
 import {
   ATLAS_SIZE,
   CAPSULE_BY_TYPE,
@@ -86,7 +87,9 @@ const FORMS = Object.keys(BOTTLE_FORM_SPECS) as BottleForm[];
  * Built along +Y with the base at 0, then turned so the neck points to the viewer (+Z) and centred.
  */
 function bottleBody(form: BottleForm): BufferGeometry {
-  const geometry = new LatheGeometry(lathePoints(BOTTLE_FORM_SPECS[form].wall).map(([r, y]) => new Vector2(r, y)), 20);
+  const wall = BOTTLE_FORM_SPECS[form].wall;
+  const outline = hasSparklingModel(form) ? sparklingGlassPoints(wall, BOTTLE_LENGTH) : lathePoints(wall);
+  const geometry = new LatheGeometry(outline.map(([r, y]) => new Vector2(r, y)), 20);
   geometry.translate(0, -BOTTLE_LENGTH / 2, 0);
   geometry.rotateX(Math.PI / 2);
   return geometry;
@@ -100,6 +103,14 @@ function capsule(form: BottleForm): BufferGeometry {
   geometry.translate(0, ((foil.top + foil.start) / 2) * BOTTLE_LENGTH - BOTTLE_LENGTH / 2, 0);
   geometry.rotateX(Math.PI / 2);
   return geometry;
+}
+
+/** Foil, wire cage and cork of the sparkling wine model, turned like the other rack geometries. */
+function sparklingRackParts(form: BottleForm): { foil: BufferGeometry; wire: BufferGeometry; cork: BufferGeometry } | null {
+  if (!hasSparklingModel(form)) return null;
+  const parts = sparklingParts(standardShape('Sparkling', form), BOTTLE_LENGTH);
+  for (const geometry of [parts.foil, parts.wire, parts.cork]) geometry.rotateX(Math.PI / 2);
+  return parts;
 }
 
 /** Slightly curved label on top of the bottle body (the side that faces the viewer once the rolled bottle stands upright). */
@@ -117,6 +128,8 @@ interface FormMeshes {
   bottles: InstancedMesh;
   capsules: InstancedMesh;
   labels: InstancedMesh;
+  /** Wire cage and cork of the sparkling wine model; other forms have none. */
+  extras: InstancedMesh[];
   labelRects: InstancedBufferAttribute;
 }
 
@@ -190,9 +203,14 @@ export class Rack3d {
   private frame = 0;
   private startDistance = 10;
 
-  private readonly formGeometries = new Map<BottleForm, { bottle: BufferGeometry; capsule: BufferGeometry; label: BufferGeometry }>(
-    FORMS.map((form) => [form, { bottle: bottleBody(form), capsule: capsule(form), label: labelPatch(form) }]),
+  private readonly formGeometries = new Map<BottleForm, { bottle: BufferGeometry; capsule: BufferGeometry; label: BufferGeometry; wire?: BufferGeometry; cork?: BufferGeometry }>(
+    FORMS.map((form) => {
+      const sparkling = sparklingRackParts(form);
+      return [form, { bottle: bottleBody(form), capsule: sparkling?.foil ?? capsule(form), label: labelPatch(form), wire: sparkling?.wire, cork: sparkling?.cork }];
+    }),
   );
+  private readonly wireMaterial = new MeshStandardMaterial({ color: '#b8a77a', roughness: 0.35, metalness: 0.8 });
+  private readonly corkMaterial = new MeshStandardMaterial({ color: '#c9a577', roughness: 0.9, metalness: 0 });
   private placements: Placement[] = [];
   private readonly images = inject(ImageCache);
   private readonly glass = new MeshStandardMaterial({ roughness: 0.12, metalness: 0, envMapIntensity: 1.3 });
@@ -397,7 +415,7 @@ export class Rack3d {
       this.placeSlot(rack, built, i, slot, this.pull.get(slot.row) ?? 0);
     });
     for (const [form, meshes] of built.forms) {
-      for (const mesh of [meshes.bottles, meshes.capsules, meshes.labels]) {
+      for (const mesh of [meshes.bottles, meshes.capsules, meshes.labels, ...meshes.extras]) {
         mesh.count = counts.get(form)!;
         mesh.instanceMatrix.needsUpdate = true;
       }
@@ -432,6 +450,7 @@ export class Rack3d {
     meshes.bottles.setMatrixAt(index, this.matrix);
     meshes.capsules.setMatrixAt(index, this.matrix);
     meshes.labels.setMatrixAt(index, this.matrix);
+    for (const extra of meshes.extras) extra.setMatrixAt(index, this.matrix);
   }
 
   /** Runs only while a row is moving; the scene is otherwise rendered on demand. */
@@ -476,7 +495,7 @@ export class Rack3d {
       if (progress !== undefined) this.placeSlot(rack, built, i, slot, progress);
     });
     for (const meshes of built.forms.values()) {
-      for (const mesh of [meshes.bottles, meshes.capsules, meshes.labels]) mesh.instanceMatrix.needsUpdate = true;
+      for (const mesh of [meshes.bottles, meshes.capsules, meshes.labels, ...meshes.extras]) mesh.instanceMatrix.needsUpdate = true;
     }
     for (const [row, value] of this.pull) {
       if (value === 0 && row !== this.pullTarget) this.pull.delete(row);
@@ -585,12 +604,15 @@ export class Rack3d {
       const labelRects = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
       geometries.label.setAttribute('labelRect', labelRects);
       // Instances move when a row is pulled out, so the bounding spheres computed from the first pose would be wrong.
-      for (const mesh of [bottles, capsules, labels]) {
+      const extras: InstancedMesh[] = [];
+      if (geometries.wire) extras.push(new InstancedMesh(geometries.wire, this.wireMaterial, capacity));
+      if (geometries.cork) extras.push(new InstancedMesh(geometries.cork, this.corkMaterial, capacity));
+      for (const mesh of [bottles, capsules, labels, ...extras]) {
         mesh.frustumCulled = false;
         mesh.count = 0;
       }
-      forms.set(form, { bottles, capsules, labels, labelRects });
-      bottleMeshes.push(bottles, labels, capsules);
+      forms.set(form, { bottles, capsules, labels, extras, labelRects });
+      bottleMeshes.push(bottles, labels, capsules, ...extras);
     }
 
     // Row highlight: a gold frame around the front of the row (does not tint the bottles).
@@ -651,8 +673,10 @@ export class Rack3d {
       geometries.bottle.dispose();
       geometries.capsule.dispose();
       geometries.label.dispose();
+      geometries.wire?.dispose();
+      geometries.cork?.dispose();
     }
-    for (const item of [this.glass, this.foil, this.labelMaterial, this.atlasTexture, this.wood, this.backWood, this.hitMaterial, this.highlightMaterial]) {
+    for (const item of [this.glass, this.foil, this.wireMaterial, this.corkMaterial, this.labelMaterial, this.atlasTexture, this.wood, this.backWood, this.hitMaterial, this.highlightMaterial]) {
       item.dispose();
     }
     this.environment?.dispose();

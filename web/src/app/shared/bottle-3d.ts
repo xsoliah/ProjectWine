@@ -51,6 +51,7 @@ import { ImageCache } from '../core/images';
 import { BottleForm, BottleShape, WineType } from '../core/models';
 import { Icon } from './icon';
 import { CAPSULE_BY_TYPE, GLASS_BY_TYPE } from './rack-3d-look';
+import { hasSparklingModel, sparklingGlassPoints, sparklingParts } from './sparkling-bottle';
 
 /** The label floats slightly above the glass so the two surfaces do not flicker. */
 const LABEL_LIFT = 0.004;
@@ -218,6 +219,8 @@ export class Bottle3d {
 
   private readonly glass = new MeshStandardMaterial({ roughness: 0.12, metalness: 0, envMapIntensity: 1.3 });
   private readonly foil = new MeshStandardMaterial({ roughness: 0.4, metalness: 0.6 });
+  private readonly wire = new MeshStandardMaterial({ color: '#b8a77a', roughness: 0.35, metalness: 0.8 });
+  private readonly cork = new MeshStandardMaterial({ color: '#c9a577', roughness: 0.9, metalness: 0 });
   private readonly labelMaterial = new MeshStandardMaterial({ roughness: 0.85, metalness: 0 });
   private readonly group = new Group();
   private geometries: BufferGeometry[] = [];
@@ -440,17 +443,27 @@ export class Bottle3d {
     this.glass.color.set(GLASS_BY_TYPE[type] ?? GLASS_BY_TYPE.Other);
     this.foil.color.set(CAPSULE_BY_TYPE[type] ?? CAPSULE_BY_TYPE.Other);
 
-    const body = new LatheGeometry(lathePoints(wallPoints(shape, length)).map(([r, y]) => new Vector2(r, y)), 48);
+    const sparkling = hasSparklingModel(form);
+    const wall = wallPoints(shape, length);
+    const outline = sparkling ? sparklingGlassPoints(wall, length) : lathePoints(wall);
+    const body = new LatheGeometry(outline.map(([r, y]) => new Vector2(r, y)), 48);
     body.translate(0, -length / 2, 0);
+    this.geometries = [body];
+    this.group.add(new Mesh(body, this.glass));
 
-    const foil = capsuleDimensions(shape, form);
     const lift = LABEL_LIFT * scale;
-    const capsule = new CylinderGeometry(
-      foil.topRadius * length + lift, foil.bottomRadius * length + lift, (foil.top - foil.start) * length, 24);
-    capsule.translate(0, ((foil.top + foil.start) / 2) * length - length / 2, 0);
-
-    this.geometries = [body, capsule];
-    this.group.add(new Mesh(body, this.glass), new Mesh(capsule, this.foil));
+    if (sparkling) {
+      const parts = sparklingParts(shape, length, lift);
+      this.geometries.push(parts.foil, parts.wire, parts.cork);
+      this.group.add(new Mesh(parts.foil, this.foil), new Mesh(parts.wire, this.wire), new Mesh(parts.cork, this.cork));
+    } else {
+      const foil = capsuleDimensions(shape, form);
+      const capsule = new CylinderGeometry(
+        foil.topRadius * length + lift, foil.bottomRadius * length + lift, (foil.top - foil.start) * length, 24);
+      capsule.translate(0, ((foil.top + foil.start) / 2) * length - length / 2, 0);
+      this.geometries.push(capsule);
+      this.group.add(new Mesh(capsule, this.foil));
+    }
 
     if (labelId) {
       const label = labelGeometry(shape, length);
@@ -558,7 +571,7 @@ export class Bottle3d {
     this.labelTexture?.dispose();
     this.backTexture?.dispose();
     this.stopAnimation();
-    for (const item of [this.glass, this.foil, this.labelMaterial, this.backMaterial]) item.dispose();
+    for (const item of [this.glass, this.foil, this.wire, this.cork, this.labelMaterial, this.backMaterial]) item.dispose();
     this.environment?.dispose();
     this.renderer.dispose();
   }
