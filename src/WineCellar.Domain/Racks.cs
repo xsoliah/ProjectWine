@@ -21,9 +21,48 @@ public class Rack
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>Distance of the left edge of the footprint from the left wall in cm; null = not placed in the room.</summary>
+    public int? PosX { get; private set; }
+
+    /// <summary>Distance of the back edge of the footprint from the back wall in cm.</summary>
+    public int? PosZ { get; private set; }
+
+    /// <summary>Quarter turns clockwise (0-3); 0 = the front faces the front wall.</summary>
+    public int? Rotation { get; private set; }
+
     public List<RackSlot> Slots { get; } = [];
 
     public int Capacity => Height * Width;
+
+    public bool IsPlaced => PosX.HasValue && PosZ.HasValue && Rotation.HasValue;
+
+    /// <summary>The floor area the rack occupies in the room (null when not placed).</summary>
+    public Footprint? CurrentFootprint => IsPlaced ? FootprintAt(PosX!.Value, PosZ!.Value, Rotation!.Value) : null;
+
+    /// <summary>The floor area for the given position and rotation, using the current size.</summary>
+    public Footprint FootprintAt(int x, int z, int rotation)
+    {
+        var w = Width * CellarRoom.CellCm;
+        var d = CellarRoom.RackDepthCm;
+        return rotation % 2 == 0 ? new Footprint(x, z, w, d) : new Footprint(x, z, d, w);
+    }
+
+    public void Place(int x, int z, int rotation)
+    {
+        if (rotation is < 0 or > 3) throw new DomainException("Die Drehung muss 0°, 90°, 180° oder 270° betragen.");
+        if (x is < 0 or > CellarRoom.MaxSizeCm || z is < 0 or > CellarRoom.MaxSizeCm)
+            throw new DomainException("Die Position liegt außerhalb des zulässigen Bereichs.");
+        PosX = x;
+        PosZ = z;
+        Rotation = rotation;
+    }
+
+    public void ClearPlacement()
+    {
+        PosX = null;
+        PosZ = null;
+        Rotation = null;
+    }
 
     public void Set(string? name, int height, int width)
     {

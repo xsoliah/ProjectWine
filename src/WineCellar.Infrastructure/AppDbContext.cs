@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<WineGrape> WineGrapes => Set<WineGrape>();
     public DbSet<Rack> Racks => Set<Rack>();
     public DbSet<RackSlot> RackSlots => Set<RackSlot>();
+    public DbSet<CellarRoom> CellarRooms => Set<CellarRoom>();
     public DbSet<StoredImage> StoredImages => Set<StoredImage>();
     public DbSet<CaptureDraft> CaptureDrafts => Set<CaptureDraft>();
     public DbSet<CaptureUsage> CaptureUsages => Set<CaptureUsage>();
@@ -138,6 +139,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(x => x.OwnerId);
             // No FK OwnerId -> AppUser: SQL Server refuses multiple cascade paths; slots go with rack or wine.
             e.HasOne(x => x.Wine).WithMany(w => w.Slots).HasForeignKey(x => x.WineId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CellarRoom>(e =>
+        {
+            e.ToTable("cellar_rooms");
+            e.HasKey(x => x.OwnerId);
+            e.Property(x => x.OwnerId).HasMaxLength(450);
+            e.HasOne<AppUser>().WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<StoredImage>(e =>
