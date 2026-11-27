@@ -475,3 +475,33 @@ a {
     color: #f4d98a;
   }
 }
+
+/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
+.dx-pivotgrid td.pv-heat-1 {
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.dx-pivotgrid td.pv-heat-2 {
+  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.dx-pivotgrid td.pv-heat-3 {
+  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.dx-pivotgrid td.pv-heat-4 {
+  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  font-weight: 600;
+}
+
+/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
+.dx-pivotgrid td.pv-heat-1 {
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.dx-pivotgrid td.pv-heat-2 {
+  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+.dx-pivotgrid td.pv-heat-3 {
+  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.dx-pivotgrid td.pv-heat-4 {
+  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  font-weight: 600;
+}

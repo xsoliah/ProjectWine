@@ -3,6 +3,7 @@ import { formatDate } from '../../core/format';
 import { CONSUMPTION_KINDS, WINE_TYPES, kindLabel, wineTypeLabel } from '../../core/labels';
 import { ListField, ListMeasure, parseIsoDate } from '../../core/list-model';
 import { PivotLayout } from '../../core/list-view-state';
+import { ListKpi, PivotPreset, averageOf, sumOf } from '../../core/pivot-insights';
 import { ArchiveEntry } from '../../core/models';
 
 /** Felder des Archivs; die erste (Wein) ist immer sichtbar. Das Datum ist im Pivot nach Jahr, Quartal und Monat gruppiert. */
@@ -62,5 +63,19 @@ export function archiveMeasures(): ListMeasure<ArchiveEntry>[] {
   ];
 }
 
-/** Vorgabe: Datum (Jahr → Quartal → Monat, zunächst nur Jahre) × Abgangsart mit Flaschen. */
-export const ARCHIVE_PIVOT: PivotLayout = { rows: ['date'], cols: ['kind'], data: ['bottles'] };
+/** Vorlagen des Archiv-Pivots; die erste ist die Vorgabe (Jahre zugeklappt, darunter Quartal und Monat). */
+export const ARCHIVE_PRESETS: PivotPreset[] = [
+  { id: 'year', title: 'Jahr × Abgangsart', layout: { rows: ['date'], cols: ['kind'], data: ['bottles', 'rating'] } },
+  { id: 'type', title: 'Weinart × Abgangsart', layout: { rows: ['type'], cols: ['kind'], data: ['bottles'] } },
+  { id: 'rating', title: 'Bewertung × Weinart', layout: { rows: ['rating'], cols: ['type'], data: ['entries'] } },
+];
+
+export const ARCHIVE_PIVOT: PivotLayout = ARCHIVE_PRESETS[0].layout;
+
+export function archiveKpis(): ListKpi<ArchiveEntry>[] {
+  return [
+    { key: 'bottles', title: 'Flaschen', format: 'integer', value: (rows) => sumOf(rows, (e) => e.quantity) },
+    { key: 'entries', title: 'Einträge', format: 'integer', value: (rows) => rows.length },
+    { key: 'rating', title: 'Ø Bewertung', format: 'decimal1', value: (rows) => averageOf(rows, (e) => e.rating) },
+  ];
+}

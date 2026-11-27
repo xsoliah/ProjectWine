@@ -19,6 +19,12 @@ export interface PivotLayout {
   rows: string[];
   cols: string[];
   data: string[];
+  /** Erste Zeilenebene nach dieser Kennzahl sortieren (statt nach dem Feldwert). */
+  sort?: { measure: string; dir: 'asc' | 'desc' };
+  /** Nur die `n` Werte des Feldes mit der größten Kennzahl anzeigen. */
+  top?: { field: string; measure: string; n: number };
+  /** Kennzahlen, die als Anteil an der Gesamtsumme angezeigt werden. */
+  percent?: string[];
 }
 
 export interface ListViewConfig<T> {
