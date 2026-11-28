@@ -24,6 +24,11 @@ public class CellarRoomService(IAppDbContext db, ICurrentUser user)
         room.Set(request.WidthCm, request.DepthCm, request.HeightCm);
 
         var racks = await LoadRacksAsync(ct);
+        if (room.HasDoor && CellarRoom.CheckDoor(room.DoorWall!.Value, room.DoorOffsetCm!.Value, room.WidthCm, room.DepthCm) is not null)
+            throw new ConflictException("Der Raum kann nicht verkleinert werden: Die Tür würde nicht mehr in ihre Wand passen.");
+        foreach (var rack in racks.Where(r => r.IsPlaced && CellarRoom.CheckHeight(room.HeightCm, r, r.ElevationCm) is not null))
+            throw new ConflictException(
+                $"Der Raum kann nicht niedriger werden: Das Regal „{rack.Name}“ würde nicht mehr unter die Decke passen.");
         foreach (var rack in racks.Where(r => r.CurrentFootprint is { } f && !f.IsInside(room.WidthCm, room.DepthCm)))
             throw new ConflictException(
                 $"Der Raum kann nicht verkleinert werden: Das Regal „{rack.Name}“ würde nicht mehr hineinpassen.");
@@ -33,15 +38,41 @@ public class CellarRoomService(IAppDbContext db, ICurrentUser user)
         return ToDto(room, racks);
     }
 
+    public async Task<CellarRoomDto> SetDoorAsync(SetDoorRequest request, CancellationToken ct = default)
+    {
+        var room = await FindRoomAsync(track: true, ct);
+        var isNew = room is null;
+        room ??= new CellarRoom { OwnerId = user.UserId };
+        // A wall outside 0-3 is a bad request (domain error); a door that does not fit its wall is a conflict.
+        if (request.Wall is >= 0 and <= 3 && CellarRoom.CheckDoor(request.Wall, request.OffsetCm, room.WidthCm, room.DepthCm) is { } error)
+            throw new ConflictException(error);
+        room.SetDoor(request.Wall, request.OffsetCm);
+        if (isNew) db.CellarRooms.Add(room);
+        await db.SaveChangesAsync(ct);
+        return ToDto(room, await LoadRacksAsync(ct));
+    }
+
+    public async Task<CellarRoomDto> ClearDoorAsync(CancellationToken ct = default)
+    {
+        var room = await FindRoomAsync(track: true, ct);
+        if (room is not null)
+        {
+            room.ClearDoor();
+            await db.SaveChangesAsync(ct);
+        }
+        return ToDto(room ?? new CellarRoom(), await LoadRacksAsync(ct));
+    }
+
     public async Task<CellarRoomDto> PlaceAsync(Guid rackId, PlaceRackRequest request, CancellationToken ct = default)
     {
         var room = await FindRoomAsync(track: false, ct) ?? new CellarRoom();
         var racks = await LoadRacksAsync(ct);
         var rack = racks.FirstOrDefault(r => r.Id == rackId) ?? throw new NotFoundException("Regal nicht gefunden.");
 
-        rack.Place(request.X, request.Z, request.Rotation);
+        rack.Place(request.X, request.Z, request.Rotation, request.ElevationCm);
         // Nothing is saved when the new spot is invalid.
-        var error = CellarRoom.CheckFit(room.WidthCm, room.DepthCm, rack, rack.CurrentFootprint!.Value, racks);
+        var error = CellarRoom.CheckHeight(room.HeightCm, rack, rack.ElevationCm)
+            ?? CellarRoom.CheckFit(room.WidthCm, room.DepthCm, rack, rack.CurrentFootprint!.Value, racks);
         if (error is not null) throw new ConflictException(error);
 
         await db.SaveChangesAsync(ct);
@@ -65,7 +96,8 @@ public class CellarRoomService(IAppDbContext db, ICurrentUser user)
         var room = await db.CellarRooms.AsNoTracking().FirstOrDefaultAsync(r => r.OwnerId == userId, ct) ?? new CellarRoom();
         var others = await db.Racks.AsNoTracking()
             .Where(r => r.OwnerId == userId && r.Id != rack.Id).ToListAsync(ct);
-        var error = CellarRoom.CheckFit(room.WidthCm, room.DepthCm, rack, footprint, others);
+        var error = CellarRoom.CheckHeight(room.HeightCm, rack, rack.ElevationCm)
+            ?? CellarRoom.CheckFit(room.WidthCm, room.DepthCm, rack, footprint, others);
         if (error is not null)
             throw new ConflictException(error + " Bitte das Regal zuerst im Kellerraum entfernen oder verschieben.");
     }
@@ -85,8 +117,9 @@ public class CellarRoomService(IAppDbContext db, ICurrentUser user)
             racks.OrderBy(r => r.Name, StringComparer.CurrentCultureIgnoreCase)
                 .Select(r => new RoomRackDto(
                     r.Id, r.Name, r.Height, r.Width, r.Slots.Count, r.Capacity - r.Slots.Count,
-                    r.IsPlaced ? new RackPlacementDto(r.PosX!.Value, r.PosZ!.Value, r.Rotation!.Value) : null,
+                    r.IsPlaced ? new RackPlacementDto(r.PosX!.Value, r.PosZ!.Value, r.Rotation!.Value, r.ElevationCm) : null,
                     r.Slots.OrderBy(s => s.Row).ThenBy(s => s.Column)
                         .Select(s => new RoomSlotDto(s.Row, s.Column, s.Wine.Type)).ToList()))
-                .ToList());
+                .ToList(),
+            room.HasDoor ? new RoomDoorDto(room.DoorWall!.Value, room.DoorOffsetCm!.Value) : null);
 }

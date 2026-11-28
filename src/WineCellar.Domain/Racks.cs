@@ -30,6 +30,9 @@ public class Rack
     /// <summary>Quarter turns clockwise (0-3); 0 = the front faces the front wall.</summary>
     public int? Rotation { get; private set; }
 
+    /// <summary>Height of the rack above the floor in cm (0 = on the floor); only meaningful when placed.</summary>
+    public int ElevationCm { get; private set; }
+
     public List<RackSlot> Slots { get; } = [];
 
     public int Capacity => Height * Width;
@@ -47,11 +50,14 @@ public class Rack
         return rotation % 2 == 0 ? new Footprint(x, z, w, d) : new Footprint(x, z, d, w);
     }
 
-    public void Place(int x, int z, int rotation)
+    public void Place(int x, int z, int rotation, int elevationCm = 0)
     {
         if (rotation is < 0 or > 3) throw new DomainException("Die Drehung muss 0°, 90°, 180° oder 270° betragen.");
         if (x is < 0 or > CellarRoom.MaxSizeCm || z is < 0 or > CellarRoom.MaxSizeCm)
             throw new DomainException("Die Position liegt außerhalb des zulässigen Bereichs.");
+        if (elevationCm is < 0 or > CellarRoom.MaxElevationCm)
+            throw new DomainException($"Die Höhe über dem Boden muss zwischen 0 und {CellarRoom.MaxElevationCm} cm liegen.");
+        ElevationCm = elevationCm;
         PosX = x;
         PosZ = z;
         Rotation = rotation;
@@ -62,6 +68,7 @@ public class Rack
         PosX = null;
         PosZ = null;
         Rotation = null;
+        ElevationCm = 0;
     }
 
     public void Set(string? name, int height, int width)

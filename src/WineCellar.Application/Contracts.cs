@@ -291,7 +291,7 @@ public record AcceptCaptureRequest(Guid? WineId = null, Guid? AddToWineId = null
 
 // ----- Cellar room -----
 
-public record RackPlacementDto(int X, int Z, int Rotation);
+public record RackPlacementDto(int X, int Z, int Rotation, int ElevationCm = 0);
 
 /// <summary>Compact occupancy of one slot for the room view (no wine details).</summary>
 public record RoomSlotDto(int Row, int Column, WineType Type);
@@ -306,8 +306,12 @@ public record RoomRackDto(
     RackPlacementDto? Placement,
     IReadOnlyList<RoomSlotDto> Slots);
 
-public record CellarRoomDto(int WidthCm, int DepthCm, int HeightCm, IReadOnlyList<RoomRackDto> Racks);
+public record RoomDoorDto(int Wall, int OffsetCm);
+
+public record CellarRoomDto(int WidthCm, int DepthCm, int HeightCm, IReadOnlyList<RoomRackDto> Racks, RoomDoorDto? Door = null);
 
 public record SaveCellarRoomRequest(int WidthCm, int DepthCm, int HeightCm);
 
-public record PlaceRackRequest(int X, int Z, int Rotation);
+public record PlaceRackRequest(int X, int Z, int Rotation, int ElevationCm = 0);
+
+public record SetDoorRequest(int Wall, int OffsetCm);

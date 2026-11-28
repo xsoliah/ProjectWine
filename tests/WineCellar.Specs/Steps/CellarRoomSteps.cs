@@ -93,6 +93,57 @@ public class CellarRoomSteps(TestWorld world)
     [Then(@"zeigt der Raum keine Regale")]
     public void ThenNoRacks() => Assert.Empty(world.LastRoom!.Racks);
 
+    // ----- Door and elevation -----
+
+    [Given(@"ich setze das Regal ""([^""]*)"" an Position (\d+) / (\d+) mit Drehung (\d+) auf (\d+) cm Höhe")]
+    public async Task GivenPlacedElevated(string rack, int x, int z, int rotation, int elevation) =>
+        await world.CellarRooms.PlaceAsync(world.KnownRacks[rack], new PlaceRackRequest(x, z, rotation, elevation));
+
+    [Given(@"ich setze eine Tür an der Wand ""([^""]*)"" mit Abstand (\d+) cm")]
+    public async Task GivenDoor(string wall, int offset) =>
+        await world.CellarRooms.SetDoorAsync(new SetDoorRequest(WallIndex(wall), offset));
+
+    [When(@"ich eine Tür an der Wand ""([^""]*)"" mit Abstand (\d+) cm setze")]
+    public async Task WhenDoor(string wall, int offset) =>
+        await world.TryAsync(async () => await world.CellarRooms.SetDoorAsync(new SetDoorRequest(WallIndex(wall), offset)));
+
+    [When(@"ich die Tür entferne")]
+    public async Task WhenClearDoor() => await world.TryAsync(async () => await world.CellarRooms.ClearDoorAsync());
+
+    [When(@"ich das Regal ""([^""]*)"" an Position (\d+) / (\d+) mit Drehung (\d+) auf (-?\d+) cm Höhe setze")]
+    public async Task WhenPlaceElevated(string rack, int x, int z, int rotation, int elevation) =>
+        await world.TryAsync(async () =>
+            await world.CellarRooms.PlaceAsync(world.KnownRacks[rack], new PlaceRackRequest(x, z, rotation, elevation)));
+
+    [Then(@"hat der Raum eine Tür an der Wand ""([^""]*)"" mit Abstand (\d+) cm")]
+    public async Task ThenDoor(string wall, int offset)
+    {
+        var door = (await world.CellarRooms.GetAsync()).Door;
+        Assert.NotNull(door);
+        Assert.Equal((WallIndex(wall), offset), (door!.Wall, door.OffsetCm));
+    }
+
+    [Then(@"hat der Raum keine Tür")]
+    public async Task ThenNoDoor() => Assert.Null((await world.CellarRooms.GetAsync()).Door);
+
+    [Then(@"steht das Regal ""([^""]*)"" (\d+) cm über dem Boden")]
+    public async Task ThenElevation(string rack, int elevation)
+    {
+        var room = await world.CellarRooms.GetAsync();
+        var r = Assert.Single(room.Racks, x => x.Id == world.KnownRacks[rack]);
+        Assert.Equal(elevation, r.Placement?.ElevationCm ?? 0);
+    }
+
+    // Walls: 0 = back, 1 = right, 2 = front, 3 = left; unknown names map to an invalid index.
+    private static int WallIndex(string wall) => wall switch
+    {
+        "hinten" => 0,
+        "rechts" => 1,
+        "vorne" => 2,
+        "links" => 3,
+        _ => 9,
+    };
+
     private async Task<RoomRackDto> RoomRackAsync(string name) =>
         Assert.Single((await world.CellarRooms.GetAsync()).Racks, r => r.Id == world.KnownRacks[name]);
 }
