@@ -126,35 +126,32 @@ npx cap open android
 - iOS: in `Info.plist` `NSCameraUsageDescription` setzen.
 - Die CORS-Origins für die Apps (`https://localhost`, `capacitor://localhost`) stehen in `appsettings.json` unter `Cors:Origins`.
 
-## Ansichten: Kacheln, Tabelle, Pivot
+## Ansichten: Kacheln, Tabelle, Statistik
 
-Keller, Archiv und Regale lassen sich über den Umschalter „Ansicht“ als **Kacheln** (Standard), **Tabelle** oder **Pivot**
-anzeigen; die Wahl wird je Liste im Gerät gemerkt. Tabelle und Pivot sind [DevExtreme](https://js.devexpress.com/)-Komponenten
-(`DataGrid`, `PivotGrid`, `FilterBuilder`); sie und das Theme werden erst beim Wechsel in die Ansicht bzw. beim Öffnen des
-Filter-Editors geladen, die Kachelansicht und der App-Start laden sie nicht.
+Keller und Archiv lassen sich über den Umschalter „Ansicht“ als **Kacheln** (Standard), **Tabelle** oder **Statistik**
+anzeigen, die Regale als Kacheln oder Tabelle; die Wahl wird je Liste im Gerät gemerkt (eine früher gemerkte Ansicht „Pivot“
+öffnet als „Statistik“). Die Tabelle ist eine [DevExtreme](https://js.devexpress.com/)-Komponente (`DataGrid`,
+`FilterBuilder`); sie und das Theme werden erst beim Wechsel in die Ansicht bzw. beim Öffnen des Filter-Editors geladen,
+Kacheln, Statistik und der App-Start laden sie nicht.
 
+- **Statistik** (ohne Diagramme, folgt den Filtern): Im Keller Kennzahlkacheln (Flaschen, Weine, geschätzter Wert), je Regal
+  (und „Ohne Fach“) eine Karte mit Flaschen, Weinarten, Regionen und Wert sowie Listen nach Weinart, Land › Region und
+  Trinkfenster mit Flaschen, Anteil und Wert. Im Archiv Kacheln (Flaschen, Einträge, Ø Bewertung, Summe Preis) und Listen nach
+  Jahr, Abgangsart, Weinart und Bewertung. Der „geschätzte Wert“ ist Flaschen × Einkaufspreis; Weine ohne Preis zählen nicht
+  mit (ein Hinweis nennt ihre Anzahl). Ein Antippen einer Karte oder Zeile zeigt die zugehörigen Einträge als Tabelle („Zurück
+  zur Statistik“). Alles wird im Frontend aus der geladenen Liste berechnet.
 - **Spaltenfilter**: Filterzeile unter den Spaltenköpfen (auf dem Handy über „Filterzeile“ ein-/ausblendbar) und Werteliste
   mit Häufigkeit im Spaltenkopf. Spaltenwahl, Sortierung und Spaltenbreiten werden je Liste im Gerät gemerkt
   („Spalten zurücksetzen“).
 - **Verschachtelte Filter**: „Filter erstellen/Bearbeiten“ öffnet den Filter-Editor mit beliebig tief geschachtelten
   Gruppen („Und“, „Oder“, „Nicht“). Der aktive Filter steht als Text über der Liste und lässt sich aus-/einschalten,
-  bearbeiten und löschen. Er gilt für Kacheln, Tabelle und Pivot gleichermaßen und steht als JSON im Adressparameter `f`
+  bearbeiten und löschen. Er gilt für Kacheln, Tabelle und Statistik gleichermaßen und steht als JSON im Adressparameter `f`
   (alte Parameter wie `?type=Red` werden übersetzt, die Suche steht in `q`). Mehrwertige Felder (Rebsorte, Regal) werden mit
   „enthält“ gefiltert.
-- **Pivot**: mehrere Felder in Zeilen und Spalten, Zwischensummen, Auf-/Zuklappen, Feldauswahl (Felder per Drag-and-drop
-  zwischen den Bereichen), mehrere Kennzahlen; das Datum im Archiv ist nach Jahr → Quartal → Monat gruppiert. Die Anordnung
-  wird je Liste im Gerät gemerkt („Zurücksetzen“ stellt die Vorgabe wieder her). Ein Antippen einer Zelle oder Summe zeigt die
-  zugehörigen Einträge als Tabelle (alle Ebenen als Filter, „Zurück zum Pivot“). Wird die Rebsorte als Feld verwendet,
-  zählen Flaschen mit mehreren Rebsorten bei jeder mit; die Summen können dann über der Flaschenzahl liegen (ein Hinweis
-  erklärt das).
-  Das Pivot öffnet mit einer aussagekräftigen Vorgabe (Keller: Land › Region × Weinart mit Flaschen und Kaufpreis, größte
-  Länder zuerst) und zeigt darüber Kennzahlkacheln der gefilterten Einträge. Die Auswahl „Ansicht“ bietet Vorlagen (z. B.
-  Trinkfenster × Weinart, Winzer Top 10); dazu kommen eine abschaltbare **Heatmap**, „Anteil %“ je Kennzahl und ein
-  **Diagramm**, das dem Pivot folgt (auf dem Handy zunächst ausgeblendet). Die Schalter werden je Liste im Gerät gemerkt.
-- Tabelle und Pivot lassen sich als CSV exportieren (UTF-8 mit BOM, Semikolon). Sortieren, Filtern und Pivotieren laufen im
-  Frontend, das Backend ist unverändert.
-- Größe (Produktions-Build, unkomprimiert): Start der App unverändert klein (Initial 339 kB); die Tabelle lädt beim ersten Aufruf
-  ca. 1,7 MB (DataGrid) plus Theme-CSS (ca. 0,6 MB), das Pivot zusätzlich ca. 0,2 MB, der Filter-Editor ca. 20 kB.
+- Die Tabelle lässt sich als CSV exportieren (UTF-8 mit BOM, Semikolon). Sortieren und Filtern laufen im Frontend, das Backend
+  ist unverändert.
+- Größe (Produktions-Build, unkomprimiert): Start der App unverändert klein (Initial 347 kB); die Tabelle lädt beim ersten Aufruf
+  ca. 1,8 MB (DataGrid) plus Theme-CSS (ca. 0,6 MB), der Filter-Editor ca. 20 kB.
 
 ### DevExtreme-Lizenzschlüssel
 

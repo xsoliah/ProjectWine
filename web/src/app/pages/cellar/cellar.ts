@@ -13,16 +13,17 @@ import { StorageService } from '../../core/storage.service';
 import { ToastService } from '../../core/toast.service';
 import { AuthImage } from '../../core/images';
 import { DxDataGrid } from '../../shared/dx/dx-data-grid';
-import { DxPivotGrid } from '../../shared/dx/dx-pivot-grid';
+
 import { Icon } from '../../shared/icon';
 import { ListFilter } from '../../shared/list-filter';
 import { TypeBadge } from '../../shared/type-badge';
 import { ViewSwitch } from '../../shared/view-switch';
-import { CELLAR_LEGACY, CELLAR_PIVOT, CELLAR_PRESETS, CELLAR_SEARCH_KEYS, cellarFields, cellarKpis, cellarMeasures } from './cellar.views';
+import { CellarStats } from './cellar-stats';
+import { CELLAR_LEGACY, CELLAR_SEARCH_KEYS, cellarFields } from './cellar.views';
 
 @Component({
   selector: 'app-cellar',
-  imports: [FormsModule, RouterLink, Icon, TypeBadge, AuthImage, ViewSwitch, ListFilter, DxDataGrid, DxPivotGrid],
+  imports: [FormsModule, RouterLink, Icon, TypeBadge, AuthImage, ViewSwitch, ListFilter, DxDataGrid, CellarStats],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cellar.html',
   styleUrl: './cellar.css',
@@ -33,13 +34,9 @@ export class Cellar {
   private readonly storage = inject(StorageService);
   private readonly toast = inject(ToastService);
 
-  private readonly year = new Date().getFullYear();
+  protected readonly year =new Date().getFullYear();
 
   protected readonly fields = cellarFields(this.year);
-  protected readonly measures = cellarMeasures();
-  protected readonly pivotLayout = CELLAR_PIVOT;
-  protected readonly presets = CELLAR_PRESETS;
-  protected readonly kpis = cellarKpis();
 
   /** Ansicht, Suche und Filter stehen in der URL (?view=, ?q=, ?f=), damit sie eine Einzelansicht überleben. */
   protected readonly view = new ListViewState<Wine>({
@@ -56,7 +53,7 @@ export class Cellar {
 
   private readonly list = resource({ loader: () => this.api.listWines({ search: '', type: null }) });
 
-  /** Alle Weine im Keller; Suche und Filter wirken lokal auf Kacheln, Tabelle und Pivot. */
+  /** Alle Weine im Keller; Suche und Filter wirken lokal auf Kacheln, Tabelle und Statistik. */
   protected readonly allWines = computed(() => (this.list.hasValue() ? this.list.value() : []));
   protected readonly wines = computed(() => this.view.apply(this.allWines()));
   /** Nur nach Suche gefiltert: die Tabelle wendet den Filter selbst an. */

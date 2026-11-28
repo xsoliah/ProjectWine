@@ -1,8 +1,6 @@
 import { wineTitle } from '../../core/format';
-import { WINE_TYPES, wineTypeLabel } from '../../core/labels';
-import { ListField, ListMeasure } from '../../core/list-model';
-import { PivotLayout } from '../../core/list-view-state';
-import { ListKpi, PivotPreset } from '../../core/pivot-insights';
+import { wineTypeLabel } from '../../core/labels';
+import { ListField } from '../../core/list-model';
 import { Rack, RackSummary } from '../../core/models';
 
 export const FILL_EMPTY = 'Leer';
@@ -44,66 +42,5 @@ export function rackFields(): ListField<RackRow>[] {
     { key: 'fill', title: 'Belegung', type: 'string', value: fillState, order: [FILL_EMPTY, FILL_PARTIAL, FILL_FULL] },
     { key: 'types', title: 'Weinarten', type: 'string', value: () => null, values: (r) => r.types, column: 'optional' },
     { key: 'wines', title: 'Weine', type: 'string', value: () => null, values: (r) => r.wines, column: 'optional' },
-  ];
-}
-
-/** Eine Flasche im Regalfach: Zeile des Pivots. */
-export interface RackFact {
-  rack: string;
-  row: number;
-  column: number;
-  type: string;
-  wine: string;
-}
-
-export function bottleFacts(racks: readonly RackSummary[], details: ReadonlyMap<string, Rack>): RackFact[] {
-  return racks.flatMap((rack) =>
-    (details.get(rack.id)?.slots ?? []).map((slot) => ({
-      rack: rack.name,
-      row: slot.row,
-      column: slot.column,
-      type: wineTypeLabel(slot.wine.type),
-      wine: wineTitle(slot.wine),
-    })),
-  );
-}
-
-/** Pivot-Felder der Flaschen; ein Klick schlüsselt auf die entsprechenden Felder der Regaltabelle auf. */
-export function factFields(): ListField<RackFact>[] {
-  return [
-    { key: 'rack', title: 'Regal', type: 'string', value: (f) => f.rack, pivot: true, drill: { key: 'name', op: '=' } },
-    {
-      key: 'type',
-      title: 'Weinart',
-      type: 'string',
-      value: (f) => f.type,
-      order: WINE_TYPES.map((t) => t.label),
-      pivot: true,
-      drill: { key: 'types', op: 'contains' },
-    },
-    { key: 'wine', title: 'Wein', type: 'string', value: (f) => f.wine, pivot: true, drill: { key: 'wines', op: 'contains' } },
-    { key: 'row', title: 'Reihe', type: 'number', value: (f) => f.row, pivot: true, drill: null },
-    { key: 'column', title: 'Spalte', type: 'number', value: (f) => f.column, pivot: true, drill: null },
-  ];
-}
-
-export function factMeasures(): ListMeasure<RackFact>[] {
-  return [
-    { key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: () => 1, format: 'integer' },
-    { key: 'share', title: 'Anteil Flaschen', kind: 'sum', value: () => 1, format: 'integer' },
-  ];
-}
-
-/** Vorlage des Regale-Pivots (zugleich Vorgabe): Flaschen und deren Anteil je Regal und Weinart. */
-export const RACKS_PRESETS: PivotPreset[] = [
-  { id: 'rack', title: 'Regal × Weinart', layout: { rows: ['rack'], cols: ['type'], data: ['bottles', 'share'], percent: ['share'] } },
-];
-
-export const RACKS_PIVOT: PivotLayout = RACKS_PRESETS[0].layout;
-
-export function factKpis(): ListKpi<RackFact>[] {
-  return [
-    { key: 'bottles', title: 'Flaschen', format: 'integer', value: (rows) => rows.length },
-    { key: 'racks', title: 'Regale', format: 'integer', value: (rows) => new Set(rows.map((r) => r.rack)).size },
   ];
 }

@@ -1,9 +1,7 @@
 import { drinkWindow } from '../../core/drink-window';
 import { LegacyParam } from '../../core/filter-expr';
 import { WINE_TYPES, wineTypeLabel } from '../../core/labels';
-import { ListField, ListMeasure } from '../../core/list-model';
-import { PivotLayout } from '../../core/list-view-state';
-import { ListKpi, PivotPreset, sumOf } from '../../core/pivot-insights';
+import { ListField } from '../../core/list-model';
 import { Wine } from '../../core/models';
 
 /** Trinkfenster-Status eines Weins als Anzeigetext; `null` ohne Angabe. */
@@ -41,12 +39,12 @@ function windowText(wine: Wine): string {
   return '';
 }
 
-/** Felder des Kellers: Tabellenspalten, Filterfelder und Pivot-Dimensionen. Die erste (Name) ist immer sichtbar. */
+/** Felder des Kellers: Tabellenspalten, und Filterfelder. Die erste (Name) ist immer sichtbar. */
 export function cellarFields(year: number): ListField<Wine>[] {
   return [
     { key: 'name', title: 'Name', type: 'string', value: (w) => w.name, column: 'default' },
-    { key: 'producer', title: 'Winzer', type: 'string', value: (w) => w.producer, column: 'default', pivot: true },
-    { key: 'vintage', title: 'Jahrgang', type: 'number', value: (w) => w.vintage, column: 'default', pivot: true },
+    { key: 'producer', title: 'Winzer', type: 'string', value: (w) => w.producer, column: 'default' },
+    { key: 'vintage', title: 'Jahrgang', type: 'number', value: (w) => w.vintage, column: 'default' },
     {
       key: 'type',
       title: 'Weinart',
@@ -54,10 +52,9 @@ export function cellarFields(year: number): ListField<Wine>[] {
       value: (w) => wineTypeLabel(w.type),
       order: WINE_TYPES.map((t) => t.label),
       column: 'default',
-      pivot: true,
     },
-    { key: 'country', title: 'Land', type: 'string', value: (w) => w.country?.name ?? null, column: 'default', pivot: true },
-    { key: 'region', title: 'Region', type: 'string', value: (w) => w.region?.name ?? null, column: 'default', pivot: true },
+    { key: 'country', title: 'Land', type: 'string', value: (w) => w.country?.name ?? null, column: 'default' },
+    { key: 'region', title: 'Region', type: 'string', value: (w) => w.region?.name ?? null, column: 'default' },
     {
       key: 'grape',
       title: 'Rebsorte',
@@ -65,8 +62,6 @@ export function cellarFields(year: number): ListField<Wine>[] {
       value: () => null,
       values: (w) => w.grapes.map((g) => g.name),
       column: 'optional',
-      pivot: true,
-      drill: { key: 'grape', op: 'contains' },
     },
     { key: 'quantity', title: 'Flaschen', type: 'number', value: (w) => w.quantity, column: 'default' },
     {
@@ -77,7 +72,6 @@ export function cellarFields(year: number): ListField<Wine>[] {
       display: windowText,
       order: WINDOW_STATES,
       column: 'default',
-      pivot: true,
     },
     { key: 'price', title: 'Preis', type: 'number', value: (w) => w.purchasePrice, format: 'currency', column: 'default' },
     {
@@ -86,8 +80,6 @@ export function cellarFields(year: number): ListField<Wine>[] {
       type: 'string',
       value: () => null,
       values: rackNames,
-      pivot: true,
-      drill: { key: 'rack', op: 'contains' },
     },
     {
       key: 'placement',
@@ -118,54 +110,3 @@ export const CELLAR_LEGACY: LegacyParam[] = [
   { param: 'vintageFrom', key: 'vintage', kind: 'from' },
   { param: 'vintageTo', key: 'vintage', kind: 'to' },
 ];
-
-export function cellarMeasures(): ListMeasure<Wine>[] {
-  return [
-    { key: 'bottles', title: 'Anzahl Flaschen', kind: 'sum', value: (w) => w.quantity, format: 'integer' },
-    { key: 'wines', title: 'Anzahl Weine', kind: 'sum', value: () => 1, format: 'integer' },
-    {
-      key: 'price',
-      title: 'Summe Kaufpreis',
-      kind: 'sum',
-      value: (w) => (w.purchasePrice === null ? null : w.purchasePrice * w.quantity),
-      format: 'currency',
-    },
-  ];
-}
-
-/** Vorlagen des Keller-Pivots; die erste ist die Vorgabe (Länder zugeklappt, größte zuerst). */
-export const CELLAR_PRESETS: PivotPreset[] = [
-  {
-    id: 'country',
-    title: 'Land × Weinart',
-    layout: { rows: ['country', 'region'], cols: ['type'], data: ['bottles', 'price'], sort: { measure: 'bottles', dir: 'desc' } },
-  },
-  { id: 'window', title: 'Trinkfenster × Weinart', layout: { rows: ['window'], cols: ['type'], data: ['bottles'] } },
-  { id: 'vintage', title: 'Jahrgang × Weinart', layout: { rows: ['vintage'], cols: ['type'], data: ['bottles'] } },
-  {
-    id: 'producer',
-    title: 'Winzer (Top 10)',
-    layout: {
-      rows: ['producer'],
-      cols: [],
-      data: ['bottles', 'price'],
-      sort: { measure: 'bottles', dir: 'desc' },
-      top: { field: 'producer', measure: 'bottles', n: 10 },
-    },
-  },
-];
-
-export const CELLAR_PIVOT: PivotLayout = CELLAR_PRESETS[0].layout;
-
-export function cellarKpis(): ListKpi<Wine>[] {
-  return [
-    { key: 'bottles', title: 'Flaschen', format: 'integer', value: (rows) => sumOf(rows, (w) => w.quantity) },
-    { key: 'wines', title: 'Weine', format: 'integer', value: (rows) => rows.length },
-    {
-      key: 'value',
-      title: 'Wert',
-      format: 'currency',
-      value: (rows) => sumOf(rows, (w) => (w.purchasePrice === null ? null : w.purchasePrice * w.quantity)),
-    },
-  ];
-}

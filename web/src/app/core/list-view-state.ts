@@ -11,25 +11,14 @@ import {
   parseFilter,
   serializeFilter,
 } from './filter-expr';
-import { LIST_VIEWS, ListField, ListView, toRecords } from './list-model';
+import { ListField, ListView, parseView, toRecords } from './list-model';
 import { StorageService } from './storage.service';
-
-/** Anordnung des Pivots: Felder in Zeilen- und Spaltenbereich sowie Kennzahlen; Datumsebenen als `schlüssel:year|quarter|month`. */
-export interface PivotLayout {
-  rows: string[];
-  cols: string[];
-  data: string[];
-  /** Erste Zeilenebene nach dieser Kennzahl sortieren (statt nach dem Feldwert). */
-  sort?: { measure: string; dir: 'asc' | 'desc' };
-  /** Nur die `n` Werte des Feldes mit der größten Kennzahl anzeigen. */
-  top?: { field: string; measure: string; n: number };
-  /** Kennzahlen, die als Anteil an der Gesamtsumme angezeigt werden. */
-  percent?: string[];
-}
 
 export interface ListViewConfig<T> {
   /** Kennung der Liste; trennt die gemerkten Einstellungen. */
   id: string;
+  /** Zulässige Ansichten (Standard: alle); eine frühere Ansicht „pivot“ wird zu „stats“ bzw. „tiles“. */
+  views?: readonly ListView[];
   /** Alle Felder der Liste (Filter-Editor, Spalten, Auswertung der Filter). */
   fields: readonly ListField<T>[];
   /** Frühere einfache Adressparameter, die in den Filterausdruck übersetzt werden. */
@@ -43,7 +32,7 @@ export interface ViewState {
   search: string;
   filter: FilterExpr | null;
   filterOn: boolean;
-  /** Tabelle wurde aus dem Pivot aufgeschlüsselt („Zurück zum Pivot“ ist möglich). */
+  /** Tabelle wurde aus der Statistik aufgeschlüsselt („Zurück zur Statistik“ ist möglich). */
   drilled: boolean;
 }
 
@@ -76,7 +65,7 @@ export class ListViewState<T> {
 
   constructor(readonly config: ListViewConfig<T>) {
     const params = inject(ActivatedRoute).snapshot.queryParams as Record<string, string | undefined>;
-    const view = (LIST_VIEWS as readonly string[]).includes(params['view'] ?? '') ? (params['view'] as ListView) : 'tiles';
+    const view = parseView(params['view'], config.views) ?? 'tiles';
     const filter =
       parseFilter(params['f'], config.fields) ??
       (params['f'] ? null : legacyFilter(params, config.legacy ?? [], config.fields));
@@ -93,7 +82,7 @@ export class ListViewState<T> {
         void ensureFilterEngine().then(() => this.engineReady.set(true));
       }
     });
-    const urlHasView = (LIST_VIEWS as readonly string[]).includes(params['view'] ?? '');
+    const urlHasView = parseView(params['view'], config.views) !== null;
     void this.restoreView(urlHasView);
 
     const legacyKeys = (config.legacy ?? []).map((l) => l.param);
@@ -117,16 +106,15 @@ export class ListViewState<T> {
   private async restoreView(urlHasView: boolean): Promise<void> {
     if (urlHasView) return;
     const stored = await this.storage.get(`view:${this.config.id}`);
-    if (stored && (LIST_VIEWS as readonly string[]).includes(stored)) {
-      this.state.update((s) => (s.view === 'tiles' ? { ...s, view: stored as ListView } : s));
-    }
+    const view = parseView(stored, this.config.views);
+    if (view) this.state.update((s) => (s.view === 'tiles' ? { ...s, view } : s));
   }
 
   // ----- Ansicht -----
 
   setView(view: ListView): void {
     void this.storage.set(`view:${this.config.id}`, view);
-    this.state.update((s) => ({ ...s, view, drilled: view === 'pivot' ? false : s.drilled }));
+    this.state.update((s) => ({ ...s, view, drilled: view === 'stats' ? false : s.drilled }));
   }
 
   // ----- Suche und Filter -----
@@ -150,7 +138,7 @@ export class ListViewState<T> {
     this.state.update((s) => ({ ...s, search: '', filter: null, filterOn: true, drilled: false }));
   }
 
-  /** Wechselt mit der Bedingung der Pivotzelle (mit „und“ zum Filter) in die Tabelle. */
+  /** Wechselt mit der Bedingung der angetippten Karte oder Zeile (mit „und“ zum Filter) in die Tabelle. */
   drill(condition: FilterExpr | null): void {
     const s = this.state();
     // Ein zweites Antippen derselben Aufschlüsselung (z. B. Doppelklick) baut auf dem ursprünglichen Filter auf.
@@ -165,13 +153,13 @@ export class ListViewState<T> {
     });
   }
 
-  /** Zurück zum Pivot mit dem Filter von vor dem Aufschlüsseln. */
+  /** Zurück zur Statistik mit dem Filter von vor dem Aufschlüsseln. */
   endDrill(): void {
     const before = this.beforeDrill;
     this.beforeDrill = null;
     this.state.update((s) => ({
       ...s,
-      view: 'pivot',
+      view: 'stats',
       drilled: false,
       filter: before ? before.filter : s.filter,
       filterOn: before ? before.filterOn : s.filterOn,
