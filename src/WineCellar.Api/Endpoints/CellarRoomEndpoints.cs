@@ -18,6 +18,12 @@ public static class CellarRoomEndpoints
 
         var placement = app.MapGroup("/api/racks/{id:guid}/placement").RequireAuthorization().WithTags("CellarRoom");
 
+        room.MapPut("/door", async (SetDoorRequest request, CellarRoomService rooms, CancellationToken ct) =>
+            TypedResults.Ok(await rooms.SetDoorAsync(request, ct)));
+
+        room.MapDelete("/door", async (CellarRoomService rooms, CancellationToken ct) =>
+            TypedResults.Ok(await rooms.ClearDoorAsync(ct)));
+
         placement.MapPut("", async (Guid id, PlaceRackRequest request, CellarRoomService rooms, CancellationToken ct) =>
             TypedResults.Ok(await rooms.PlaceAsync(id, request, ct)));
 

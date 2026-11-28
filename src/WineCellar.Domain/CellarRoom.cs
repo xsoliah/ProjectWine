@@ -23,6 +23,9 @@ public class CellarRoom
     public const int MaxSizeCm = 2000;
     public const int MinHeightCm = 150;
     public const int MaxHeightCm = 500;
+    public const int DoorWidthCm = 90;
+    public const int DoorHeightCm = 205;
+    public const int MaxElevationCm = 200;
     public const int DefaultWidthCm = 400;
     public const int DefaultDepthCm = 300;
     public const int DefaultHeightCm = 250;
@@ -31,6 +34,47 @@ public class CellarRoom
     public int WidthCm { get; private set; } = DefaultWidthCm;
     public int DepthCm { get; private set; } = DefaultDepthCm;
     public int HeightCm { get; private set; } = DefaultHeightCm;
+
+    /// <summary>Wall of the door: 0 = back, 1 = right, 2 = front, 3 = left; null = no door.</summary>
+    public int? DoorWall { get; private set; }
+
+    /// <summary>Distance of the door edge from the start of its wall in cm (from the left wall for back/front, from the back wall for left/right).</summary>
+    public int? DoorOffsetCm { get; private set; }
+
+    public bool HasDoor => DoorWall.HasValue && DoorOffsetCm.HasValue;
+
+    /// <summary>Length of the given wall in cm.</summary>
+    public static int WallLength(int wall, int widthCm, int depthCm) => wall % 2 == 0 ? widthCm : depthCm;
+
+    /// <summary>Checks that a door fits into its wall; returns an error text or null.</summary>
+    public static string? CheckDoor(int wall, int offsetCm, int widthCm, int depthCm)
+    {
+        if (wall is < 0 or > 3) return "Die Wand der Tür muss vorne, hinten, links oder rechts sein.";
+        var length = WallLength(wall, widthCm, depthCm);
+        if (offsetCm < 0 || offsetCm + DoorWidthCm > length)
+            return $"Die Tür ({DoorWidthCm} cm breit) passt mit {offsetCm} cm Abstand nicht in die Wand ({length} cm).";
+        return null;
+    }
+
+    public void SetDoor(int wall, int offsetCm)
+    {
+        var error = CheckDoor(wall, offsetCm, WidthCm, DepthCm);
+        if (error is not null) throw new DomainException(error);
+        DoorWall = wall;
+        DoorOffsetCm = offsetCm;
+    }
+
+    public void ClearDoor()
+    {
+        DoorWall = null;
+        DoorOffsetCm = null;
+    }
+
+    /// <summary>A rack with an elevation must fit under the ceiling (elevation + rows x cell size); no check at elevation 0.</summary>
+    public static string? CheckHeight(int roomHeightCm, Rack rack, int elevationCm) =>
+        elevationCm > 0 && elevationCm + rack.Height * CellCm > roomHeightCm
+            ? $"Das Regal „{rack.Name}“ passt auf {elevationCm} cm Höhe nicht unter die Decke ({roomHeightCm} cm)."
+            : null;
 
     public void Set(int widthCm, int depthCm, int heightCm)
     {

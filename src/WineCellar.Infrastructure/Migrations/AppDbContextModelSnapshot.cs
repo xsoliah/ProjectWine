@@ -263,6 +263,12 @@ namespace WineCellar.Infrastructure.Migrations
                     b.Property<int>("DepthCm")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DoorOffsetCm")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DoorWall")
+                        .HasColumnType("int");
+
                     b.Property<int>("HeightCm")
                         .HasColumnType("int");
 
@@ -388,6 +394,9 @@ namespace WineCellar.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("ElevationCm")
+                        .HasColumnType("int");
 
                     b.Property<int>("Height")
                         .HasColumnType("int");
