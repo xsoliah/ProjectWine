@@ -5,6 +5,9 @@ export const CELL_CM = 12;
 export const RACK_DEPTH_CM = 38;
 export const SNAP_CM = 10;
 export const STEP_CM = 10;
+export const DOOR_WIDTH_CM = 90;
+export const DOOR_HEIGHT_CM = 205;
+export const MAX_ELEVATION_CM = 200;
 
 export interface RackPlacement {
   /** Distance of the left edge from the left wall (cm). */
@@ -13,6 +16,8 @@ export interface RackPlacement {
   z: number;
   /** Quarter turns clockwise, 0-3. */
   rotation: number;
+  /** Height above the floor in cm (0 or missing = on the floor). */
+  elevationCm?: number;
 }
 
 export interface RoomSlot {
@@ -32,11 +37,18 @@ export interface RoomRack {
   slots: RoomSlot[];
 }
 
+/** Door wall: 0 = back, 1 = right, 2 = front, 3 = left. */
+export interface RoomDoor {
+  wall: number;
+  offsetCm: number;
+}
+
 export interface CellarRoom {
   widthCm: number;
   depthCm: number;
   heightCm: number;
   racks: RoomRack[];
+  door?: RoomDoor | null;
 }
 
 export interface Rect {
@@ -88,6 +100,7 @@ export function rotateAround(rack: { width: number }, p: RackPlacement): RackPla
   const after = footprint(rack, { ...p, rotation });
   return {
     rotation,
+    elevationCm: p.elevationCm,
     x: Math.round(p.x + before.w / 2 - after.w / 2),
     z: Math.round(p.z + before.d / 2 - after.d / 2),
   };
@@ -152,5 +165,57 @@ export function firstFreeSpot(
 export function describePlacement(p: RackPlacement | null): string {
   if (!p) return 'nicht platziert';
   const front = ['nach vorn', 'nach links', 'nach hinten', 'nach rechts'][p.rotation] ?? 'nach vorn';
-  return `${p.x} cm von links, ${p.z} cm von hinten, Front ${front}`;
+  const height = p.elevationCm ? `, ${p.elevationCm} cm über dem Boden` : '';
+  return `${p.x} cm von links, ${p.z} cm von hinten, Front ${front}${height}`;
+}
+
+export const WALL_NAMES = ['hinten', 'rechts', 'vorne', 'links'] as const;
+
+export function wallLength(wall: number, room: RoomSize): number {
+  return wall % 2 === 0 ? room.widthCm : room.depthCm;
+}
+
+/** Whether a door fits completely into its wall (same rule as the server). */
+export function isDoorValid(door: RoomDoor, room: RoomSize): boolean {
+  return (
+    Number.isInteger(door.wall) &&
+    door.wall >= 0 &&
+    door.wall <= 3 &&
+    door.offsetCm >= 0 &&
+    door.offsetCm + DOOR_WIDTH_CM <= wallLength(door.wall, room)
+  );
+}
+
+/** Door height: 205 cm, but never higher than the room. */
+export function doorHeight(roomHeightCm: number): number {
+  return Math.min(DOOR_HEIGHT_CM, roomHeightCm);
+}
+
+/**
+ * Puts the door on the wall nearest to a floor point (cm), centred under the point,
+ * kept inside the wall and snapped to the wall ends within `tolerance` cm.
+ */
+export function projectToWall(room: RoomSize, point: { x: number; z: number }, tolerance = SNAP_CM): RoomDoor {
+  const distances = [point.z, room.widthCm - point.x, room.depthCm - point.z, point.x];
+  const wall = distances.indexOf(Math.min(...distances));
+  const along = wall % 2 === 0 ? point.x : point.z;
+  const max = wallLength(wall, room) - DOOR_WIDTH_CM;
+  let offset = Math.min(Math.max(Math.round(along - DOOR_WIDTH_CM / 2), 0), max);
+  if (offset <= tolerance) offset = 0;
+  else if (max - offset <= tolerance) offset = max;
+  return { wall, offsetCm: offset };
+}
+
+/** Whether the rack, lifted by `elevationCm`, still fits under the ceiling (no check at 0, like the server). */
+export function checkHeight(roomHeightCm: number, rack: { name: string; height: number }, elevationCm: number): FitResult {
+  if (elevationCm > 0 && elevationCm + rack.height * CELL_CM > roomHeightCm) {
+    return { ok: false, reason: `„${rack.name}“ passt auf ${elevationCm} cm Höhe nicht unter die Decke.` };
+  }
+  return { ok: true };
+}
+
+export function describeDoor(door: RoomDoor | null | undefined): string {
+  if (!door) return 'keine Tür';
+  const wall = ['hinteren', 'rechten', 'vorderen', 'linken'][door.wall] ?? 'vordere';
+  return `Tür an der ${wall} Wand, ${door.offsetCm} cm vom Wandanfang`;
 }

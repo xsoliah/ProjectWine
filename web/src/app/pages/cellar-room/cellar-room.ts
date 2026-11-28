@@ -4,10 +4,15 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import {
   CellarRoom,
+  MAX_ELEVATION_CM,
   RackPlacement,
+  RoomDoor,
   RoomRack,
   checkFit,
+  checkHeight,
+  describeDoor,
   describePlacement,
+  isDoorValid,
   firstFreeSpot,
   rotateAround,
 } from '../../core/cellar-room';
@@ -60,6 +65,27 @@ const FINE_STEP = 1;
           <p class="muted small">Ein Fach misst 12 × 12 cm, ein Regal ist 38 cm tief.</p>
         </details>
 
+        <details class="size-form">
+          <summary>{{ doorText() }}</summary>
+          <form class="size-fields" (submit)="$event.preventDefault(); saveDoor()">
+            <label>Wand
+              <select name="doorWall" [(ngModel)]="doorWall">
+                @for (name of wallNames; track $index) {
+                  <option [ngValue]="$index">{{ name }}</option>
+                }
+              </select>
+            </label>
+            <label>Abstand vom Wandanfang (cm)
+              <input type="number" name="doorOffset" step="1" min="0" inputmode="numeric" [(ngModel)]="doorOffset" />
+            </label>
+            <button type="submit" class="btn" [disabled]="busy()">{{ r.door ? 'Tür speichern' : 'Tür hinzufügen' }}</button>
+            @if (r.door) {
+              <button type="button" class="btn" [disabled]="busy()" (click)="removeDoor()">Tür entfernen</button>
+            }
+          </form>
+          <p class="muted small">Die Tür ist 90 cm breit und 205 cm hoch. Der Abstand zählt bei der vorderen und hinteren Wand von der linken Wand, bei der linken und rechten Wand von der hinteren Wand. Im Modus „Anordnen“ lässt sie sich auch in der 3D-Ansicht ziehen.</p>
+        </details>
+
         @if (r.racks.length === 0) {
           <div class="empty">
             <h2>Noch keine Regale</h2>
@@ -73,7 +99,7 @@ const FINE_STEP = 1;
 
         <p class="sr-only" id="room-desc">
           Kellerraum von {{ meters(r.widthCm) }} mal {{ meters(r.depthCm) }} Metern mit {{ placedCount() }} platzierten
-          {{ placedCount() === 1 ? 'Regal' : 'Regalen' }}. Die Regalliste ist der barrierefreie Zugang.
+          {{ placedCount() === 1 ? 'Regal' : 'Regalen' }}. {{ doorText() }}. Die Regalliste ist der barrierefreie Zugang.
         </p>
 
         <div class="layout">
@@ -82,6 +108,7 @@ const FINE_STEP = 1;
               @defer (on immediate) {
                 <app-cellar-room-3d [room]="r" [selectedId]="selectedId()" [arrange]="arrange()"
                   (rackTapped)="select($event)" (rackMoved)="applyPlacement($event.id, $event.placement)"
+                  (doorMoved)="moveDoor($event)"
                   (dragChange)="onDrag($event)" (contextLost)="can3d.set(false)" />
               } @loading (minimum 200ms) {
                 <p class="muted loading" role="status">3D-Ansicht wird geladen …</p>
@@ -98,6 +125,12 @@ const FINE_STEP = 1;
               <section class="info card" aria-label="Ausgewähltes Regal">
                 <h2>{{ s.name }}</h2>
                 <p>{{ s.height }} Reihen × {{ s.width }} Spalten · {{ s.occupied }} belegt, {{ s.free }} frei</p>
+                @if (s.placement) {
+                  <label class="elevation">Höhe über dem Boden (cm)
+                    <input type="number" min="0" max="200" step="5" inputmode="numeric" [value]="s.placement.elevationCm ?? 0"
+                      [disabled]="busy()" (change)="setElevation(s, $any($event.target).value)" />
+                  </label>
+                }
                 <a class="btn btn-primary" [routerLink]="['/racks', s.id]">Regal öffnen</a>
                 <button type="button" class="btn-link" (click)="select(null)">Auswahl aufheben</button>
               </section>
@@ -122,6 +155,9 @@ const FINE_STEP = 1;
                         </label>
                         <label>Hinten (cm)
                           <input type="number" [value]="rack.placement!.z" step="1" (change)="setCoordinate(rack, 'z', $any($event.target).value)" />
+                        </label>
+                        <label>Höhe (cm)
+                          <input type="number" min="0" max="200" step="5" [value]="rack.placement!.elevationCm ?? 0" (change)="setElevation(rack, $any($event.target).value)" />
                         </label>
                         <button type="button" class="btn btn-small" (click)="rotate(rack)" [disabled]="busy()">Drehen</button>
                         <button type="button" class="btn btn-small" (click)="remove(rack)" [disabled]="busy()">Entfernen</button>
@@ -174,6 +210,14 @@ export class CellarRoomPage {
   protected readonly selectedId = signal<string | null>(null);
   protected readonly can3d = signal(hasWebGl());
 
+  protected readonly wallNames = ['Hinten', 'Rechts', 'Vorne', 'Links'];
+  protected readonly doorText = computed(() => {
+    const room = this.room();
+    return room ? describeDoor(room.door) : '';
+  });
+  protected doorWall = 2;
+  protected doorOffset = 155;
+
   protected widthM = 4;
   protected depthM = 3;
   protected heightM = 2.5;
@@ -212,6 +256,10 @@ export class CellarRoomPage {
     this.widthM = room.widthCm / 100;
     this.depthM = room.depthCm / 100;
     this.heightM = room.heightCm / 100;
+    if (room.door) {
+      this.doorWall = room.door.wall;
+      this.doorOffset = room.door.offsetCm;
+    }
     if (this.selectedId() && !room.racks.some((r) => r.id === this.selectedId())) this.selectedId.set(null);
   }
 
@@ -248,10 +296,57 @@ export class CellarRoomPage {
     });
   }
 
+  protected async saveDoor(): Promise<void> {
+    const room = this.room();
+    if (!room) return;
+    const door = { wall: Number(this.doorWall), offsetCm: Math.round(Number(this.doorOffset)) };
+    if (!Number.isFinite(door.offsetCm) || !isDoorValid(door, room)) {
+      this.error.set('Die Tür passt dort nicht in die Wand (90 cm breit).');
+      return;
+    }
+    await this.run(async () => {
+      this.apply(await this.api.setCellarDoor(door.wall, door.offsetCm));
+      this.status.set(`${describeDoor(door)} gespeichert.`);
+    });
+  }
+
+  protected async removeDoor(): Promise<void> {
+    await this.run(async () => {
+      this.apply(await this.api.removeCellarDoor());
+      this.status.set('Tür entfernt.');
+    });
+  }
+
+  /** The door was dragged to another place in the 3D view. */
+  protected async moveDoor(door: RoomDoor): Promise<void> {
+    await this.run(async () => {
+      this.apply(await this.api.setCellarDoor(door.wall, door.offsetCm));
+      this.status.set(`${describeDoor(door)}.`);
+    });
+  }
+
+  protected async setElevation(rack: RoomRack, value: string): Promise<void> {
+    const number = Math.round(Number(value));
+    if (!rack.placement || !Number.isFinite(number)) return;
+    await this.applyPlacement(rack.id, { ...rack.placement, elevationCm: number });
+  }
+
   protected async applyPlacement(id: string, placement: RackPlacement): Promise<void> {
     const room = this.room();
     const rack = room?.racks.find((r) => r.id === id);
     if (!room || !rack) return;
+    const elevation = placement.elevationCm ?? 0;
+    if (elevation < 0 || elevation > MAX_ELEVATION_CM) {
+      this.status.set(`Nicht möglich: Die Höhe muss zwischen 0 und ${MAX_ELEVATION_CM} cm liegen.`);
+      this.resync();
+      return;
+    }
+    const height = checkHeight(room.heightCm, rack, elevation);
+    if (!height.ok) {
+      this.status.set(`Nicht möglich: ${height.reason}`);
+      this.resync();
+      return;
+    }
     const fit = checkFit(room, rack, placement, room.racks);
     if (!fit.ok) {
       this.status.set(`Nicht möglich: ${fit.reason}`);

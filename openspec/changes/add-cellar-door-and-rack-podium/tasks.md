@@ -14,19 +14,19 @@
 
 ## 3. Frontend: Geometrie und Daten
 
-- [ ] 3.1 `core/cellar-room.ts`: Modelle (`RoomDoor`, `elevationCm` an `RackPlacement`), `doorSegment`, `isDoorValid`, `projectToWall` (nächste Wand, Mittelpunkt unter dem Zeiger, Klemmen, Einrasten ≤ 10 cm), `checkHeight`, `describePlacement` mit „… cm über dem Boden“; `ApiService`-Aufrufe für Tür und erweiterte Platzierung; Tests in `cellar-room.spec.ts` mit denselben Testvektoren wie in C#
+- [x] 3.1 `core/cellar-room.ts`: Modelle (`RoomDoor`, `elevationCm` an `RackPlacement`), `doorSegment`, `isDoorValid`, `projectToWall` (nächste Wand, Mittelpunkt unter dem Zeiger, Klemmen, Einrasten ≤ 10 cm), `checkHeight`, `describePlacement` mit „… cm über dem Boden“; `ApiService`-Aufrufe für Tür und erweiterte Platzierung; Tests in `cellar-room.spec.ts` mit denselben Testvektoren wie in C#
 
 ## 4. Frontend: 3D-Szene
 
-- [ ] 4.1 Wände mit Tür bauen (Wand in links/rechts/Sturz zerlegt), Türrahmen, Türblatt und Klinke; Durchscheinen wie die Wand; Aufräumen; im Browser prüfen, dass die Tür an allen vier Wänden maßstäblich und von innen wie von außen sichtbar ist
-- [ ] 4.2 Podeste und Anheben: Podest-Quader pro Regal mit Höhe > 0, `y`-Versatz für Bretter, Flaschenböden, Auswahlhülle; Podest folgt Ziehen und Drehen; kein Podest bei Höhe 0; im Browser mit 0, 40 und 200 cm prüfen
-- [ ] 4.3 Tür ziehen im Modus „Anordnen“ (Raycast auf Türblatt, `projectToWall`, Live-Umbau, Speichern beim Loslassen, Rückkehr bei Fehler); im Browser mit simulierten Zeigerereignissen prüfen, auch Wechsel der Wand
+- [x] 4.1 Wände mit Tür bauen (Wand in links/rechts/Sturz zerlegt), Türrahmen, Türblatt und Klinke; Durchscheinen wie die Wand; Aufräumen; im Browser prüfen, dass die Tür an allen vier Wänden maßstäblich und von innen wie von außen sichtbar ist
+- [x] 4.2 Podeste und Anheben: Podest-Quader pro Regal mit Höhe > 0, `y`-Versatz für Bretter, Flaschenböden, Auswahlhülle; Podest folgt Ziehen und Drehen; kein Podest bei Höhe 0; im Browser mit 0, 40 und 200 cm prüfen
+- [x] 4.3 Tür ziehen im Modus „Anordnen“ (Raycast auf Türblatt, `projectToWall`, Live-Umbau, Speichern beim Loslassen, Rückkehr bei Fehler); im Browser mit simulierten Zeigerereignissen prüfen, auch Wechsel der Wand
 
 ## 5. Frontend: Seite „Kellerraum“
 
-- [ ] 5.1 Raumformular um den Abschnitt „Tür“ erweitern (Auswahl Wand, Abstand in cm, „Tür setzen“/„Tür hinzufügen“, „Tür entfernen“, Konfliktmeldung des Servers); Beschreibung der Szene nennt die Tür; Anzeige der Tür auch in der 3D-losen Liste
-- [ ] 5.2 Regalliste und Infoleiste um das Feld „Höhe über Boden (cm)“ für platzierte Regale ergänzen (kein Feld bei nicht platzierten), Speichern über `PUT placement` mit vollständiger Platzierung, Rückkehr zum gespeicherten Wert und Fehlermeldung bei Fehlschlag; Platzierung beim Ziehen/Drehen/Platzieren behält die Höhe
+- [x] 5.1 Raumformular um den Abschnitt „Tür“ erweitern (Auswahl Wand, Abstand in cm, „Tür setzen“/„Tür hinzufügen“, „Tür entfernen“, Konfliktmeldung des Servers); Beschreibung der Szene nennt die Tür; Anzeige der Tür auch in der 3D-losen Liste
+- [x] 5.2 Regalliste und Infoleiste um das Feld „Höhe über Boden (cm)“ für platzierte Regale ergänzen (kein Feld bei nicht platzierten), Speichern über `PUT placement` mit vollständiger Platzierung, Rückkehr zum gespeicherten Wert und Fehlermeldung bei Fehlschlag; Platzierung beim Ziehen/Drehen/Platzieren behält die Höhe
 
 ## 6. Abschluss
 
-- [ ] 6.1 Gesamttest: `dotnet test`, Frontend-Tests und `ng build`; im Browser Raum mit Tür und mindestens zwei Regalen (eines auf Podest) auf Desktop- und Handybreite durchspielen (Tür setzen/ziehen/entfernen, Höhe ändern, Regal ziehen mit Podest, Raum verkleinern mit Konflikt, Seite neu laden)
+- [x] 6.1 Gesamttest: `dotnet test`, Frontend-Tests und `ng build`; im Browser Raum mit Tür und mindestens zwei Regalen (eines auf Podest) auf Desktop- und Handybreite durchspielen (Tür setzen/ziehen/entfernen, Höhe ändern, Regal ziehen mit Podest, Raum verkleinern mit Konflikt, Seite neu laden)

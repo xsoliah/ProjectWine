@@ -175,7 +175,15 @@ export class ApiService {
   }
 
   placeRack(id: string, p: RackPlacement): Promise<CellarRoom> {
-    return firstValueFrom(this.http.put<CellarRoom>(`/api/racks/${id}/placement`, { x: p.x, z: p.z, rotation: p.rotation }));
+    return firstValueFrom(this.http.put<CellarRoom>(`/api/racks/${id}/placement`, { x: p.x, z: p.z, rotation: p.rotation, elevationCm: p.elevationCm ?? 0 }));
+  }
+
+  setCellarDoor(wall: number, offsetCm: number): Promise<CellarRoom> {
+    return firstValueFrom(this.http.put<CellarRoom>('/api/cellar-room/door', { wall, offsetCm }));
+  }
+
+  removeCellarDoor(): Promise<CellarRoom> {
+    return firstValueFrom(this.http.delete<CellarRoom>('/api/cellar-room/door'));
   }
 
   removeRackPlacement(id: string): Promise<CellarRoom> {

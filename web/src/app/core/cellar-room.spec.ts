@@ -1,7 +1,12 @@
 import {
   RoomRack,
   checkFit,
+  describeDoor,
   describePlacement,
+  checkHeight,
+  doorHeight,
+  isDoorValid,
+  projectToWall,
   firstFreeSpot,
   footprint,
   overlaps,
@@ -113,5 +118,61 @@ describe('describePlacement', () => {
   it('says "nicht platziert" without a placement', () => {
     expect(describePlacement(null)).toBe('nicht platziert');
     expect(describePlacement({ x: 50, z: 20, rotation: 0 })).toContain('50 cm von links');
+  });
+});
+
+describe('door', () => {
+  it('accepts doors that fit the wall and rejects others (same vectors as the server)', () => {
+    expect(isDoorValid({ wall: 2, offsetCm: 150 }, room)).toBe(true);
+    expect(isDoorValid({ wall: 2, offsetCm: 310 }, room)).toBe(true);
+    expect(isDoorValid({ wall: 2, offsetCm: 330 }, room)).toBe(false);
+    expect(isDoorValid({ wall: 1, offsetCm: 211 }, room)).toBe(false);
+    expect(isDoorValid({ wall: 4, offsetCm: 0 }, room)).toBe(false);
+    expect(isDoorValid({ wall: 0, offsetCm: -1 }, room)).toBe(false);
+  });
+
+  it('projects a floor point to the nearest wall, centred and clamped', () => {
+    expect(projectToWall(room, { x: 200, z: 295 })).toEqual({ wall: 2, offsetCm: 155 });
+    expect(projectToWall(room, { x: 3, z: 150 })).toEqual({ wall: 3, offsetCm: 105 });
+    expect(projectToWall(room, { x: 398, z: 20 })).toEqual({ wall: 1, offsetCm: 0 });
+  });
+
+  it('snaps to the wall ends within 10 cm', () => {
+    expect(projectToWall(room, { x: 50, z: 2 })).toEqual({ wall: 0, offsetCm: 0 });
+    expect(projectToWall(room, { x: 354, z: 2 })).toEqual({ wall: 0, offsetCm: 310 });
+    expect(projectToWall(room, { x: 100, z: 2 })).toEqual({ wall: 0, offsetCm: 55 });
+  });
+
+  it('limits the door height to the room height', () => {
+    expect(doorHeight(250)).toBe(205);
+    expect(doorHeight(180)).toBe(180);
+  });
+});
+
+describe('elevation', () => {
+  const tall = { name: 'Hoch', height: 10 };
+
+  it('needs elevation plus rack height below the ceiling', () => {
+    expect(checkHeight(250, tall, 150).ok).toBe(false);
+    expect(checkHeight(250, tall, 130).ok).toBe(true);
+    expect(checkHeight(250, { name: 'A', height: 5 }, 40).ok).toBe(true);
+  });
+
+  it('skips the check at elevation 0', () => {
+    expect(checkHeight(100, tall, 0).ok).toBe(true);
+  });
+
+  it('keeps the elevation when rotating and describes it', () => {
+    const turned = rotateAround({ width: 6 }, { x: 0, z: 0, rotation: 0, elevationCm: 40 });
+    expect(turned.elevationCm).toBe(40);
+    expect(describePlacement({ x: 1, z: 2, rotation: 0, elevationCm: 40 })).toContain('40 cm über dem Boden');
+    expect(describePlacement({ x: 1, z: 2, rotation: 0 })).not.toContain('über dem Boden');
+  });
+});
+
+describe('describeDoor', () => {
+  it('names the wall in the dative case', () => {
+    expect(describeDoor({ wall: 2, offsetCm: 155 })).toBe('Tür an der vorderen Wand, 155 cm vom Wandanfang');
+    expect(describeDoor(null)).toBe('keine Tür');
   });
 });
