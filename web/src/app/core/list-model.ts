@@ -1,13 +1,23 @@
 /**
- * Gemeinsames Modell der Listen Keller, Archiv und Regale: Felder (Tabellenspalten, Filterfelder, Pivot-Dimensionen)
- * und Kennzahlen je Liste, daraus abgeleitete flache Datensätze für DevExtreme sowie CSV-Erzeugung.
+ * Gemeinsames Modell der Listen Keller, Archiv und Regale: Felder (Tabellenspalten, Filterfelder)
+ * daraus abgeleitete flache Datensätze für DevExtreme (Tabelle, Filter) sowie CSV-Erzeugung.
  * Keine Angular-Abhängigkeiten, damit alles ohne Oberfläche testbar ist.
  */
 
 export const NO_VALUE = 'Ohne Angabe';
 
-export type ListView = 'tiles' | 'table' | 'pivot';
-export const LIST_VIEWS: readonly ListView[] = ['tiles', 'table', 'pivot'];
+export type ListView = 'tiles' | 'table' | 'stats';
+export const LIST_VIEWS: readonly ListView[] = ['tiles', 'table', 'stats'];
+
+/**
+ * Gemerkte oder in der Adresse stehende Ansicht, die in der Liste zulässig ist; die frühere Ansicht „pivot“ wird zu
+ * „stats“ (oder zu „tiles“, wenn die Liste keine Statistik hat). Unbekanntes ergibt `null`.
+ */
+export function parseView(raw: string | null | undefined, allowed: readonly ListView[] = LIST_VIEWS): ListView | null {
+  const view = raw === 'pivot' ? 'stats' : raw;
+  if (!view || !(LIST_VIEWS as readonly string[]).includes(view)) return null;
+  return allowed.includes(view as ListView) ? (view as ListView) : raw === 'pivot' ? 'tiles' : null;
+}
 
 export type FieldType = 'string' | 'number' | 'date';
 export type Scalar = string | number | Date | null;
@@ -20,15 +30,14 @@ export interface ListField<T> {
   /** Wert der Zeile; Datum als `Date` (lokale Mitternacht), leer als `null`. */
   value: (row: T) => Scalar;
   /**
-   * Mehrwertiges Feld (z. B. Rebsorten): Tabelle und Filter sehen die Werte „, “-getrennt als Text; im Pivot wird die
-   * Zeile je Wert aufgefächert.
+   * Mehrwertiges Feld (z. B. Rebsorten): Tabelle und Filter sehen die Werte „, “-getrennt als Text.
    */
   values?: (row: T) => string[];
   /** Anzeigetext in Tabelle und CSV, falls vom Wert abweichend. */
   display?: (row: T) => string;
   /** Tabellenspalte: `default` = standardmäßig sichtbar, `optional` = wählbar; fehlt = keine Spalte. */
   column?: 'default' | 'optional';
-  /** Anzeigetext eines Zahlenwerts in Tabelle, CSV und Pivot, falls vom Wert abweichend (z. B. „Top“ für 6). */
+  /** Anzeigetext eines Zahlenwerts in Tabelle und CSV, falls vom Wert abweichend (z. B. „Top“ für 6). */
   valueText?: (value: number) => string;
   /** Wählbare Zahlenwerte im Filter-Editor (mit `valueText` beschriftet), z. B. die Bewertungsstufen. */
   levels?: readonly number[];
@@ -36,26 +45,14 @@ export interface ListField<T> {
   format?: NumberFormat;
   /** Feste Reihenfolge der Werte (übrige danach, „Ohne Angabe“ zuletzt). */
   order?: readonly string[];
-  /** Im Pivot als Feld (Dimension) wählbar. */
-  pivot?: boolean;
-  /** Im Pivot: Tabellenfeld und Operator, auf die ein Klick auf diese Ebene aufgeschlüsselt wird (Standard: dasselbe Feld, „=“). */
-  drill?: { key: string; op: string } | null;
   /** Aus dem Filter-Editor und den Spaltenfiltern ausnehmen. */
   noFilter?: boolean;
 }
 
-export interface ListMeasure<T> {
-  key: string;
-  title: string;
-  kind: 'sum' | 'avg';
-  value: (row: T) => number | null;
-  format: NumberFormat;
-}
 
-/** Datensatz für DevExtreme: Feldwerte unter ihrem Schlüssel, Kennzahlen unter `m_<Schlüssel>`, die Zeile unter `__row`. */
+/** Datensatz für DevExtreme: Feldwerte unter ihrem Schlüssel, die Zeile unter `__row`. */
 export type Rec<T> = Record<string, unknown> & { __row: T };
 
-export const MEASURE_PREFIX = 'm_';
 
 export function isMulti<T>(field: ListField<T>): boolean {
   return field.values !== undefined;
@@ -71,43 +68,15 @@ function blank(value: Scalar | undefined): Scalar {
   return value === undefined || value === '' ? null : value;
 }
 
-/**
- * Flache Datensätze der Zeilen. Mehrwertige Felder stehen als Text; die Schlüssel in `fan` werden aufgefächert
- * (eine Zeile je Wert, bei mehreren Schlüsseln als Kreuzprodukt; ohne Wert bleibt eine Zeile mit `null`).
- */
-export function toRecords<T>(
-  rows: readonly T[],
-  fields: readonly ListField<T>[],
-  measures: readonly ListMeasure<T>[] = [],
-  fan: ReadonlySet<string> = new Set(),
-): Rec<T>[] {
-  const out: Rec<T>[] = [];
-  for (const row of rows) {
-    const base: Record<string, unknown> = { __row: row };
-    const fanned: { key: string; values: (string | null)[] }[] = [];
+/** Flache Datensätze der Zeilen für DevExtreme; mehrwertige Felder stehen als „, “-getrennter Text. */
+export function toRecords<T>(rows: readonly T[], fields: readonly ListField<T>[]): Rec<T>[] {
+  return rows.map((row) => {
+    const record: Record<string, unknown> = { __row: row };
     for (const field of fields) {
-      if (field.values) {
-        const values = [...new Set(field.values(row).filter((v) => v !== ''))];
-        if (fan.has(field.key)) fanned.push({ key: field.key, values: values.length > 0 ? values : [null] });
-        else base[field.key] = joinValues(values);
-      } else {
-        base[field.key] = blank(field.value(row));
-      }
+      record[field.key] = field.values ? joinValues(field.values(row)) : blank(field.value(row));
     }
-    for (const m of measures) base[MEASURE_PREFIX + m.key] = m.value(row);
-    let combos: Record<string, unknown>[] = [base];
-    for (const { key, values } of fanned) {
-      combos = combos.flatMap((c) => values.map((v) => ({ ...c, [key]: v })));
-    }
-    out.push(...(combos as Rec<T>[]));
-  }
-  return out;
-}
-
-/** Ob ein Feld in mindestens einer Zeile mehrere Werte hat (Summen können dann Flaschen mehrfach zählen). */
-export function hasMultiplicity<T>(rows: readonly T[], field: ListField<T>): boolean {
-  if (!field.values) return false;
-  return rows.some((r) => new Set(field.values!(r).filter((v) => v !== '')).size > 1);
+    return record as Rec<T>;
+  });
 }
 
 // ----- Anzeige -----

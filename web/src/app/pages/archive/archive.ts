@@ -6,14 +6,14 @@ import { ListViewState } from '../../core/list-view-state';
 import { ArchiveEntry } from '../../core/models';
 import { ArchiveEntryItem } from '../../shared/archive-entry-item';
 import { DxDataGrid } from '../../shared/dx/dx-data-grid';
-import { DxPivotGrid } from '../../shared/dx/dx-pivot-grid';
+import { ArchiveStats } from './archive-stats';
 import { ListFilter } from '../../shared/list-filter';
 import { ViewSwitch } from '../../shared/view-switch';
-import { ARCHIVE_LEGACY, ARCHIVE_PIVOT, ARCHIVE_PRESETS, archiveFields, archiveKpis, archiveMeasures } from './archive.views';
+import { ARCHIVE_LEGACY, archiveFields } from './archive.views';
 
 @Component({
   selector: 'app-archive',
-  imports: [ArchiveEntryItem, ViewSwitch, ListFilter, DxDataGrid, DxPivotGrid],
+  imports: [ArchiveEntryItem, ViewSwitch, ListFilter, DxDataGrid, ArchiveStats],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page stack">
@@ -26,10 +26,10 @@ import { ARCHIVE_LEGACY, ARCHIVE_PIVOT, ARCHIVE_PRESETS, archiveFields, archiveK
       <app-list-filter [fields]="fields" [filter]="view.filter()" [on]="view.filterOn()" [options]="options()"
         (filterChange)="view.setFilter($event)" (toggle)="view.toggleFilter()" />
 
-      @if (view.drilled() && view.view() !== 'pivot') {
+      @if (view.drilled() && view.view() !== 'stats') {
         <div class="banner" role="status">
-          Aufgeschlüsselt: Einträge der angetippten Pivotzelle
-          <button type="button" class="btn-link" (click)="view.endDrill()">Zurück zum Pivot</button>
+          Aufgeschlüsselt: Einträge der angetippten Statistikzeile
+          <button type="button" class="btn-link" (click)="view.endDrill()">Zurück zur Statistik</button>
         </div>
       }
 
@@ -41,12 +41,15 @@ import { ARCHIVE_LEGACY, ARCHIVE_PIVOT, ARCHIVE_PRESETS, archiveFields, archiveK
 
       @if (loading()) {
         <p class="muted" role="status">Archiv wird geladen …</p>
-      } @else if (view.view() === 'pivot') {
-        @defer {
-          <app-dx-pivot-grid [rows]="entries()" [fields]="fields" [measures]="measures" [layout]="pivotLayout" [presets]="presets" [kpis]="kpis"
-            storageId="archive" label="Pivot des Archivs" fileName="archiv-pivot.csv" (drill)="view.drill($event)" />
-        } @placeholder {
-          <p class="muted" role="status">Pivot wird geladen …</p>
+      } @else if (view.view() === 'stats') {
+        @if (entries().length === 0 && view.filtered()) {
+          <div class="empty">
+            <h2>Keine passenden Einträge</h2>
+            <p>Ändere die Filter.</p>
+            <button type="button" class="btn" (click)="view.reset()">Filter zurücksetzen</button>
+          </div>
+        } @else {
+          <app-archive-stats [entries]="entries()" (drill)="view.drill($event)" />
         }
       } @else if (entries().length === 0 && !error() && view.view() === 'tiles') {
         @if (view.filtered()) {
@@ -82,10 +85,6 @@ export class Archive {
   private readonly api = inject(ApiService);
 
   protected readonly fields = archiveFields();
-  protected readonly measures = archiveMeasures();
-  protected readonly pivotLayout = ARCHIVE_PIVOT;
-  protected readonly presets = ARCHIVE_PRESETS;
-  protected readonly kpis = archiveKpis();
 
   protected readonly view = new ListViewState<ArchiveEntry>({
     id: 'archive',

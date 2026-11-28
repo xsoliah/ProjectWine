@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ListField, ListMeasure, cellText, csvCell, hasMultiplicity, joinValues, parseIsoDate, tableCsv, toCsv, toIsoDate, toRecords } from './list-model';
+import { ListField, cellText, csvCell, joinValues, parseIsoDate, parseView, tableCsv, toCsv, toIsoDate, toRecords } from './list-model';
 
 interface Row {
   name: string;
@@ -11,12 +11,11 @@ interface Row {
 
 const fields: ListField<Row>[] = [
   { key: 'name', title: 'Name', type: 'string', value: (r) => r.name, column: 'default' },
-  { key: 'year', title: 'Jahr', type: 'number', value: (r) => r.year, column: 'default', pivot: true },
+  { key: 'year', title: 'Jahr', type: 'number', value: (r) => r.year, column: 'default' },
   { key: 'price', title: 'Preis', type: 'number', value: (r) => r.price, format: 'currency', column: 'default' },
-  { key: 'grape', title: 'Rebsorte', type: 'string', value: () => null, values: (r) => r.grapes, pivot: true },
-  { key: 'date', title: 'Datum', type: 'date', value: (r) => parseIsoDate(r.date), column: 'optional', pivot: true },
+  { key: 'grape', title: 'Rebsorte', type: 'string', value: () => null, values: (r) => r.grapes },
+  { key: 'date', title: 'Datum', type: 'date', value: (r) => parseIsoDate(r.date), column: 'optional' },
 ];
-const measures: ListMeasure<Row>[] = [{ key: 'count', title: 'Anzahl', kind: 'sum', value: () => 1, format: 'integer' }];
 
 const rows: Row[] = [
   { name: 'A', year: 2019, price: 12.5, grapes: ['Merlot', 'Syrah'], date: '2026-03-01' },
@@ -24,28 +23,15 @@ const rows: Row[] = [
 ];
 
 describe('toRecords', () => {
-  it('bildet Werte, leere Werte als null und Kennzahlen unter m_', () => {
-    const [a, b] = toRecords(rows, fields, measures);
+  it('bildet Werte, leere Werte als null und Datensätze', () => {
+    const [a, b] = toRecords(rows, fields);
     expect(a['year']).toBe(2019);
     expect(a['grape']).toBe('Merlot, Syrah');
     expect(a['date']).toEqual(new Date(2026, 2, 1));
-    expect(a['m_count']).toBe(1);
     expect(a.__row).toBe(rows[0]);
     expect(b['year']).toBeNull();
     expect(b['grape']).toBeNull();
     expect(b['date']).toBeNull();
-  });
-
-  it('fächert mehrwertige Felder nur auf Wunsch auf', () => {
-    const fanned = toRecords(rows, fields, measures, new Set(['grape']));
-    expect(fanned.map((r) => r['grape'])).toEqual(['Merlot', 'Syrah', null]);
-    expect(fanned.map((r) => r.__row.name)).toEqual(['A', 'A', '=Summe']);
-  });
-
-  it('erkennt Mehrfachzuordnung', () => {
-    expect(hasMultiplicity(rows, fields[3])).toBe(true);
-    expect(hasMultiplicity([rows[1]], fields[3])).toBe(false);
-    expect(hasMultiplicity(rows, fields[0])).toBe(false);
   });
 });
 
@@ -71,5 +57,26 @@ describe('Anzeige und CSV', () => {
     expect(parseIsoDate('kaputt')).toBeNull();
     expect(joinValues(['a', '', 'a', 'b'])).toBe('a, b');
     expect(joinValues([])).toBeNull();
+  });
+});
+
+describe('parseView', () => {
+  it('übernimmt zulässige Ansichten', () => {
+    expect(parseView('table')).toBe('table');
+    expect(parseView('stats')).toBe('stats');
+  });
+
+  it('macht aus einer gemerkten Ansicht „pivot“ die Statistik', () => {
+    expect(parseView('pivot')).toBe('stats');
+  });
+
+  it('öffnet „pivot“ als Kacheln, wo es keine Statistik gibt', () => {
+    expect(parseView('pivot', ['tiles', 'table'])).toBe('tiles');
+  });
+
+  it('ignoriert Unbekanntes und nicht angebotene Ansichten', () => {
+    expect(parseView('chart')).toBeNull();
+    expect(parseView(undefined)).toBeNull();
+    expect(parseView('stats', ['tiles', 'table'])).toBeNull();
   });
 });

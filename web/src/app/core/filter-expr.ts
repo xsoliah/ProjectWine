@@ -1,7 +1,7 @@
 /**
  * Gemeinsamer Filterausdruck der Listen im DevExtreme-Format, beliebig verschachtelt:
  * `[["type","=","Rot"],"and",[["country","=","Italien"],"or",["country","=","Spanien"]]]`, Negation `["!", ausdruck]`.
- * Wird von Kacheln, Tabelle (DataGrid) und Pivot gleichermaßen ausgewertet und steht kompakt als JSON in der Adresse.
+ * Wird von Kacheln, Tabelle (DataGrid) und Statistik gleichermaßen ausgewertet und steht kompakt als JSON in der Adresse.
  */
 import { FieldType, ListField, formatDateValue, parseIsoDate, toIsoDate } from './list-model';
 

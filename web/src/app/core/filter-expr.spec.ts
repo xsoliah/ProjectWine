@@ -78,16 +78,6 @@ describe('filterRecords', () => {
   });
 });
 
-describe('Auffächern', () => {
-  it('erzeugt je Rebsorte einen Datensatz, ohne Rebsorte einen mit null', () => {
-    const records = toRecords(wines, fields, [], new Set(['grape']));
-    expect(records.map((r) => r['grape'])).toEqual(['Sangiovese', 'Merlot', 'Cabernet', null, 'Merlot']);
-  });
-
-  it('ohne Auffächern steht der Text', () => {
-    expect(toRecords(wines, fields)[1]['grape']).toBe('Merlot, Cabernet');
-  });
-});
 
 describe('Adresse', () => {
   const expr: FilterExpr = [['type', '=', 'Rot'], 'and', ['bought', 'between', [new Date(2026, 2, 1), new Date(2026, 2, 31)]]];

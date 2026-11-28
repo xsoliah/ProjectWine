@@ -36,7 +36,7 @@ export function stepRating(rating: number | null, steps: number): number {
   return RATING_LEVELS[next];
 }
 
-/** Short text of a tier or a number of stars, e.g. for tables and the pivot ("Hammer", "4,5"). */
+/** Short text of a tier or a number of stars, e.g. for tables ("Hammer", "4,5"). */
 export function ratingText(rating: number): string {
   if (rating === RATING_HAMMER) return 'Hammer';
   if (rating === RATING_TOP) return 'Top';

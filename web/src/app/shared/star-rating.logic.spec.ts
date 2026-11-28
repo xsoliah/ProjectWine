@@ -55,7 +55,7 @@ describe('star rating logic', () => {
     expect(ratingLabel(RATING_HAMMER)).toBe('Hammer');
   });
 
-  it('gives a short text for tables and the pivot', () => {
+  it('gives a short text for tables', () => {
     expect(ratingText(4.5)).toBe('4,5');
     expect(ratingText(RATING_TOP)).toBe('Top');
     expect(ratingText(RATING_HAMMER)).toBe('Hammer');

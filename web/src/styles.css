@@ -556,7 +556,7 @@ a {
   gap: var(--space-2) var(--space-3);
 }
 
-/* DevExtreme (wird nur mit Tabelle, Pivot und Filter-Editor geladen): Schrift und Rundungen der App übernehmen.
+/* DevExtreme (wird nur mit Tabelle und Filter-Editor geladen): Schrift und Rundungen der App übernehmen.
    Das Stylesheet (hell/dunkel) folgt dem gewählten Theme, siehe shared/dx/dx-theme.ts. */
 .dx-widget,
 .dx-widget input,
@@ -564,44 +564,13 @@ a {
   font-family: var(--font-body);
 }
 
-.dx-datagrid,
-.dx-pivotgrid {
+.dx-datagrid {
   border-radius: var(--radius-m);
   overflow: hidden;
 }
 
 .dx-datagrid .dx-row a {
   color: var(--link);
-}
-
-/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
-.dx-pivotgrid td.pv-heat-1 {
-  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-.dx-pivotgrid td.pv-heat-2 {
-  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
-}
-.dx-pivotgrid td.pv-heat-3 {
-  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
-}
-.dx-pivotgrid td.pv-heat-4 {
-  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  font-weight: 600;
-}
-
-/* Pivot-Heatmap: Stufen 1–4 aus der Akzentfarbe; der Zellwert bleibt als Text sichtbar. */
-.dx-pivotgrid td.pv-heat-1 {
-  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-.dx-pivotgrid td.pv-heat-2 {
-  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
-}
-.dx-pivotgrid td.pv-heat-3 {
-  background-color: color-mix(in srgb, var(--accent) 26%, transparent);
-}
-.dx-pivotgrid td.pv-heat-4 {
-  background-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  font-weight: 600;
 }
 
 /* Weicher Wechsel: nur kurz beim Umschalten (ThemeService setzt die Klasse), nie dauerhaft. */
