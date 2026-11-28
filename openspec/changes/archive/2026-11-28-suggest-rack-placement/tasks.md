@@ -33,4 +33,4 @@
 ## 6. Abschluss
 
 - [x] 6.1 `README.md` ergänzen (Funktion „Einlagerungsvorschlag“, Bewertungsregeln kurz)
-- [ ] 6.2 Manuelle Prüfung: Wein per Hand, per Foto und „Flaschen hinzufügen“ einlagern; zweites Gerät belegt ein Fach
+- [x] 6.2 Manuelle Prüfung: Wein per Hand, per Foto und „Flaschen hinzufügen“ einlagern; zweites Gerät belegt ein Fach
